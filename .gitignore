@@ -206,3 +206,12 @@ Engine/Binaries/DotNET/SwarmAgent.Options.xml
 
 # Ignore CLion directory
 .idea/
+
+# Additional files which show up in the Blast repo at least
+BuildGraph.Automation.xml
+*.exp
+
+# BlastPluginSample content 
+!BlastPluginSample/Content/
+!BlastPluginSample/Content/**/*.uasset
+!BlastPluginSample/Content/**/*.umap

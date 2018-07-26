@@ -185,6 +185,17 @@ public:
 	/** Called to notify clothing data that component transform has changed */
 	virtual void RefreshClothingTransforms(const FMatrix& InNewLocalToWorld, uint32 FrameNumber) {};
 
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+	/** Get index buffer dynamic override. */
+	FORCEINLINE FSkeletalMeshDynamicOverride* GetSkeletalMeshDynamicOverride() const { return SkeletalMeshDynamicOverride; }
+
+	/** Set index buffer dynamic override. */
+	void SetSkeletalMeshDynamicOverride(FSkeletalMeshDynamicOverride* NewSkeletalMeshDynamicOverride)
+	{
+		SkeletalMeshDynamicOverride = NewSkeletalMeshDynamicOverride;
+	}
+//nv end
+
 	/** Setup for rendering a specific LOD entry of the component */
 	struct FSkelMeshObjectLODInfo
 	{
@@ -244,6 +255,11 @@ public:
 protected:
 	/** The skeletal mesh resource with which to render. */
 	FSkeletalMeshRenderData* SkeletalMeshRenderData;
+
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+	/** Dynamic index buffer data. */
+	FSkeletalMeshDynamicOverride* SkeletalMeshDynamicOverride;
+//nv end
 
 	/** Per-LOD info. */
 	TArray<FSkeletalMeshLODInfo> SkeletalMeshLODInfo;

@@ -11,6 +11,7 @@
 #include "Engine/TextureStreamingTypes.h"
 #include "Components/MeshComponent.h"
 #include "Containers/SortedMap.h"
+#include "SkeletalMeshRenderData.h"	//#nv #Blast Ability to hide bones using a dynamic index buffer
 #include "SkinnedMeshComponent.generated.h"
 
 class FPrimitiveSceneProxy;
@@ -20,6 +21,7 @@ class FSkeletalMeshRenderData;
 class FSkeletalMeshLODRenderData;
 struct FSkelMeshRenderSection;
 class FPositionVertexBuffer;
+struct FSkeletalMeshIndexBufferRanges;	//#nv #Blast Ability to hide bones using a dynamic index buffer
 
 DECLARE_DELEGATE_OneParam(FOnAnimUpdateRateParamsCreated, FAnimUpdateRateParameters*)
 
@@ -39,6 +41,19 @@ enum EBoneVisibilityStatus
 	BVS_ExplicitlyHidden,
 	BVS_MAX,
 };
+
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+/** The method by which to hide bones */
+UENUM()
+enum EBoneHidingMethod
+{
+	/** Set bone transformation scales to 0 to hide them. */
+	BHM_Zero_Scale,
+	/** Use a dynamic index buffer to hide bones. */
+	BHM_Dynamic_Index_Buffer,
+	BHM_MAX,
+};
+//nv end
 
 /** PhysicsBody options when bone is hidden */
 UENUM()
@@ -716,7 +731,9 @@ public:
 	 * 
 	 * @param MeshObject - Mesh Object owned by this component
 	 */
-	virtual void PostInitMeshObject(class FSkeletalMeshObject*) {}
+	//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+	virtual void PostInitMeshObject(class FSkeletalMeshObject*);
+	//nv end
 
 	/**
 	* Simple, CPU evaluation of a vertex's skinned position (returned in component space)
@@ -998,6 +1015,35 @@ public:
 	void AddSocketOverride(FName SourceSocketName, FName OverrideSocketName, bool bWarnHasOverrided = true);
 	void RemoveSocketOverrides(FName SourceSocketName);
 	void RemoveAllSocketOverrides();
+
+	//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+	/**
+	* Set the method by which component hides bones during rendering.
+	*
+	* @param InBoneHidingMethod Enumerated index for bone hiding method (see EBoneHidingMethod)
+	*/
+	void SetBoneHidingMethod(EBoneHidingMethod InBoneHidingMethod);
+
+	/**
+	* Read the method by which component hides bones during rendering.
+	*
+	* @return current bone hiding method
+	*/
+	EBoneHidingMethod GetBoneHidingMethod() const
+	{
+		return BoneHidingMethod;
+	}
+
+protected:
+	EBoneHidingMethod BoneHidingMethod;
+
+	FSkeletalMeshDynamicOverride IndexBufferOverride;
+
+	void RebuildBoneVisibilityUpdateIndexBuffer_RenderThread(FSkeletalMeshIndexBufferRanges* CombinedResult);
+	void RebuildBoneVisibilityIndexBuffer();
+
+public:
+	//nv end
 
 	/** 
 	 * Get Bone Matrix from index

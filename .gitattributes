@@ -8,5 +8,11 @@
 # block boundaries.  This is important when files are downloaded through a zip archive that was authored on a
 # Linux machine (the default behavior on GitHub)
 
-*.bat eol=crlf
+* text=auto
 
+*.bat eol=crlf
+*.sln eol=crlf
+
+*.c text
+*.cpp text
+*.h text

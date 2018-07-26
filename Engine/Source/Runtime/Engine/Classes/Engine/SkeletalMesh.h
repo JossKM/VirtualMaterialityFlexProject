@@ -98,6 +98,54 @@ struct FBoneMirrorExport
 
 };
 
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+/** Structures to store dynamic index buffer data */
+USTRUCT()
+struct ENGINE_API FSkeletalMeshIndexBufferRanges
+{
+	GENERATED_BODY();
+
+	struct FPerSectionInfo
+	{
+		TArray<FInt32Range, TInlineAllocator<1>> Regions;
+
+		friend FArchive& operator<<(FArchive& Ar, FPerSectionInfo& S)
+		{
+			return Ar << S.Regions;
+		}
+	};
+
+	struct FPerLODInfo
+	{
+		TArray<FPerSectionInfo> Sections;
+
+		friend FArchive& operator<<(FArchive& Ar, FPerLODInfo& S)
+		{
+			return Ar << S.Sections;
+		}
+	};
+
+	TArray<FPerLODInfo> LODModels;
+
+	//Using UPROPERTIES here would result in a very large data size since the name is stored for each entry
+	bool Serialize(FArchive& Ar)
+	{
+		Ar << LODModels;
+		return true;
+	}
+};
+
+template<>
+struct TStructOpsTypeTraits<FSkeletalMeshIndexBufferRanges> : public TStructOpsTypeTraitsBase2<FSkeletalMeshIndexBufferRanges>
+{
+	enum
+	{
+		WithSerializer = true,
+		WithCopy = true,
+	};
+};
+//nv end
+
 /** Struct holding parameters needed when creating a new clothing asset or sub asset (LOD) */
 USTRUCT()
 struct ENGINE_API FSkeletalMeshClothBuildParams
@@ -786,6 +834,12 @@ private:
 	/** Cached matrices from GetComposedRefPoseMatrix */
 	TArray<FMatrix> CachedComposedRefPoseMatrices;
 
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+	/** Cached index buffer ranges */
+	UPROPERTY()
+	TArray<FSkeletalMeshIndexBufferRanges> IndexBufferRanges;
+//nv end
+
 public:
 	/**
 	* Initialize the mesh's render resources.
@@ -937,8 +991,26 @@ public:
 	 * @param InSectionIndex Section index to remove
 	 */
 	void RemoveMeshSection(int32 InLodIndex, int32 InSectionIndex);
-
 #endif // #if WITH_EDITOR
+
+//#nv begin #Blast Ability to hide bones using a dynamic index buffer
+#if WITH_EDITOR
+	/**
+	* Ensure that IndexBufferRanges is updated
+	*/
+	void RebuildIndexBufferRanges();
+#endif // #if WITH_EDITOR
+
+	/**
+	* Const accessor to IndexBufferRanges
+	*
+	* @return const reference to IndexBufferRanges
+	*/
+	const TArray<FSkeletalMeshIndexBufferRanges>& GetIndexBufferRanges() const
+	{
+		return IndexBufferRanges;
+	}
+//nv end
 
 	/**
 	* Verify SkeletalMeshLOD is set up correctly	
