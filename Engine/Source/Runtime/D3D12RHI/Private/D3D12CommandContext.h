@@ -333,6 +333,9 @@ public:
 	// NvFlow end
 
 	virtual void RHIClearMRTImpl(bool bClearColor, int32 NumClearColors, const FLinearColor* ColorArray, bool bClearDepth, float Depth, bool bClearStencil, uint32 Stencil);
+#if WITH_TXAA
+    virtual void RHIResolveTXAA(FTextureRHIParamRef Target, FTextureRHIParamRef Source, FTextureRHIParamRef Feedback, FTextureRHIParamRef Velocity, FTextureRHIParamRef Depth, const FVector2D& Jitter) override;
+#endif
 
 	virtual void RHIBeginRenderPass(const FRHIRenderPassInfo& InInfo, const TCHAR* InName) final override
 	{
@@ -755,6 +758,13 @@ public:
 	{
 		ContextRedirect(RHIBroadcastTemporalEffect(InEffectName, InTextures, NumTextures));
 	}
+    
+#if WITH_TXAA   
+    FORCEINLINE virtual void RHIResolveTXAA(FTextureRHIParamRef Target, FTextureRHIParamRef Source, FTextureRHIParamRef Feedback, FTextureRHIParamRef Velocity, FTextureRHIParamRef Depth, const FVector2D& Jitter) final AFR_API_OVERRIDE
+    {
+        ContextRedirect(RHIResolveTXAA(Target, Source, Feedback, Velocity, Depth, Jitter));
+    }
+#endif // WITH_TXAA
 
 	virtual void RHIBeginRenderPass(const FRHIRenderPassInfo& InInfo, const TCHAR* InName) final override
 	{

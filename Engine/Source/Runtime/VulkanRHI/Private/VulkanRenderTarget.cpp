@@ -2145,3 +2145,11 @@ uint16 FVulkanRenderTargetLayout::SetupSubpasses(VkSubpassDescription* OutDescs,
 	OutNumDependencies = 0;
 	return 1;
 }
+
+#if WITH_TXAA
+void FVulkanCommandListContext::RHIResolveTXAA(FTextureRHIParamRef Target, FTextureRHIParamRef Source, FTextureRHIParamRef Feedback, FTextureRHIParamRef Velocity, FTextureRHIParamRef Depth, const FVector2D& Jitter)
+{
+    UE_LOG(LogRHI, Fatal, TEXT("%s not implemented yet"), ANSI_TO_TCHAR(__FUNCTION__));
+
+}
+#endif // WITH_TXAA

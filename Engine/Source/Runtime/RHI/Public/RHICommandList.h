@@ -219,7 +219,7 @@ struct FRHICommandListDebugContext
 			{
 				DebugMarkerStack[i - 1] = DebugMarkerStack[i];
 				DebugMarkerSizes[i - 1] = DebugMarkerSizes[i];
-			}
+	}
 			DebugMarkerStackIndex = MaxDebugMarkerStackDepth - 1;
 		}
 
@@ -1398,7 +1398,7 @@ struct FRHICommandTransitionTextures final : public FRHICommand<FRHICommandTrans
 		, Textures(InTextures)
 		, TransitionType(InTransitionType)
 	{
-	}
+		}
 	RHI_API void Execute(FRHICommandListBase& CmdList);
 };
 
@@ -1430,7 +1430,7 @@ struct FRHICommandTransitionUAVs final : public FRHICommand<FRHICommandTransitio
 		, TransitionPipeline(InTransitionPipeline)
 		, WriteFence(InWriteFence)
 	{
-	}
+		}
 	RHI_API void Execute(FRHICommandListBase& CmdList);
 };
 
@@ -1897,6 +1897,35 @@ template<> void FRHICommandSetShaderTexture<FComputeShaderRHIParamRef, ECmdList:
 template<> void FRHICommandSetShaderResourceViewParameter<FComputeShaderRHIParamRef, ECmdList::ECompute>::Execute(FRHICommandListBase& CmdList);
 template<> void FRHICommandSetShaderSampler<FComputeShaderRHIParamRef, ECmdList::ECompute>::Execute(FRHICommandListBase& CmdList);
 
+#if WITH_TXAA
+
+struct FRHICommandResolveTXAA : public FRHICommand<FRHICommandResolveTXAA>
+{
+    FTextureRHIParamRef Target;
+    FTextureRHIParamRef Source;
+    FTextureRHIParamRef Feedback;
+    FTextureRHIParamRef Velocity;
+    FTextureRHIParamRef Depth;
+    FVector2D Jitter;
+
+    FORCEINLINE_DEBUGGABLE FRHICommandResolveTXAA(FTextureRHIParamRef InTarget,
+        FTextureRHIParamRef InSource,
+        FTextureRHIParamRef InFeedback,
+        FTextureRHIParamRef InVelocity,
+        FTextureRHIParamRef InDepth,
+        const FVector2D& InJitter)
+        : Target(InTarget)
+        , Source(InSource)
+        , Feedback(InFeedback)
+        , Velocity(InVelocity)
+        , Depth(InDepth)
+        , Jitter(InJitter)
+    {
+    }
+    RHI_API void Execute(FRHICommandListBase& CmdList);
+};
+
+#endif
 
 class RHI_API FRHICommandList : public FRHICommandListBase
 {
@@ -2655,7 +2684,7 @@ public:
 		for (int32 Index = 0; Index < NumTextures; ++Index)
 		{
 			InlineTextureArray[Index] = InTextures[Index];
-		}
+	}
 
 		new (AllocCommand<FRHICommandTransitionTextures>()) FRHICommandTransitionTextures(TransitionType, InlineTextureArray, NumTextures);
 	}
@@ -2704,7 +2733,7 @@ public:
 		for (int32 Index = 0; Index < NumUAVs; ++Index)
 		{
 			UAVArray[Index] = InUAVs[Index];
-		}
+	}
 
 		new (AllocCommand<FRHICommandTransitionUAVs<ECmdList::EGfx>>()) FRHICommandTransitionUAVs<ECmdList::EGfx>(TransitionType, TransitionPipeline, UAVArray, NumUAVs, WriteFence);
 	}
@@ -2866,6 +2895,17 @@ public:
 		new (AllocCommand<FRHICommandDebugBreak>()) FRHICommandDebugBreak();
 #endif
 	}
+#if WITH_TXAA
+    FORCEINLINE_DEBUGGABLE void ResolveTXAA(FTextureRHIParamRef Target, FTextureRHIParamRef Source, FTextureRHIParamRef Feedback, FTextureRHIParamRef Velocity, FTextureRHIParamRef Depth, const FVector2D& Jitter)
+    {
+        if (Bypass())
+        {
+            CMD_CONTEXT(RHIResolveTXAA)(Target, Source, Feedback, Velocity, Depth, Jitter);
+            return;
+        }
+        new (AllocCommand<FRHICommandResolveTXAA>()) FRHICommandResolveTXAA(Target, Source, Feedback, Velocity, Depth, Jitter);
+    }
+#endif
 
 	// NvFlow begin
 	FORCEINLINE_DEBUGGABLE void NvFlowWork(void(*WorkFunc)(void*,SIZE_T,IRHICommandContext*), void* ParamData, SIZE_T NumBytes)
@@ -3072,7 +3112,7 @@ public:
 		for (int32 Index = 0; Index < NumUAVs; ++Index)
 		{
 			UAVArray[Index] = InUAVs[Index];
-		}
+	}
 
 		new (AllocCommand<FRHICommandTransitionUAVs<ECmdList::ECompute> >()) FRHICommandTransitionUAVs<ECmdList::ECompute>(TransitionType, TransitionPipeline, UAVArray, NumUAVs, WriteFence);
 	}
@@ -3699,7 +3739,7 @@ public:
 	}
 	
 	FORCEINLINE void UpdateTexture2D(FTexture2DRHIParamRef Texture, uint32 MipIndex, const struct FUpdateTextureRegion2D& UpdateRegion, uint32 SourcePitch, const uint8* SourceData)
-	{		
+	{	
 		checkf(UpdateRegion.DestX + UpdateRegion.Width <= Texture->GetSizeX(), TEXT("UpdateTexture2D out of bounds on X. Texture: %s, %i, %i, %i"), *Texture->GetName().ToString(), UpdateRegion.DestX, UpdateRegion.Width, Texture->GetSizeX());
 		checkf(UpdateRegion.DestY + UpdateRegion.Height <= Texture->GetSizeY(), TEXT("UpdateTexture2D out of bounds on Y. Texture: %s, %i, %i, %i"), *Texture->GetName().ToString(), UpdateRegion.DestY, UpdateRegion.Height, Texture->GetSizeY());
 		LLM_SCOPE(ELLMTag::Textures);
