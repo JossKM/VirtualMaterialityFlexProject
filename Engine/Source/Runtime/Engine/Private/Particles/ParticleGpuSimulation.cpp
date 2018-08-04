@@ -47,6 +47,13 @@
 #include "PipelineStateCache.h"
 #include "SceneRenderTargetParameters.h"
 
+//#nv begin #flex
+#if WITH_FLEX
+#include "GameWorks/IFlexPluginBridge.h"
+#include "GameWorks/FlexPluginGPUParticles.h"
+#endif
+//#nv end
+
 // NvFlow begin
 #define NV_FLOW_WITH_GPU_PARTICLES 1
 
@@ -1018,7 +1025,12 @@ public:
 	{
 		FGlobalShader::ModifyCompilationEnvironment( Parameters, OutEnvironment );
 		OutEnvironment.SetDefine(TEXT("TILES_PER_INSTANCE"), TILES_PER_INSTANCE);
-
+		//#nv begin #flex
+#if WITH_FLEX
+		OutEnvironment.SetDefine(TEXT("TILE_SIZE"), GParticleSimulationTileSize);
+		OutEnvironment.SetDefine(TEXT("WITH_FLEX"), 1);
+#endif
+		//#nv end
 		if (Parameters.Platform == SP_OPENGL_ES2_ANDROID)
 		{
 			OutEnvironment.CompilerFlags.Add(CFLAG_FeatureLevelES31);
@@ -1096,6 +1108,13 @@ public:
 		OutEnvironment.SetDefine(TEXT("NV_FLOW_WITH_GPU_PARTICLES"), 1);
 #endif
 		// NvFlow end
+
+		//#nv begin #flex
+#if WITH_FLEX
+		OutEnvironment.SetDefine(TEXT("WITH_FLEX"), CollisionMode == PCM_Flex);
+		OutEnvironment.SetDefine(TEXT("TILE_SIZE"), GParticleSimulationTileSize);
+#endif
+		//#nv end
 		OutEnvironment.SetRenderTargetOutputFormat(0, PF_A32B32G32R32F);
 
 		if (Parameters.Platform == SP_OPENGL_ES2_ANDROID)
@@ -1131,6 +1150,11 @@ public:
 		CollisionDepthBounds.Bind(Initializer.ParameterMap,TEXT("CollisionDepthBounds"));
 		PerFrameParameters.Bind(Initializer.ParameterMap);
 		GlobalDistanceFieldParameters.Bind(Initializer.ParameterMap);
+		//#nv begin #flex
+#if WITH_FLEX
+		FlexSimulationParameters.Bind(Initializer.ParameterMap);
+#endif
+		//#nv end
 
 		// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
@@ -1166,6 +1190,12 @@ public:
 		Ar << CollisionDepthBounds;
 		Ar << PerFrameParameters;
 		Ar << GlobalDistanceFieldParameters;
+		//#nv begin #flex
+#if WITH_FLEX
+		Ar << FlexSimulationParameters;
+#endif
+		//#nv end
+
 		// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
 		for (int32 i = 0; i < MAX_NVFLOW_GRIDS; ++i)
@@ -1261,6 +1291,16 @@ public:
 		PerFrameParameters.Set(RHICmdList, PixelShaderRHI, InPerFrameParameters, bUseFixDT);
 	}
 
+	//#nv begin #flex
+#if WITH_FLEX
+	void SetFlexSimulationParameters(FRHICommandList& RHICmdList, const FFlexGPUParticleSimulationParameters& InFlexSimulationParameters)
+	{
+		FPixelShaderRHIParamRef PixelShaderRHI = GetPixelShader();
+		FlexSimulationParameters.Set(RHICmdList, PixelShaderRHI, InFlexSimulationParameters);
+	}
+#endif
+	//#nv end
+
 	/**
 	 * Unbinds buffers that may need to be bound as UAVs.
 	 */
@@ -1275,6 +1315,12 @@ public:
 				RHICmdList.SetShaderResourceViewParameter(PixelShaderRHI, VectorFieldTextures[i].GetBaseIndex(), NullSRV);
 			}
 		}
+		//#nv begin #flex
+#if WITH_FLEX
+		FlexSimulationParameters.UnbindBuffers(RHICmdList, PixelShaderRHI);
+#endif
+		//#nv end
+
 		// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
 		for (int32 i = 0; i < MAX_NVFLOW_GRIDS; ++i)
@@ -1330,6 +1376,11 @@ private:
 	/** Collision depth bounds. */
 	FShaderParameter CollisionDepthBounds;
 	FGlobalDistanceFieldParameters GlobalDistanceFieldParameters;
+	//#nv begin #flex
+#if WITH_FLEX
+	FFlexGPUParticleSimulationShaderParameters FlexSimulationParameters;
+#endif
+	//#nv end
 
 	// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
@@ -1391,6 +1442,11 @@ IMPLEMENT_SHADER_TYPE(template<>,TParticleSimulationPS<PCM_None>,TEXT("/Engine/P
 IMPLEMENT_SHADER_TYPE(template<>,TParticleSimulationPS<PCM_DepthBuffer>,TEXT("/Engine/Private/ParticleSimulationShader.usf"),TEXT("PixelMain"),SF_Pixel);
 IMPLEMENT_SHADER_TYPE(template<>,TParticleSimulationPS<PCM_DistanceField>,TEXT("/Engine/Private/ParticleSimulationShader.usf"),TEXT("PixelMain"),SF_Pixel);
 IMPLEMENT_SHADER_TYPE(,FParticleSimulationClearPS,TEXT("/Engine/Private/ParticleSimulationShader.usf"),TEXT("PixelMain"),SF_Pixel);
+//#nv begin #flex
+#if WITH_FLEX
+IMPLEMENT_SHADER_TYPE(template<>, TParticleSimulationPS<PCM_Flex>, TEXT("/Engine/Private/ParticleSimulationShader.usf"), TEXT("PixelMain"), SF_Pixel);
+#endif
+//#nv end
 
 /**
  * Vertex declaration for drawing particle tiles.
@@ -1567,6 +1623,11 @@ struct FSimulationCommandGPU
 	FTexture3DRHIParamRef VectorFieldTexturesRHI[MAX_VECTOR_FIELDS];
 	/** The number of tiles to simulate. */
 	int32 UnalignedTileCount;
+	//#nv begin #flex
+#if WITH_FLEX
+	FFlexGPUParticleSimulationParameters FlexSimulationParameters;
+#endif
+	//#nv end
 
 	// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
@@ -1659,6 +1720,15 @@ void ExecuteSimulationCommands(
 		PixelShader->SetNvFlowGridParameters(RHICmdList, Command.NvFlowGridUniformBuffer, Command.NvFlowGridDataSRV, Command.NvFlowGridBlockTableSRV);
 #endif
 		// NvFlow end
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (CollisionMode == PCM_Flex)
+		{
+			PixelShader->SetFlexSimulationParameters(RHICmdList, Command.FlexSimulationParameters);
+		}
+#endif
+		//#nv end
 		
 		if (FeatureLevel <= ERHIFeatureLevel::ES3_1)
 		{
@@ -1689,6 +1759,25 @@ void ExecuteSimulationCommands(
 	EParticleSimulatePhase::Type Phase,
 	bool bUseFixDT)
 {
+	//#nv begin #flex
+#if WITH_FLEX
+	if (Phase == EParticleSimulatePhase::Flex)
+	{
+		ExecuteSimulationCommands<PCM_Flex>(
+			RHICmdList,
+			GraphicsPSOInit,
+			FeatureLevel,
+			SimulationCommands,
+			ParticleSimulationResources,
+			NULL,
+			GlobalDistanceFieldParameterData,
+			FTexture2DRHIParamRef(),
+			FTexture2DRHIParamRef(),
+			bUseFixDT);
+	}
+	else
+#endif
+	//#nv begin #flex
 	if (Phase == EParticleSimulatePhase::CollisionDepthBuffer && ViewUniformBuffer)
 	{
 		ExecuteSimulationCommands<PCM_DepthBuffer>(
@@ -2733,6 +2822,12 @@ public:
 	/** Allows disabling of simulation. */
 	bool bEnabled;
 
+	//#nv begin #flex
+#if WITH_FLEX
+	FRenderResource* FlexSimulationResource;
+#endif
+	//#nv end
+
 	// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
 	bool bEnableGridInteraction;
@@ -2756,6 +2851,12 @@ public:
 		, bReleased_GameThread(true)
 		, bDestroyed_GameThread(false)
 		, bEnabled(true)
+		//#nv begin #flex
+#if WITH_FLEX
+		, FlexSimulationResource(nullptr)
+#endif
+		//#nv end
+
 		// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES
 		, bEnableGridInteraction(false)
@@ -2770,6 +2871,12 @@ public:
 	{
 		delete VectorFieldVisualizationVertexFactory;
 		VectorFieldVisualizationVertexFactory = NULL;
+		//#nv begin #flex
+#if WITH_FLEX
+		delete FlexSimulationResource;
+		FlexSimulationResource = nullptr;
+#endif
+		//#nv end
 	}
 
 	/**
@@ -2845,6 +2952,14 @@ private:
 		{
 			VectorFieldVisualizationVertexFactory->ReleaseResource();
 		}
+		//#nv begin #flex
+#if WITH_FLEX
+		if (FlexSimulationResource)
+		{
+			FlexSimulationResource->ReleaseResource();
+		}
+#endif
+		//#nv end
 	}
 };
 
@@ -3092,6 +3207,15 @@ public:
 		{
 			Exchange(Simulation->TilesToClear, TilesToClear);
 		}
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (Simulation->SimulationPhase == EParticleSimulatePhase::Flex)
+		{
+			return;
+		}
+#endif
+		//#nv end
 
 		const bool bTranslucent = RendersWithTranslucentMaterial();
 		const bool bSupportsDepthBufferCollision = IsParticleCollisionModeSupported(FXSystem->GetShaderPlatform(), PCM_DepthBuffer);
@@ -3434,6 +3558,15 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 	virtual bool IsDynamicDataRequired(UParticleLODLevel* InCurrentLODLevel) override
 	{
 		bool bShouldRender = (ActiveParticles >= 0 || TilesToClear.Num() || NewParticles.Num());
+		//#nv begin #flex
+#if WITH_FLEX
+		if (FlexEmitterInstance)
+		{
+			verify(GFlexPluginBridge);
+			bShouldRender &= GFlexPluginBridge->GPUSpriteEmitterInstance_ShouldRenderParticles(FlexEmitterInstance);
+		}
+#endif
+		//#nv end
 		bool bCanRender = (FXSystem != NULL) && (Component != NULL) && (Component->FXSystem == FXSystem);
 		return bShouldRender && bCanRender;
 	}
@@ -3455,6 +3588,15 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 		{
 			return NULL;
 		}
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (!IsDynamicDataRequired(LODLevel))
+		{
+			return NULL;
+		}
+#endif
+		//#nv end
 
 		UParticleSystem *Template = Component->Template;
 
@@ -3727,6 +3869,22 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 		CurrentMaterial = EmitterInfo.RequiredModule ? EmitterInfo.RequiredModule->Material : UMaterial::GetDefaultMaterial(MD_Surface);
 
 		InitLocalVectorField();
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (FlexEmitterInstance)
+		{
+			verify(GFlexPluginBridge);
+			// check if this is the first call to Init()
+			if (Simulation->SimulationPhase != EParticleSimulatePhase::Flex)
+			{
+				Simulation->FlexSimulationResource = GFlexPluginBridge->GPUSpriteEmitterInstance_Init(FlexEmitterInstance, GParticlesPerTile);
+				Simulation->SimulationPhase = EParticleSimulatePhase::Flex;
+			}
+			GFlexPluginBridge->GPUSpriteEmitterInstance_AllocParticleIndices(FlexEmitterInstance, NumAllocated);
+		}
+#endif
+		//#nv end
 	}
 
 	FORCENOINLINE void ReserveNewParticles(int32 Num)
@@ -3771,6 +3929,16 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 		Simulation->bEnabled = bEnabled;
 		if (bEnabled)
 		{
+			//#nv begin #flex
+#if WITH_FLEX
+			if (FlexEmitterInstance)
+			{
+				verify(GFlexPluginBridge);
+				GFlexPluginBridge->GPUSpriteEmitterInstance_Tick(FlexEmitterInstance, DeltaSeconds, bSuppressSpawning, Simulation->FlexSimulationResource);
+			}
+#endif
+			//#nv end
+
 			// If the emitter is warming up but any particle spawned now will die
 			// anyway, suppress spawning.
 			if (Component && Component->bWarmingUp &&
@@ -3798,8 +3966,39 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 				FSpawnInfo BurstInfo;
 				int32 LeftoverBurst = 0;
 				{
+					//#nv begin #flex
+#if WITH_FLEX
+					const float OldLeftover = SpawnFraction;
+					bool bProcessBurstList = true;
+					// Process all Spawning modules that are present in the emitter.
+					for (int32 SpawnModIndex = 0; SpawnModIndex < LODLevel->SpawningModules.Num(); SpawnModIndex++)
+					{
+						UParticleModuleSpawnBase* SpawnModule = LODLevel->SpawningModules[SpawnModIndex];
+						if (SpawnModule && SpawnModule->bEnabled)
+						{
+							// Update the burst list
+							int32 BurstNumber = 0;
+							if (SpawnModule->GetBurstCount(this, /*Offset=*/ 0, OldLeftover, DeltaSeconds, BurstNumber) == false)
+							{
+								bProcessBurstList = false;
+							}
+
+							BurstInfo.Count += BurstNumber;
+						}
+					}
+
+					// Take Bursts into account as well...
+					if (bProcessBurstList)
+					{
+						int32 Burst = 0;
+						float BurstTime = GetCurrentBurstRateOffset(DeltaSeconds, Burst);
+						BurstInfo.Count += Burst;
+					}
+#else
 					float BurstDeltaTime = DeltaSeconds;
 					GetCurrentBurstRateOffset(BurstDeltaTime, BurstInfo.Count);
+#endif
+					//#nv end
 
 					BurstInfo.Count += ForceBurstSpawnedParticles.Num();
 
@@ -3932,6 +4131,16 @@ FGPUSpriteParticleEmitterInstance(FFXSystem* InFXSystem, FGPUSpriteEmitterInfo& 
 		TileToAllocateFrom = INDEX_NONE;
 		FreeParticlesInTile = 0;
 		ActiveTiles.Init(false,ActiveTiles.Num());
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (FlexEmitterInstance)
+		{
+			verify(GFlexPluginBridge);
+			GFlexPluginBridge->GPUSpriteEmitterInstance_DestroyAllParticles(FlexEmitterInstance, false); // false - don't free all FlexParticleIndices
+		}
+#endif
+		//#nv end
 	}
 
 	/**
@@ -4017,6 +4226,15 @@ private:
 			const int32 BitIndex = BitIt.GetIndex();
 			if (TileTimeOfDeath[BitIndex] <= SecondsSinceCreation)
 			{
+				//#nv begin #flex
+#if WITH_FLEX
+				if (FlexEmitterInstance)
+				{
+					verify(GFlexPluginBridge);
+					GFlexPluginBridge->GPUSpriteEmitterInstance_DestroyTileParticles(FlexEmitterInstance, BitIndex);
+				}
+#endif
+
 				ActiveTiles.AccessCorrespondingBit(BitIt) = false;
 				if ( TileToAllocateFrom == BitIndex )
 				{
@@ -4105,6 +4323,16 @@ private:
 			AllocatedTiles.RemoveAt(FirstTileIndex, TilesToFree);
 			TileTimeOfDeath.RemoveAt(FirstTileIndex, TilesToFree);
 			Simulation->bDirty_GameThread = true;
+
+			//#nv begin #flex
+#if WITH_FLEX
+			if (FlexEmitterInstance)
+			{
+				verify(GFlexPluginBridge);
+				GFlexPluginBridge->GPUSpriteEmitterInstance_FreeParticleIndices(FlexEmitterInstance, FirstTileIndex, TilesToFree);
+			}
+#endif
+			//#nv end
 		}
 		return TilesToFree;
 	}
@@ -4143,6 +4371,15 @@ private:
 				*Component->GetName(),*Component->Template->GetName(),(PTRINT)this, AllocatedTiles.Num(), (PTRINT)FXSystem);
 		}
 
+		//#nv begin #flex
+#if WITH_FLEX
+		if (FlexEmitterInstance)
+		{
+			verify(GFlexPluginBridge);
+			GFlexPluginBridge->GPUSpriteEmitterInstance_DestroyAllParticles(FlexEmitterInstance, true); // true - free all FlexParticleIndices
+		}
+#endif
+		//#nv end
 
 		ActiveTiles.Reset();
 		AllocatedTiles.Reset();
@@ -4168,6 +4405,26 @@ private:
 		{
 			return 0;
 		}
+
+		//#nv begin #flex
+#if WITH_FLEX
+		const int32 FlexStartIndex = InNewParticles.Num();
+		if (FlexEmitterInstance)
+		{
+			verify(GFlexPluginBridge);
+			int32 NumFlexParticles = GFlexPluginBridge->GPUSpriteEmitterInstance_CreateNewParticles(FlexEmitterInstance, FlexStartIndex, NumNewParticles);
+			if (NumFlexParticles < NumNewParticles)
+			{
+				UE_LOG(LogParticles, Warning,
+					TEXT("Failed to create a flex particles for %s! %d new particles truncated to %d."),
+					*Component->Template->GetName(), NumNewParticles, NumFlexParticles);
+
+				NumNewParticles = NumFlexParticles;
+			}
+		}
+#endif
+		//#nv end
+
 		// Need to allocate space in tiles for all new particles.
 		FParticleSimulationResources* SimulationResources = FXSystem->GetParticleSimulationResources();
 		uint32 TileIndex = (AllocatedTiles.IsValidIndex(TileToAllocateFrom)) ? AllocatedTiles[TileToAllocateFrom] : INDEX_NONE;
@@ -4190,6 +4447,16 @@ private:
 					uint32 NewTile = SimulationResources->AllocateTile();
 					if (NewTile == INDEX_NONE)
 					{
+						//#nv begin #flex
+#if WITH_FLEX
+						if (FlexEmitterInstance)
+						{
+							verify(GFlexPluginBridge);
+							GFlexPluginBridge->GPUSpriteEmitterInstance_DestroyNewParticles(FlexEmitterInstance, FlexStartIndex + ParticleIndex, NumNewParticles - ParticleIndex);
+						}
+#endif
+						//#nv end
+
 						// Out of particle tiles.
 						UE_LOG(LogParticles,Warning,
 							TEXT("Failed to allocate tiles for %s! %d new particles truncated to %d."),
@@ -4202,6 +4469,16 @@ private:
 					TilesToClear.Add(NewTile);
 					ActiveTiles.Add(true);
 					Simulation->bDirty_GameThread = true;
+
+					//#nv begin #flex
+#if WITH_FLEX
+					if (FlexEmitterInstance)
+					{
+						verify(GFlexPluginBridge);
+						GFlexPluginBridge->GPUSpriteEmitterInstance_AllocParticleIndices(FlexEmitterInstance, 1);
+					}
+#endif
+					//#nv end
 				}
 
 				ActiveTileCount++;
@@ -4218,6 +4495,17 @@ private:
 			Particle.Offset.Y = TileOffset.Y + ((float)SubTileY / (float)GParticleSimulationTextureSizeY);
 			Particle.ResilienceAndTileIndex.AllocatedTileIndex = TileToAllocateFrom;
 			FreeParticlesInTile--;
+
+			//#nv begin #flex
+#if WITH_FLEX
+			if (FlexEmitterInstance)
+			{
+				verify(GFlexPluginBridge);
+				GFlexPluginBridge->GPUSpriteEmitterInstance_AddNewParticle(FlexEmitterInstance,
+					FlexStartIndex + ParticleIndex, TileToAllocateFrom, SubTileIndex);
+			}
+#endif
+			//#nv end
 		}
 
 		return NumNewParticles;
@@ -4371,6 +4659,17 @@ private:
 			const float ParticleTimeOfDeath = SecondsSinceCreation + 1.0f / NewParticle->TimeScale;
 			const float NewTileTimeOfDeath = FMath::Max(PrevTileTimeOfDeath, ParticleTimeOfDeath);
 			TileTimeOfDeath[AllocatedTileIndex] = NewTileTimeOfDeath;
+
+			//#nv begin #flex
+#if WITH_FLEX
+			if (FlexEmitterInstance)
+			{
+				verify(GFlexPluginBridge);
+				GFlexPluginBridge->GPUSpriteEmitterInstance_SetNewParticle(FlexEmitterInstance, NewParticle - NewParticles.GetData(),
+					NewParticle->Position, NewParticle->Velocity, NewParticle->RelativeTime, NewParticle->TimeScale, FMath::Abs(BaseSize.X) * EmitterInfo.InvMaxSize.X);
+			}
+#endif
+			//#nv end
 		}
 	}
 
@@ -5008,6 +5307,16 @@ void FFXSystem::SimulateGPUParticles(
 					SimulationCommand->VectorFieldsUniformBuffer = FVectorFieldUniformBufferRef::CreateUniformBufferImmediate(VectorFieldParameters, UniformBuffer_SingleFrame);
 #endif
 				}
+
+				//#nv begin #flex
+#if WITH_FLEX
+				if (Simulation->SimulationPhase == EParticleSimulatePhase::Flex)
+				{
+					verify(GFlexPluginBridge);
+					GFlexPluginBridge->GPUSpriteEmitterInstance_FillSimulationParams(Simulation->FlexSimulationResource, SimulationCommand->FlexSimulationParameters);
+				}
+#endif
+				//#nv end
 			}
 			// NvFlow begin
 #if NV_FLOW_WITH_GPU_PARTICLES

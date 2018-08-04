@@ -35,6 +35,11 @@
 #include "MeshDescription.h"
 #include "MeshAttributes.h"
 
+//#nv begin #flex
+#if WITH_FLEX
+#include "GameWorks/IFlexEditorPluginBridge.h"
+#endif
+//#nv end
 
 bool GBuildStaticMeshCollision = 1;
 
@@ -1091,6 +1096,11 @@ struct ExistingStaticMeshData
 
 	UModel*						ExistingCollisionModel;
 	UBodySetup*					ExistingBodySetup;
+	//#nv begin #flex
+#if WITH_FLEX
+	class UFlexAsset*			ExistingFlexAsset;
+#endif
+	//#nv end
 
 	// A mapping of vertex positions to their color in the existing static mesh
 	TMap<FVector, FColor>		ExistingVertexColorData;
@@ -1243,7 +1253,11 @@ ExistingStaticMeshData* SaveExistingStaticMeshData(UStaticMesh* ExistingMesh, Un
 		ExistingMeshDataPtr->ExistingThumbnailInfo = ExistingMesh->ThumbnailInfo;
 
 		ExistingMeshDataPtr->ExistingBodySetup = ExistingMesh->BodySetup;
-
+		//#nv begin #flex
+#if WITH_FLEX
+		ExistingMeshDataPtr->ExistingFlexAsset = GFlexEditorPluginBridge ? GFlexEditorPluginBridge->GetFlexAsset(ExistingMesh) : nullptr;
+#endif
+		//#nv end
 		ExistingMeshDataPtr->LpvBiasMultiplier = ExistingMesh->LpvBiasMultiplier;
 		ExistingMeshDataPtr->bHasNavigationData = ExistingMesh->bHasNavigationData;
 		ExistingMeshDataPtr->LODGroup = ExistingMesh->LODGroup;
@@ -1703,6 +1717,15 @@ void RestoreExistingMeshData(ExistingStaticMeshData* ExistingMeshDataPtr, UStati
 		
 
 	NewMesh->ThumbnailInfo = ExistingMeshDataPtr->ExistingThumbnailInfo.Get();
+
+		//#nv begin #flex
+#if WITH_FLEX
+		if (GFlexEditorPluginBridge && ExistingMeshDataPtr->ExistingFlexAsset)
+		{
+			GFlexEditorPluginBridge->SetFlexAsset(NewMesh, ExistingMeshDataPtr->ExistingFlexAsset);
+		}
+#endif
+		//#nv end
 
 	// If we already had some collision info...
 	if(ExistingMeshDataPtr->ExistingBodySetup)

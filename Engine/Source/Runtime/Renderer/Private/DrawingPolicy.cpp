@@ -76,7 +76,12 @@ void FMeshDrawingPolicy::SetInstanceParameters(FRHICommandList& RHICmdList, cons
 	}
 	else
 	{
-		BaseVertexShader->SetInstanceParameters(RHICmdList, InVertexOffset, InInstanceOffset, InInstanceCount);
+		//#nv begin #flex
+		if (BaseVertexShader)
+		{
+			BaseVertexShader->SetInstanceParameters(RHICmdList, InVertexOffset, InInstanceOffset, InInstanceCount);
+		}
+		//#nv end
 	}
 }
 

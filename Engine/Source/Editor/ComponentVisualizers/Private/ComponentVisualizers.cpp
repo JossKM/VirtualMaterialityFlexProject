@@ -36,6 +36,11 @@
 #include "PhysicsEngine/PhysicalAnimationComponent.h"
 #include "Components/StereoLayerComponent.h"
 #include "ForceFeedbackComponentVisualizer.h"
+//#nv begin #flex
+#if WITH_FLEX
+#include "GameWorks/IFlexEditorPluginBridge.h"
+#endif
+//#nv end
 
 // NvFlow begin
 #include "GameWorks/RendererHooksNvFlow.h"
@@ -67,6 +72,15 @@ void FComponentVisualizersModule::StartupModule()
 		GEditorRendererHooksNvFlow->NvFlowRegisterVisualizer(this);
 	}
 	// NvFlow end
+
+	//#nv begin #flex
+#if WITH_FLEX
+	if (GFlexEditorPluginBridge)
+	{
+		GFlexEditorPluginBridge->RegisterComponentVisualizers(this);
+	}
+#endif
+	//#nv end
 }
 
 void FComponentVisualizersModule::ShutdownModule()

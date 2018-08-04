@@ -28,6 +28,12 @@
 #include "RendererModule.h"
 #include "VT/VirtualTextureSystem.h"
 #include "VT/VirtualTextureFeedback.h"
+//#nv begin #flex
+#if WITH_FLEX
+#include "GameWorks/IFlexFluidSurfaceRendering.h"
+#endif
+//#nv end
+
 // @third party code - BEGIN HairWorks
 #include "HairWorksRenderer.h"
 // @third party code - END HairWorks
@@ -887,6 +893,12 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 		GPUSkinCache->TransitionAllToReadable(RHICmdList);
 	}
 
+	//#nv begin #flex
+#if WITH_FLEX
+	GFlexFluidSurfaceRenderer->PreRenderOpaque(RHICmdList, Views);
+#endif
+	//#nv end
+
 	// Before starting the render, all async task for the Custom data must be completed
 	if (UpdateViewCustomDataEvents.Num() > 0)
 	{
@@ -1324,6 +1336,12 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 			);
 		ServiceLocalQueue();
 	}
+
+	//#nv begin #flex
+#if WITH_FLEX
+	GFlexFluidSurfaceRenderer->PostRenderOpaque(RHICmdList, Views);
+#endif
+	//#nv end
 
 	TRefCountPtr<IPooledRenderTarget> VelocityRT;
 

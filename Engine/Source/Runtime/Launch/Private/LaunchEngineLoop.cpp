@@ -1916,6 +1916,12 @@ int32 FEngineLoop::PreInit(const TCHAR* CmdLine)
 		FShaderPipelineCache::Initialize(GMaxRHIShaderPlatform);
 	}
 
+	//#nv begin #flex
+#if WITH_FLEX
+	InitGamePhysPostRHI();
+#endif
+	//#nv end
+
 	FString Commandline = FCommandLine::Get();
 	bool EnableShaderCompile = !FParse::Param(*Commandline, TEXT("NoShaderCompile"));
 

@@ -40,6 +40,11 @@ public:
 	TSharedPtr< FUICommandInfo > ResetCamera;
 	TSharedPtr< FUICommandInfo > SetShowSockets;
 	TSharedPtr< FUICommandInfo > SetDrawAdditionalData;
+	//#nv begin #flex
+#if WITH_FLEX
+	TSharedPtr< FUICommandInfo > SetDrawFlexPreview;
+#endif
+	//#nv end
 
 	// Mesh toolbar Commands
 	TSharedPtr< FUICommandInfo > ReimportMesh;

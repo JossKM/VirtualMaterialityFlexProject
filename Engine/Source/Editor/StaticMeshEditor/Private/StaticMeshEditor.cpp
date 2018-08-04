@@ -46,6 +46,13 @@
 #include "FbxMeshUtils.h"
 #include "RawMesh.h"
 
+//#nv begin #flex
+#if WITH_FLEX
+#include "GameWorks/IFlexEditorPluginBridge.h"
+#endif
+//#nv end
+
+
 #define LOCTEXT_NAMESPACE "StaticMeshEditor"
 
 DEFINE_LOG_CATEGORY_STATIC(LogStaticMeshEditor, Log, All);
@@ -703,6 +710,15 @@ void FStaticMeshEditor::ExtendToolBar()
 					LOCTEXT("UVToolbarText", "UV"),
 					LOCTEXT("UVToolbarTooltip", "Toggles display of the static mesh's UVs for the specified channel."),
 					FSlateIcon(FEditorStyle::GetStyleSetName(), "StaticMeshEditor.SetDrawUVs"));
+
+				//#nv begin #flex
+#if WITH_FLEX
+				if (GFlexEditorPluginBridge && GFlexEditorPluginBridge->IsFlexStaticMesh(ThisEditor->GetStaticMesh()))
+				{
+					ToolbarBuilder.AddToolBarButton(FStaticMeshEditorCommands::Get().SetDrawFlexPreview);
+				}
+#endif
+				//#nv end
 			}
 
 			ToolbarBuilder.EndSection();
@@ -2140,6 +2156,19 @@ void FStaticMeshEditor::NotifyPostChange( const FPropertyChangedEvent& PropertyC
 			RefreshTool();
 		}
 	}
+
+	//#nv begin #flex
+#if WITH_FLEX
+	//update preview flex mesh post UFlexAsset::ReImport
+	if (GFlexEditorPluginBridge)
+	{
+		if (GFlexEditorPluginBridge->IsChildOfFlexAsset(PropertyThatChanged->GetOwnerClass()) || *PropertyThatChanged->GetName() == FName(TEXT("FlexAsset")))
+		{
+			Viewport->UpdateFlexPreviewComponent();
+		}
+	}
+#endif
+	//#nv end
 }
 
 void FStaticMeshEditor::UndoAction()
@@ -2190,6 +2219,12 @@ void FStaticMeshEditor::OnPostReimport(UObject* InObject, bool bSuccess)
 	{
 		RefreshTool();
 	}
+
+	//#nv begin #flex
+#if WITH_FLEX
+	Viewport->UpdateFlexPreviewComponent();
+#endif
+	//#nv end
 }
 
 void FStaticMeshEditor::SetCurrentViewedUVChannel(int32 InNewUVChannel)

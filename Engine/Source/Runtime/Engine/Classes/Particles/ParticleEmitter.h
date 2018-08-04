@@ -11,6 +11,11 @@
 #include "Stats/Stats.h"
 #include "UObject/ObjectMacros.h"
 #include "UObject/Object.h"
+
+//#nv begin #flex
+#include "GameWorks/FlexPluginCommon.h"
+//#nv end
+
 #include "ParticleEmitterInstances.h"
 #include "ParticleEmitter.generated.h"
 
@@ -211,6 +216,32 @@ class UParticleEmitter : public UObject
 	FString DetailModeDisplay;
 #endif // WITH_EDITORONLY_DATA
 
+	//#nv begin #flex
+	/** The Flex container to emit into */
+	UPROPERTY()
+	class UObject* FlexContainerTemplate_DEPRECATED; // UFlexContainer*
+
+	/** Phase assigned to spawned Flex particles */
+	UPROPERTY()
+	FFlexPhase Phase_DEPRECATED;
+
+	/** Enable local-space simulation when parented */
+	UPROPERTY()
+	uint32 bLocalSpace_DEPRECATED : 1;
+
+	/** Control Local Inertial components */
+	UPROPERTY()
+	FFlexInertialScale InertialScale_DEPRECATED;
+
+	/** Mass assigned to Flex particles */
+	UPROPERTY()
+	float Mass_DEPRECATED;
+
+	/** LEGACY: Optional Flex fluid surface for rendering */
+	UPROPERTY()
+	class UObject* FlexFluidSurfaceTemplate_DEPRECATED; // UFlexFluidSurface*
+	//#nv end
+
 	/** Map module pointers to their offset into the particle data.		*/
 	TMap<UParticleModule*, uint32> ModuleOffsetMap;
 
@@ -243,8 +274,7 @@ class UParticleEmitter : public UObject
 
 	//~ Begin UObject Interface
 #if WITH_EDITOR
-	virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
-
+	ENGINE_API virtual void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
 #endif
 
 #if WITH_EDITORONLY_DATA
@@ -257,19 +287,19 @@ class UParticleEmitter : public UObject
 		DetailModeDisplay += DetailModeBitmask & (1 << EParticleDetailMode::PDM_High) ? "High" : "";
 	}
 #endif // WITH_EDITORONLY_DATA
-	virtual void Serialize(FArchive& Ar)override;
-	virtual void PostLoad() override;
-	virtual bool IsPostLoadThreadSafe() const override;
+	ENGINE_API virtual void Serialize(FArchive& Ar)override;
+	ENGINE_API virtual void PostLoad() override;
+	ENGINE_API virtual bool IsPostLoadThreadSafe() const override;
 	//~ End UObject Interface
 
 	// @todo document
-	virtual FParticleEmitterInstance* CreateInstance(UParticleSystemComponent* InComponent);
+	ENGINE_API virtual FParticleEmitterInstance* CreateInstance(UParticleSystemComponent* InComponent);
 
 	// Sets up this emitter with sensible defaults so we can see some particles as soon as its created.
 	virtual void SetToSensibleDefaults() {}
 
 	// @todo document
-	virtual void UpdateModuleLists();
+	ENGINE_API virtual void UpdateModuleLists();
 
 	// @todo document
 	ENGINE_API void SetEmitterName(FName Name);
@@ -278,7 +308,7 @@ class UParticleEmitter : public UObject
 	ENGINE_API FName& GetEmitterName();
 
 	// @todo document
-	virtual	void						SetLODCount(int32 LODCount);
+	ENGINE_API virtual void	SetLODCount(int32 LODCount);
 
 	// For Cascade
 	// @todo document
@@ -366,7 +396,7 @@ class UParticleEmitter : public UObject
 	 *
 	 *	@return	bool				true if successful, false if not.
 	 */
-	virtual bool		AutogenerateLowestLODLevel(bool bDuplicateHighest = false);
+	ENGINE_API virtual bool		AutogenerateLowestLODLevel(bool bDuplicateHighest = false);
 	
 	/**
 	 *	CalculateMaxActiveParticleCount
@@ -376,7 +406,7 @@ class UParticleEmitter : public UObject
 	 *	@return	true	if the number was determined
 	 *			false	if the number could not be determined
 	 */
-	virtual bool		CalculateMaxActiveParticleCount();
+	ENGINE_API virtual bool		CalculateMaxActiveParticleCount();
 
 	/**
 	 *	Retrieve the parameters associated with this particle system.

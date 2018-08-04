@@ -48,7 +48,7 @@ DECLARE_MULTICAST_DELEGATE_OneParam(FRecalculatedMassProperties, FBodyInstance*)
 /**
  * Physics stats
  */
-DECLARE_CYCLE_STAT_EXTERN(TEXT("FetchAndStart Time (all)"), STAT_TotalPhysicsTime, STATGROUP_Physics, );
+DECLARE_CYCLE_STAT_EXTERN(TEXT("FetchAndStart Time (all)"), STAT_TotalPhysicsTime, STATGROUP_Physics, ENGINE_API);
 DECLARE_DWORD_COUNTER_STAT_EXTERN(TEXT("Cloth Actor Count"), STAT_NumCloths, STATGROUP_Physics, ENGINE_API);
 DECLARE_DWORD_COUNTER_STAT_EXTERN(TEXT("Simulated Cloth Verts"), STAT_NumClothVerts, STATGROUP_Physics, ENGINE_API);
 
@@ -360,6 +360,13 @@ void UnloadPhysXModules();
 }
 
 ENGINE_API bool	InitGamePhys();
+
+//#nv begin #flex
+#if WITH_FLEX
+ENGINE_API void	InitGamePhysPostRHI();
+#endif
+//#nv end
+
 ENGINE_API void	TermGamePhys();
 
 /** Perform any deferred cleanup of resources (GPhysXPendingKillConvex etc) */

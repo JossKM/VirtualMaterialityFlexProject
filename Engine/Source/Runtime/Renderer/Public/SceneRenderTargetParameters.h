@@ -140,7 +140,7 @@ class RENDERER_API FSceneTextureShaderParameters
 {
 public:
 	/** Binds the parameters using a compiled shader's parameter map. */
-	void Bind(const FShader::CompiledShaderInitializerType& Initializer)
+	RENDERER_API void Bind(const FShader::CompiledShaderInitializerType& Initializer)
 	{
 		BindSceneTextureUniformBufferDependentOnShadingPath(Initializer, SceneTexturesUniformBuffer, MobileSceneTexturesUniformBuffer);
 	}
@@ -162,7 +162,7 @@ public:
 	}
 
 	/** Serializer. */
-	friend FArchive& operator<<(FArchive& Ar,FSceneTextureShaderParameters& P)
+	RENDERER_API friend FArchive& operator<<(FArchive& Ar,FSceneTextureShaderParameters& P)
 	{
 		Ar << P.SceneTexturesUniformBuffer;
 		Ar << P.MobileSceneTexturesUniformBuffer;
