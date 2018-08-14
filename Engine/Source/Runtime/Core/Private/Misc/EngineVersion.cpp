@@ -151,6 +151,7 @@ FString FEngineVersion::ToString(EVersionComponent LastComponent) const
 			}
 		}
 	}
+	Result += FString(TEXT("+GameWorks"));
 	return Result;
 }
 
