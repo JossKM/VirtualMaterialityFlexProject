@@ -26,6 +26,9 @@
 #include "Animation/MorphTarget.h"
 #include "AnimationRuntime.h"
 #include "ComponentRecreateRenderStateContext.h"	//#nv #Blast Ability to hide bones using a dynamic index buffer
+// @third party code - BEGIN HairWorks
+#include "Components/HairWorksComponent.h"
+// @third party code - END HairWorks
 
 DEFINE_LOG_CATEGORY_STATIC(LogSkinnedMeshComp, Log, All);
 
@@ -1592,6 +1595,15 @@ void USkinnedMeshComponent::RefreshSlaveComponents()
 			}
 		}
 	}
+
+	// @third party code - BEGIN HairWorks
+	// Update child HairWorksComponent
+	for(auto* ChildComponent : GetAttachChildren())
+	{
+		if(ChildComponent->IsA<UHairWorksComponent>())
+			ChildComponent->MarkRenderDynamicDataDirty();
+	}
+	// @third party code - END HairWorks
 }
 
 void USkinnedMeshComponent::SetForceWireframe(bool InForceWireframe)

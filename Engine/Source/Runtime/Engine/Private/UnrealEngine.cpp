@@ -143,6 +143,10 @@ UnrealEngine.cpp: Implements the UEngine class and helpers.
 #if WITH_EDITOR
 #include "Settings/LevelEditorPlaySettings.h"
 #endif
+// @third party code - BEGIN HairWorks
+#include "HairWorksSDK.h"
+// @third party code - END HairWorks
+
 // @todo this is here only due to circular dependency to AIModule. To be removed
 
 #if WITH_EDITORONLY_DATA
@@ -9821,6 +9825,13 @@ void DrawStatsHUD( UWorld* World, FViewport* Viewport, FCanvas* Canvas, UCanvas*
 
 		// Render all the simple stats
 		GEngine->RenderEngineStats(World, Viewport, Canvas, StatsXOffset, MessageY, X, Y, &ViewLocation, &ViewRotation);
+
+		// @third party code - BEGIN HairWorks
+#if STATS
+		// Render HairWorks stats
+		::HairWorks::RenderStats(X, Y, Canvas);
+#endif
+		// @third party code - END HairWorks
 
 #if STATS
 		extern void RenderStats(FViewport* Viewport, class FCanvas* Canvas, int32 X, int32 Y, int32 SizeX);

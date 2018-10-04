@@ -24,6 +24,9 @@
 bool GDX11NVAfterMathEnabled = false;
 bool GNVAftermathModuleLoaded = false;
 #endif
+// @third party code - BEGIN HairWorks
+#include "HairWorksSDK.h"
+// @third party code - END HairWorks
 
 #if INTEL_METRICSDISCOVERY
 bool GDX11IntelMetricsDiscoveryEnabled = false;
@@ -916,6 +919,38 @@ void FD3D11DynamicRHI::Init()
 	CreateVxgiInterface();
 #endif
 	// NVCHANGE_END: Add VXGI
+
+	// @third party code - BEGIN HairWorks
+	// Initialize HairWorks
+	class FHairWorksD3DHelper: public HairWorks::FD3DHelper
+	{
+		virtual void SetShaderResourceView(ID3D11ShaderResourceView* Srv, int32 Index) override
+		{
+			auto& D3dContext = *static_cast<FD3D11DynamicRHI*>(GDynamicRHI)->GetDeviceContext();
+			D3dContext.PSSetShaderResources(Index, 1, &Srv);
+		}
+
+		virtual ID3D11ShaderResourceView* GetShaderResourceView(FRHIShaderResourceView* RHIShaderResourceView) override
+		{
+			if (!RHIShaderResourceView)
+				return nullptr;
+
+			auto* D3D11Srv = static_cast<FD3D11ShaderResourceView*>(RHIShaderResourceView);
+			return D3D11Srv->View;
+		}
+
+		virtual void CommitShaderResources() override
+		{
+			auto& RHI = *static_cast<FD3D11DynamicRHI*>(GDynamicRHI);
+			RHI.CommitNonComputeShaderConstants();
+			RHI.CommitGraphicsResourceTables();
+		}
+	};
+
+	static FHairWorksD3DHelper HairWorksD3DHelper;
+
+	HairWorks::Initialize(*GetDevice(), *Direct3DDeviceIMContext, HairWorksD3DHelper);
+	// @third party code - END HairWorks
 }
 
 bool FD3D11DynamicRHI::IsQuadBufferStereoEnabled()

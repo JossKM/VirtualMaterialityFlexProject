@@ -338,6 +338,10 @@ SHOWFLAG_ALWAYS_ACCESSIBLE(MediaPlanes, SFG_Normal, NSLOCTEXT("UnrealEd", "Media
 SHOWFLAG_FIXED_IN_SHIPPING(0, VREditing, SFG_Hidden, NSLOCTEXT("UnrealEd", "VREditSF", "VR Editing"))
 /** Visualize Occlusion Query bounding meshes */
 SHOWFLAG_FIXED_IN_SHIPPING(0, OcclusionMeshes, SFG_Visualize, NSLOCTEXT("UnrealEd", "VisualizeOcclusionQueries", "Visualize Occlusion Queries"))
+// @third party code - BEGIN HairWorks
+/** Render hair */
+SHOWFLAG_ALWAYS_ACCESSIBLE(HairWorks, SFG_Advanced, LOCTEXT("HairWorks", "HairWorks"))
+// @third party code - END HairWorks
 
 // NVCHANGE_BEGIN: Add VXGI
 #if WITH_GFSDK_VXGI
