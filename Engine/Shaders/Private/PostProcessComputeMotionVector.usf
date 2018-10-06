@@ -25,7 +25,7 @@ void ComputeMotionVectorPS(
     // ------------------------------------------------
     float3 PosN; // Position of this pixel, possibly later nearest pixel in neighborhood.
     PosN.xy = SvPositionToScreenPosition(SvPosition).xy;
-    PosN.z = SceneDepthTexture.SampleLevel(SceneDepthTextureSampler, UV, 0).r;
+    PosN.z = SceneTexturesStruct.SceneDepthTexture.SampleLevel(SceneTexturesStruct.SceneDepthTextureSampler, UV, 0).r;
     // Screen position of minimum depth.
     float2 VelocityOffset = float2(0.0, 0.0);
     
@@ -34,10 +34,10 @@ void ComputeMotionVectorPS(
 	// This enables better quality outline on foreground against different motion background.
 	// Larger 2 pixel distance "x" works best (because AA dilates surface).
     float4 Depths;
-    Depths.x = SceneDepthTexture.SampleLevel(SceneDepthTextureSampler, UV, 0, int2(-AA_CROSS, -AA_CROSS)).r;
-    Depths.y = SceneDepthTexture.SampleLevel(SceneDepthTextureSampler, UV, 0, int2(AA_CROSS, -AA_CROSS)).r;
-    Depths.z = SceneDepthTexture.SampleLevel(SceneDepthTextureSampler, UV, 0, int2(-AA_CROSS, AA_CROSS)).r;
-    Depths.w = SceneDepthTexture.SampleLevel(SceneDepthTextureSampler, UV, 0, int2(AA_CROSS, AA_CROSS)).r;
+    Depths.x = SceneTexturesStruct.SceneDepthTexture.SampleLevel(SceneTexturesStruct.SceneDepthTextureSampler, UV, 0, int2(-AA_CROSS, -AA_CROSS)).r;
+    Depths.y = SceneTexturesStruct.SceneDepthTexture.SampleLevel(SceneTexturesStruct.SceneDepthTextureSampler, UV, 0, int2(AA_CROSS, -AA_CROSS)).r;
+    Depths.z = SceneTexturesStruct.SceneDepthTexture.SampleLevel(SceneTexturesStruct.SceneDepthTextureSampler, UV, 0, int2(-AA_CROSS, AA_CROSS)).r;
+    Depths.w = SceneTexturesStruct.SceneDepthTexture.SampleLevel(SceneTexturesStruct.SceneDepthTextureSampler, UV, 0, int2(AA_CROSS, AA_CROSS)).r;
 
     float2 DepthOffset = float2(AA_CROSS, AA_CROSS);
     float DepthOffsetXx = float(AA_CROSS);

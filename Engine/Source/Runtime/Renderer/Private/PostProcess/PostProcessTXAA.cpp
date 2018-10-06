@@ -6,16 +6,16 @@
 
 #if WITH_TXAA
 
-#include "PostProcessTXAA.h"
+#include "PostProcess/PostProcessTXAA.h"
 #include "RendererPrivate.h"
 #include "ScenePrivate.h"
-#include "SceneFilterRendering.h"
-#include "PostProcessAmbientOcclusion.h"
-#include "PostProcessEyeAdaptation.h"
-#include "PostProcessTonemap.h"
-#include "PostProcessing.h"
+#include "PostProcess/SceneFilterRendering.h"
+#include "CompositionLighting/PostProcessAmbientOcclusion.h"
+#include "PostProcess/PostProcessEyeAdaptation.h"
+#include "PostProcess/PostProcessTonemap.h"
+#include "PostProcess/PostProcessing.h"
 #include "SceneUtils.h"
-#include "NoExportTypes.h"
+#include "UObject/NoExportTypes.h"
 #include "PipelineStateCache.h"
 
 FRCPassPostProcessTXAA::FRCPassPostProcessTXAA(
@@ -93,11 +93,12 @@ void FRCPassPostProcessTXAA::Process(FRenderingCompositePassContext& Context)
 	{
 		Context.RHICmdList.ResolveTXAA(DestRenderTarget.TargetableTexture, SourceTex, FeedbackTex, VelocityTex, DepthTex, FVector2D(SampleX, SampleY));
 
-		Context.RHICmdList.CopyToResolveTarget(DestRenderTarget.TargetableTexture, DestRenderTarget.ShaderResourceTexture, false, FResolveParams());
+		Context.RHICmdList.CopyToResolveTarget(DestRenderTarget.TargetableTexture, DestRenderTarget.ShaderResourceTexture, FResolveParams());
 	}
 	else
 	{
-		Context.RHICmdList.CopyTexture(SourceTex, DestRenderTarget.TargetableTexture, FResolveParams());
+		FRHICopyTextureInfo CopyInfo(RenderTargetSize.X, RenderTargetSize.Y);
+		Context.RHICmdList.CopyTexture(SourceTex, DestRenderTarget.TargetableTexture, CopyInfo);
 	}
 
 	OutputHistory->SafeRelease();
@@ -138,7 +139,7 @@ class FPostProcessComputeMotionVectorPS : public FGlobalShader
 
 public:
     FPostProcessPassParameters PostprocessParameter;
-    FDeferredPixelShaderParameters DeferredParameters;
+	FSceneTextureShaderParameters SceneTextureParameters;
     FShaderParameter VelocityScaling;
 
     /** Initialization constructor. */
@@ -146,7 +147,7 @@ public:
         : FGlobalShader(Initializer)
     {
         PostprocessParameter.Bind(Initializer.ParameterMap);
-        DeferredParameters.Bind(Initializer.ParameterMap);
+		SceneTextureParameters.Bind(Initializer);
         VelocityScaling.Bind(Initializer.ParameterMap, TEXT("VelocityScaling"));
     }
 
@@ -154,7 +155,7 @@ public:
     virtual bool Serialize(FArchive& Ar) override
     {
         bool bShaderHasOutdatedParameters = FGlobalShader::Serialize(Ar);
-        Ar << PostprocessParameter << DeferredParameters << VelocityScaling;
+        Ar << PostprocessParameter << SceneTextureParameters << VelocityScaling;
         return bShaderHasOutdatedParameters;
     }
 
@@ -169,7 +170,7 @@ public:
 
         PostprocessParameter.SetPS(Context.RHICmdList, ShaderRHI, Context, 0, eFC_0000, FilterTable);
 
-        DeferredParameters.Set(Context.RHICmdList, ShaderRHI, Context.View, MD_PostProcess);
+		SceneTextureParameters.Set(Context.RHICmdList, ShaderRHI, Context.View.FeatureLevel, ESceneTextureSetupMode::All);
 
         FSceneViewState* ViewState = (FSceneViewState*)Context.View.State;
         const bool bIgnoreVelocity = (ViewState && ViewState->bSequencerIsPaused);
@@ -252,7 +253,7 @@ void FRCPassPostProcessComputeMotionVector::Process(FRenderingCompositePassConte
         Context.HasHmdMesh(),
         EDRF_UseTriangleOptimization);
 
-    Context.RHICmdList.CopyToResolveTarget(DestRenderTarget.TargetableTexture, DestRenderTarget.ShaderResourceTexture, false, FResolveParams());
+    Context.RHICmdList.CopyToResolveTarget(DestRenderTarget.TargetableTexture, DestRenderTarget.ShaderResourceTexture, FResolveParams());
 }
 
 FPooledRenderTargetDesc FRCPassPostProcessComputeMotionVector::ComputeOutputDesc(EPassOutputId InPassOutputId) const
