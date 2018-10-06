@@ -136,6 +136,9 @@ PxTransform ConvertToPhysXCapsulePose(const FTransform& GeomPose);
 // FILTER DATA
 
 /** Utility for creating a PhysX PxFilterData for performing a query (trace) against the scene */
+// NvFlow begin
+ENGINE_API
+// NvFlow end
 PxFilterData CreateQueryFilterData(const uint8 MyChannel, const bool bTraceComplex, const FCollisionResponseContainer& InCollisionResponseContainer, const struct FCollisionQueryParams& QueryParam, const struct FCollisionObjectQueryParams & ObjectParam, const bool bMultitrace);
 
 

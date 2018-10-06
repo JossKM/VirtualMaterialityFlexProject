@@ -37,6 +37,10 @@
 #include "Components/StereoLayerComponent.h"
 #include "ForceFeedbackComponentVisualizer.h"
 
+// NvFlow begin
+#include "GameWorks/RendererHooksNvFlow.h"
+// NvFlow end
+
 IMPLEMENT_MODULE( FComponentVisualizersModule, ComponentVisualizers );
 
 void FComponentVisualizersModule::StartupModule()
@@ -56,6 +60,13 @@ void FComponentVisualizersModule::StartupModule()
 	RegisterComponentVisualizer(UPhysicsSpringComponent::StaticClass()->GetFName(), MakeShareable(new FSpringComponentVisualizer));
 	RegisterComponentVisualizer(UDecalComponent::StaticClass()->GetFName(), MakeShareable(new FDecalComponentVisualizer));
 	RegisterComponentVisualizer(UStereoLayerComponent::StaticClass()->GetFName(), MakeShareable(new FStereoLayerComponentVisualizer));
+
+	// NvFlow begin
+	if (GEditorRendererHooksNvFlow)
+	{
+		GEditorRendererHooksNvFlow->NvFlowRegisterVisualizer(this);
+	}
+	// NvFlow end
 }
 
 void FComponentVisualizersModule::ShutdownModule()

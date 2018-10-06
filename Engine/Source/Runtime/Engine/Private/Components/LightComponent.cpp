@@ -244,6 +244,10 @@ FLightSceneProxy::FLightSceneProxy(const ULightComponent* InLightComponent)
 	, LevelName(InLightComponent->GetOutermost()->GetFName())
 	, FarShadowDistance(0)
 	, FarShadowCascadeCount(0)
+// NvFlow begin
+	, bFlowGridShadowEnabled(InLightComponent->bFlowGridShadowEnabled)
+	, FlowGridShadowChannel(InLightComponent->FlowGridShadowChannel)
+// NvFlow end
 {
 	check(SceneInterface);
 
@@ -377,6 +381,11 @@ ULightComponent::ULightComponent(const FObjectInitializer& ObjectInitializer)
 	MaxDistanceFadeRange = 0.0f;
 	bAddedToSceneVisible = false;
 	bForceCachedShadowsForMovablePrimitives = false;
+
+	// NvFlow begin
+	bFlowGridShadowEnabled = false;
+	FlowGridShadowChannel = 0;
+	// NvFlow end
 }
 
 bool ULightComponent::AffectsPrimitive(const UPrimitiveComponent* Primitive) const

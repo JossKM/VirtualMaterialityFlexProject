@@ -670,3 +670,11 @@ void FRHICommandDiscardRenderTargets::Execute(FRHICommandListBase& CmdList)
 	RHISTAT(RHIDiscardRenderTargets);
 	INTERNAL_DECORATOR(RHIDiscardRenderTargets)(Depth, Stencil, ColorBitMask);
 }
+
+// NvFlow begin
+void FRHICommandNvFlowWork::Execute(FRHICommandListBase& CmdList)
+{
+	RHISTAT(NvFlowWork);
+	INTERNAL_DECORATOR(NvFlowWork)(WorkFunc, ParamData, NumBytes);
+}
+// NvFlow end

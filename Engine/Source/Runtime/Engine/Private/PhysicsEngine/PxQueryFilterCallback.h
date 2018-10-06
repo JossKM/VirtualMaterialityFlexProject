@@ -24,6 +24,9 @@ public:
 		: FCollisionQueryFilterCallback(InQueryParams, bIsSweep)
 	{}
 
+	//NvFlow begin
+	ENGINE_API
+	// NvFlow end
 	virtual PxQueryHitType::Enum preFilter(const PxFilterData& filterData, const PxShape* shape, const PxRigidActor* actor, PxHitFlags& queryFlags) override;
 
 	virtual PxQueryHitType::Enum postFilter(const PxFilterData& filterData, const PxQueryHit& hit) override;
