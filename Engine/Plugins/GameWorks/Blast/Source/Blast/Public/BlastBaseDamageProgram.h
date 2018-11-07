@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-#include "Vector.h"
+#include "Math/Vector.h"
 #include "WorldCollision.h"
 
 struct NvBlastActor;

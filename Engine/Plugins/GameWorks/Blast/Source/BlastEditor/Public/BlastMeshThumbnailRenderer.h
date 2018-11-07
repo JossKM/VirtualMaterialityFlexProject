@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "ThumbnailRendering/DefaultSizedThumbnailRenderer.h"
 #include "ThumbnailHelpers.h"
-#include "ScopedPointer.h"
+#include "Templates/ScopedPointer.h"
 
 #include "BlastMeshThumbnailRenderer.generated.h"
 

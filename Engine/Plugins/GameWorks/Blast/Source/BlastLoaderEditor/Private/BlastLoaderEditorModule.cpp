@@ -1,8 +1,8 @@
 #include "BlastLoaderEditorModule.h"
 #include "BlastLoader.h"
 
-#include "Paths.h"
-#include "ModuleManager.h"
+#include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
 #include "Logging/LogMacros.h"
 
 IMPLEMENT_MODULE(FBlastLoaderEditorModule, BlastLoaderEditor);

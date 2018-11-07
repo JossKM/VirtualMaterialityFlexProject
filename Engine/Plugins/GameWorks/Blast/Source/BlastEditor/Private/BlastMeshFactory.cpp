@@ -3,9 +3,9 @@
 #include "BlastAsset.h"
 #include "BlastMesh.h"
 #include "PhysicsPublic.h"
-#include "LocalTimestampDirectoryVisitor.h"
-#include "Public/FbxImporter.h"
-#include "FbxErrors.h"
+#include "Misc/LocalTimestampDirectoryVisitor.h"
+#include "FbxImporter.h"
+#include "Misc/FbxErrors.h"
 #include "AssetToolsModule.h"
 #include "AssetRegistryModule.h"
 #include "PhysicsAssetUtils.h"
@@ -13,8 +13,8 @@
 #include "NvBlastExtSerialization.h"
 #include "BlastImportUI.h"
 #include "Factories/FbxSkeletalMeshImportData.h"
-#include "FeedbackContext.h"
-#include "PlatformFilemanager.h"
+#include "Misc/FeedbackContext.h"
+#include "HAL/PlatformFilemanager.h"
 #include "BlastAssetImportData.h"
 #include "Runtime/Launch/Resources/Version.h"
 #include "ComponentReregisterContext.h"
@@ -27,9 +27,9 @@
 #include "IAssetTools.h"
 #include "SkelImport.h"
 #include "Editor.h"
-#include "MessageDialog.h"
+#include "Misc/MessageDialog.h"
 #include "Animation/Skeleton.h"
-#include "FileManager.h"
+#include "HAL/FileManager.h"
 
 #define LOCTEXT_NAMESPACE "Blast"
 
@@ -420,7 +420,7 @@ USkeletalMesh* UBlastMeshFactory::ImportSkeletalMesh(UBlastMesh* BlastMesh, FNam
 		int32 InterestingNodeCount = 1;
 		TArray< TArray<FbxNode*>* > SkelMeshArray;
 
-		FbxImporter->FillFbxSkelMeshArrayInScene(RootNodeToImport, SkelMeshArray, false);
+		FbxImporter->FillFbxSkelMeshArrayInScene(RootNodeToImport, SkelMeshArray, false, false);
 
 		//Remove collision nodes to avoid duplicates. This is the only part that actually needs all this copy and pasted code, otherwise we could use the normal FBX factory
 		collisionImporter.RemoveCollisionNodesFromImportList(SkelMeshArray);
@@ -535,7 +535,7 @@ USkeletalMesh* UBlastMeshFactory::ImportSkeletalMesh(UBlastMesh* BlastMesh, FNam
 
 						if (bImportSucceeded)
 						{
-							BaseSkeletalMesh->LODInfo[SuccessfulLodIndex].ScreenSize = 1.0f / (MaxLODLevel * SuccessfulLodIndex);
+							BaseSkeletalMesh->GetLODInfo(SuccessfulLodIndex)->ScreenSize = 1.0f / (MaxLODLevel * SuccessfulLodIndex);
 							ImportedSuccessfulLodIndex = SuccessfulLodIndex;
 							SuccessfulLodIndex++;
 						}

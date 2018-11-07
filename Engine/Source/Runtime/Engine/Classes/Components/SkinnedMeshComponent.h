@@ -11,7 +11,7 @@
 #include "Engine/TextureStreamingTypes.h"
 #include "Components/MeshComponent.h"
 #include "Containers/SortedMap.h"
-#include "SkeletalMeshRenderData.h"	//#nv #Blast Ability to hide bones using a dynamic index buffer
+#include "Rendering/SkeletalMeshRenderData.h"	//#nv #Blast Ability to hide bones using a dynamic index buffer
 #include "SkinnedMeshComponent.generated.h"
 
 class FPrimitiveSceneProxy;

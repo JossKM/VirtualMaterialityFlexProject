@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BlastMeshEditor.h"
-#include "SButton.h"
+#include "Widgets/Input/SButton.h"
 #include "IDetailsView.h"
 
 //////////////////////////////////////////////////////////////////////////

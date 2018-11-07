@@ -9,13 +9,13 @@
 #include "NvBlastTypes.h"
 #include "NvBlastExtDamageShaders.h"
 #include "NvBlastExtStressSolver.h"
-#include "UnrealMathUtility.h"
+#include "Math/UnrealMathUtility.h"
 #include "BlastGlobals.h"
 #include "NvBlastGlobals.h"
 #include "SkeletalRenderPublic.h"
 #include "BlastScratch.h"
 #include "DrawDebugHelpers.h"
-#include "Stats.h"
+#include "Stats/Stats.h"
 #include "ComponentReregisterContext.h"
 #include "BlastModule.h"
 #include "BlastDamagePrograms.h"
@@ -25,8 +25,8 @@
 #include "EngineUtils.h"
 #include "RawIndexBuffer.h"
 #include "BlastExtendedSupport.h"
-#include "SkeletalMeshRenderData.h"
-#include "SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "Rendering/SkeletalMeshModel.h"
 #if WITH_EDITOR
 #include "Engine/GameViewportClient.h"
 #include "Slate/SceneViewport.h"
@@ -72,7 +72,7 @@ UBlastMeshComponent::UBlastMeshComponent(const FObjectInitializer& ObjectInitial
 	bTickInEditor = true;
 
 	// We want to tick the pose since we need to update our bone positions
-	MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+	VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 
 	bWantsInitializeComponent = true;
 
@@ -1191,7 +1191,7 @@ physx::PxScene* UBlastMeshComponent::GetPXScene() const
 	}
 	EPhysicsSceneType pst = BlastMesh->PhysicsAsset->bUseAsyncScene ? EPhysicsSceneType::PST_Async : EPhysicsSceneType::PST_Sync;
 	auto PScene = GetWorld()->GetPhysicsScene();
-	return PScene ? PScene->GetPhysXScene(pst) : nullptr;
+	return PScene ? PScene->GetPxScene(pst) : nullptr;
 }
 
 bool UBlastMeshComponent::AllocateTransformData()
@@ -2325,14 +2325,20 @@ void UBlastMeshComponent::InitBodyForActor(FActorData& ActorData, uint32 ActorIn
 	// set max contact impulse for impcat damage
 	const FBlastImpactDamageProperties& UsedImpactProperties = GetUsedImpactDamageProperties();
 	if (UsedImpactProperties.bEnabled && !BodyInst->bSimulatePhysics && UsedImpactProperties.AdvancedSettings.KinematicsMaxContactImpulse >= 0.f)
-	{
-		ExecuteOnPxRigidBodyReadWrite(BodyInst, [&](PxRigidBody* PRigidBody)
+	{		
+		if (BodyInst->ActorHandle.IsValid() && FPhysicsInterface::IsRigidBody(BodyInst->ActorHandle))
 		{
-			PRigidBody->setMaxContactImpulse(UsedImpactProperties.AdvancedSettings.KinematicsMaxContactImpulse);
+			FPhysicsCommand::ExecuteWrite(BodyInst->ActorHandle, [&](const FPhysicsActorHandle& Actor)
+			{
+				if (PxRigidBody* PRigidBody = FPhysicsInterface::GetPxRigidBody_AssumesLocked(Actor))
+				{
+					PRigidBody->setMaxContactImpulse(UsedImpactProperties.AdvancedSettings.KinematicsMaxContactImpulse);
 #if PX_PHYSICS_VERSION >= (((3<<24) + (4<<16) + (1<<8) + 0)) // available only since 3.4.1
-			PRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD_MAX_CONTACT_IMPULSE, true);
+					PRigidBody->setRigidBodyFlag(PxRigidBodyFlag::eENABLE_CCD_MAX_CONTACT_IMPULSE, true);
 #endif
-		});
+				}
+			});
+		}
 	}
 
 	BodyInst->UpdateMassProperties();
@@ -2499,7 +2505,7 @@ void UBlastMeshComponent::TickStressSolver()
 		BT.SetScale3D(BodyInst->Scale3D);
 		const FTransform invWT = BT.Inverse();
 
-		PxRigidDynamic* rigidDynamic = BodyInst->GetPxRigidDynamic_AssumesLocked();
+		PxRigidDynamic* rigidDynamic = FPhysicsInterface_PhysX::GetPxRigidDynamic_AssumesLocked(BodyInst->GetPhysicsActorHandle());
 
 		uint32_t nodeCount = NvBlastActorGetGraphNodeCount(actor, Nv::Blast::logLL);
 		if (nodeCount <= 1) // subsupport chunks don't have graph nodes and only 1 node actor doesn't make sense to be drawn

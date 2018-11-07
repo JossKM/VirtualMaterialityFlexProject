@@ -3,8 +3,8 @@
 #include "Animation/Skeleton.h"
 #include "PhysicsEngine/BodySetup.h"
 #include "PhysXPublic.h"
-#include "SkeletalMeshRenderData.h"
-#include "SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "Rendering/SkeletalMeshModel.h"
 #if WITH_EDITOR
 #include "RawMesh.h"
 #include "RawIndexBuffer.h"
@@ -258,7 +258,7 @@ void UBlastMesh::GetRenderMesh(int32 LODIndex, TArray<FRawMesh>& RawMeshes)
 		BoneIndexToChunkIndex[ChunkIndexToBoneIndex[I]] = I;
 	}
 
-	const FSkeletalMeshLODInfo& SrcLODInfo = Mesh->LODInfo[LODIndex];
+	const FSkeletalMeshLODInfo& SrcLODInfo = *Mesh->GetLODInfo(LODIndex);
 	const FSkeletalMeshLODModel& LODModel = Resource.LODModels[LODIndex];
 	const FSkeletalMeshLODRenderData& LODRenderData = RenderData->LODRenderData[LODIndex];
 

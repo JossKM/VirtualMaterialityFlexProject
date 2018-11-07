@@ -8,13 +8,13 @@
 
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "EditorReimportHandler.h"
-#include "SUniformGridPanel.h"
-#include "SNumericEntryBox.h"
-#include "SCheckBox.h"
+#include "Widgets/Layout/SUniformGridPanel.h"
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "PropertyEditorModule.h"
 #include "EditorStyleSet.h"
 #include "Widgets/Images/SImage.h"
-#include "WidgetLayoutLibrary.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include <Developer/DesktopPlatform/Public/IDesktopPlatform.h>
 #include <Developer/DesktopPlatform/Public/DesktopPlatformModule.h>
 
@@ -22,7 +22,7 @@
 #include <NvBlastExtAuthoring.h>
 #include <NvBlastExtSerialization.h>
 #include <NvBlastExtLlSerialization.h>
-#include <PlatformFilemanager.h>
+#include <HAL/PlatformFilemanager.h>
 
 
 //////////////////////////////////////////////////////////////////////////

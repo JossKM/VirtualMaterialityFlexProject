@@ -8,7 +8,7 @@
 #include "EngineDefines.h"
 #include "IDetailCustomization.h"
 #include "IPropertyTypeCustomization.h"
-#include "SVectorInputBox.h"
+#include "Widgets/Input/SVectorInputBox.h"
 #include "IBlastMeshEditor.h"
 #include "BlastFractureSettings.generated.h"
 

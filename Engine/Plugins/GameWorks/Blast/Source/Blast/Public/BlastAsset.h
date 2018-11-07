@@ -3,7 +3,7 @@
 #include "UObject/ObjectMacros.h"
 #include "UObject/UObjectBaseUtility.h"
 #include "UObject/Object.h"
-#include "BulkData.h"
+#include "Serialization/BulkData.h"
 #include "BlastAsset.generated.h"
 
 struct NvBlastAsset;

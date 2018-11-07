@@ -133,7 +133,11 @@ struct FBlastDebrisFilter
 	float DebrisLifetimeMax;
 
 	FBlastDebrisFilter()
-		: DebrisDepth(1)
+		: bUseDebrisDepth(false)
+		, bUseDebrisMaxSeparation(false)
+		, bUseDebrisMaxSize(false)
+		, bUseValidBounds(false)
+		, DebrisDepth(1)
 		, DebrisMaxSeparation(1000.0f)
 		, DebrisMaxSize(1.f)
 		, ValidBounds(FVector(-500000.0f), FVector(500000.0f))

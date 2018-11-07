@@ -6,7 +6,7 @@
 #include "IBlastMeshEditor.h"
 #include "BlastMeshEditor.h"
 #include "Misc/MessageDialog.h"
-#include "IPluginManager.h"
+#include "Interfaces/IPluginManager.h"
 #include "PropertyEditorModule.h"
 
 #include "IAssetTools.h"

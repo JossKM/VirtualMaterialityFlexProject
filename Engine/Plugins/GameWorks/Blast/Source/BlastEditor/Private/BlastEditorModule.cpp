@@ -1,6 +1,6 @@
 ﻿#include "BlastEditorModule.h"
 
-#include "IPluginManager.h"
+#include "Interfaces/IPluginManager.h"
 #include "LevelEditor.h"
 #include "EditorBuildUtils.h"
 #include "DrawDebugHelpers.h"
@@ -31,18 +31,18 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Editor.h"
 #include "BlastMeshActor.h"
-#include "SNumericEntryBox.h"
-#include "SUniformGridPanel.h"
-#include "SButton.h"
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Layout/SUniformGridPanel.h"
+#include "Widgets/Input/SButton.h"
 #include "IContentBrowserSingleton.h"
 #include "ContentBrowserModule.h"
-#include "ScopedSlowTask.h"
+#include "Misc/ScopedSlowTask.h"
 #include "Misc/PackageName.h"
-#include "SCheckBox.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "GPUSkinVertexFactory.h"
 
-#include "SkeletalMeshRenderData.h"
-#include "SkeletalMeshModel.h"
+#include "Rendering/SkeletalMeshRenderData.h"
+#include "Rendering/SkeletalMeshModel.h"
 
 #undef WITH_APEX
 #define WITH_APEX 0
@@ -692,11 +692,11 @@ public:
 
 
 
-		SkeletalMesh->LODInfo.Empty();
-		SkeletalMesh->LODInfo.AddZeroed();
-		SkeletalMesh->LODInfo[0].LODHysteresis = 0.02f;
+		SkeletalMesh->GetLODInfoArray().Empty();
+		SkeletalMesh->GetLODInfoArray().AddZeroed();
+		SkeletalMesh->GetLODInfo(0)->LODHysteresis = 0.02f;
 		FSkeletalMeshOptimizationSettings Settings;
-		SkeletalMesh->LODInfo[0].ReductionSettings = Settings;
+		SkeletalMesh->GetLODInfo(0)->ReductionSettings = Settings;
 
 		SkeletalMesh->CalculateInvRefMatrices();
 		SkeletalMesh->PostEditChange();
@@ -1427,11 +1427,11 @@ bool FBlastEditorModule::BuildExtendedSupport(ABlastExtendedSupportStructure* Ex
 	FSkeletalMeshLODModel& LODModel = ImportedModel->LODModels[0];
 	LODModel.NumTexCoords = 1;
 
-	SkeletalMesh->LODInfo.Empty();
-	SkeletalMesh->LODInfo.AddZeroed();
-	SkeletalMesh->LODInfo[0].LODHysteresis = 0.02f;
+	SkeletalMesh->GetLODInfoArray().Empty();
+	SkeletalMesh->GetLODInfoArray().AddZeroed();
+	SkeletalMesh->GetLODInfo(0)->LODHysteresis = 0.02f;
 	FSkeletalMeshOptimizationSettings Settings;
-	SkeletalMesh->LODInfo[0].ReductionSettings = Settings;
+	SkeletalMesh->GetLODInfo(0)->ReductionSettings = Settings;
 
 	SkeletalMesh->CalculateInvRefMatrices();
 	SkeletalMesh->PostEditChange();

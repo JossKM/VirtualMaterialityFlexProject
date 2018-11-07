@@ -16,10 +16,10 @@
 #include "IDetailCustomNodeBuilder.h"
 #include "IDetailPropertyRow.h"
 #include "Widgets/Input/SComboButton.h"
-#include "SButton.h"
-#include "SImage.h"
-#include "MultiBox/MultiBoxBuilder.h"
-#include "Commands/UIAction.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Images/SImage.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
+#include "Framework/Commands/UIAction.h"
 
 #define LOCTEXT_NAMESPACE "BlastMeshEditor"
 

@@ -12,7 +12,7 @@
 #include "ContentBrowserModule.h"
 #include "IAssetTools.h"
 #include "AssetToolsModule.h"
-#include "ScopedSlowTask.h"
+#include "Misc/ScopedSlowTask.h"
 
 #include "BlastMesh.h"
 #include "BlastFracture.h"

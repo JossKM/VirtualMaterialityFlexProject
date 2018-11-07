@@ -10,8 +10,8 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "Widgets/Input/SSpinBox.h"
 #include "EditorStyleSet.h"
-#include "SBorder.h"
-#include "SBox.h"
+#include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SBox.h"
 
 //static const float	AnimationEditorViewport_LightRotSpeed = 0.22f;
 

@@ -1,11 +1,12 @@
 #include "BlastImportUI.h"
 
-#include "IMainFrameModule.h"
-#include "ModuleManager.h"
+#include "Interfaces/IMainFrameModule.h"
+#include "Modules/ModuleManager.h"
 #include "JsonObjectConverter.h"
 
-#include "Public/FbxImporter.h"
+#include "FbxImporter.h"
 #include "Factories/FbxSkeletalMeshImportData.h"
+#include "Framework/Application/SlateApplication.h"
 
 #include "BlastImportOptionWindow.h"
 

@@ -1,12 +1,12 @@
 #include "BlastModule.h"
-#include "IPluginManager.h"
+#include "Interfaces/IPluginManager.h"
 
 #include "PhysicsPublic.h"
 #include "NvBlastGlobals.h"
 #include "BlastGlobals.h"
-#include "LogVerbosity.h"
-#include "Paths.h"
-#include "ModuleManager.h"
+#include "Logging/LogVerbosity.h"
+#include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
 
 class BlastAllocatorCallback final : public Nv::Blast::AllocatorCallback
 {

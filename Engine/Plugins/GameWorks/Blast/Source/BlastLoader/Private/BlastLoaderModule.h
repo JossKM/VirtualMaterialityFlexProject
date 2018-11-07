@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-#include "ModuleInterface.h"
+#include "Modules/ModuleInterface.h"
 
 //Since we cannot use delay loading on all platforms we need a simple module to load the DLLs which others can depend on, which itself *does not* link them.
 //This doesn't work for monolithic builds, but luckily we can set LD_LIBRARY_PATH in the wrapper script which is generated.

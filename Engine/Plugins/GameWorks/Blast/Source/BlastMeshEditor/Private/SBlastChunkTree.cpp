@@ -8,8 +8,8 @@
 #include "BlastMeshEditorStyle.h"
 #include "NvBlastTypes.h"
 
-#include "SButton.h"
-#include "SCheckBox.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/Input/SCheckBox.h"
 #include "EditorStyleSet.h"
 #include "Widgets/Images/SImage.h"
 #include "SlateOptMacros.h"

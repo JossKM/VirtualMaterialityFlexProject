@@ -1,9 +1,9 @@
 #include "BlastLoaderModule.h"
 #include "BlastLoader.h"
 
-#include "Paths.h"
-#include "ModuleManager.h"
-#include "IPluginManager.h"
+#include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
+#include "Interfaces/IPluginManager.h"
 #include "Logging/LogMacros.h"
 
 IMPLEMENT_MODULE(FBlastLoaderModule, BlastLoader);

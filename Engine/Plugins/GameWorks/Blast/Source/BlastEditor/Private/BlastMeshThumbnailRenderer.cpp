@@ -67,7 +67,7 @@ FBlastMeshThumbnailScene::FBlastMeshThumbnailScene()
 
 	PreviewComponent = NewObject<UBlastMeshComponent>(PreviewActor);
 	//Make sure we are rendering in that one frame we have a chance to
-	PreviewComponent->MeshComponentUpdateFlag = EMeshComponentUpdateFlag::AlwaysTickPoseAndRefreshBones;
+	PreviewComponent->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 	PreviewActor->SetRootComponent(PreviewComponent);
 	PreviewComponent->RegisterComponent();
 }

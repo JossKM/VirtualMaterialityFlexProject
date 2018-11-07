@@ -1,5 +1,5 @@
 #include "BlastLoader.h"
-#include "IPluginManager.h"
+#include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
 #include "HAL/PlatformProcess.h"
 

@@ -28,12 +28,12 @@
 #include "BlastMeshExporterObjWriter.h"
 #include "NvBlastExtAuthoringTypes.h"
 #include "NvBlastExtAuthoringMesh.h"
-#include <PlatformFilemanager.h>
-#include <FileHelper.h>
+#include <HAL/PlatformFilemanager.h>
+#include <Misc/FileHelper.h>
 #include <algorithm>
 #include <PxVec3.h>
 #include <sstream>
-#include <StringConv.h>
+#include <Containers/StringConv.h>
 
 
 

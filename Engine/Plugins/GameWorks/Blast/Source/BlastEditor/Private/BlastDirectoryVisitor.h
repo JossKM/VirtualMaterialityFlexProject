@@ -1,5 +1,5 @@
 #pragma once
-#include "GenericPlatformFile.h"
+#include "GenericPlatform/GenericPlatformFile.h"
 
 /*
 	A simple directory visitor - finds any files that start with the prefix and end with the extension.

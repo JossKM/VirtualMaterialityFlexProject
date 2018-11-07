@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Public/FbxImporter.h"
+#include "FbxImporter.h"
 
 struct FBlastCollisionHull;
 

@@ -1,5 +1,5 @@
 #include "ViewportBlastMeshComponent.h"
-#include "UnrealMathUtility.h"
+#include "Math/UnrealMathUtility.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
 UViewportBlastMeshComponent::UViewportBlastMeshComponent(const FObjectInitializer& ObjectInitializer):

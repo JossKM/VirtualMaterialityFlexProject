@@ -1,7 +1,7 @@
 #pragma once
 #include "CoreMinimal.h"
 
-#include "ModuleInterface.h"
+#include "Modules/ModuleInterface.h"
 
 class FBlastLoaderEditorModule : public IModuleInterface
 {

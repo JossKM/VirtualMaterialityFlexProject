@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Widgets/SWidget.h"
 #include "Widgets/SCompoundWidget.h"
-#include "STreeView.h"
+#include "Widgets/Views/STreeView.h"
 
 #include "IBlastMeshEditor.h"
 

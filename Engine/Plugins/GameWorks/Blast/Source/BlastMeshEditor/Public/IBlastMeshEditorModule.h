@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ModuleInterface.h"
-#include "AssetEditorToolkit.h"
+#include "Modules/ModuleInterface.h"
+#include "Toolkits/AssetEditorToolkit.h"
 
 class IBlastMeshEditor;
 class UBlastMesh;

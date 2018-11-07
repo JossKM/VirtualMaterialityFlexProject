@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EngineDefines.h"
-#include "GCObject.h"
+#include "UObject/GCObject.h"
 #include "BlastFracture.generated.h"
 
 class UMaterialInterface;

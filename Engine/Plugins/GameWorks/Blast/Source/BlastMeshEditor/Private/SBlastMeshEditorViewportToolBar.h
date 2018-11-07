@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "SWidget.h"
+#include "Widgets/SWidget.h"
 #include "SViewportToolBar.h"
-#include "UICommandList.h"
-#include "MultiBoxExtender.h"
+#include "Framework/Commands/UICommandList.h"
+#include "Framework/MultiBox/MultiBoxExtender.h"
 
 ///////////////////////////////////////////////////////////
 // SBlastVectorViewportToolBar

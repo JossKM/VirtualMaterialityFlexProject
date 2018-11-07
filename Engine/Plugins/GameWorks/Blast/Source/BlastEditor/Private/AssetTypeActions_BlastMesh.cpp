@@ -1,8 +1,10 @@
 #include "AssetTypeActions_BlastMesh.h"
-#include "SlateIcon.h"
+#include "Textures/SlateIcon.h"
 #include "Styling/SlateIconFinder.h"
 #include "BlastMesh.h"
 #include "PhysicsEngine/PhysicsAsset.h"
+#include "Animation/Skeleton.h"
+#include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "IBlastMeshEditorModule.h"
 
 #define LOCTEXT_NAMESPACE "Blast"

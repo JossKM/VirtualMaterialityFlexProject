@@ -35,6 +35,7 @@ namespace UnrealBuildTool.Rules
                 "MeshMergeUtilities",
                 "RawMesh",
                 "MeshUtilities",
+                "MeshUtilitiesCommon",
                 "RHI",
                 }
             );
@@ -45,6 +46,19 @@ namespace UnrealBuildTool.Rules
             {
                  "NvBlastExtAuthoring",
             };
+
+            PrivateIncludePaths.AddRange(
+                new string[]
+                {
+                    "Blast/Public/extensions/assetutils/include",
+                    "Blast/Public/extensions/authoring/include",
+                    "Blast/Public/extensions/serialization/include",
+                    "Blast/Public/extensions/shaders/include",
+                    "Blast/Public/extensions/stress/include",
+                    "Blast/Public/globals/include",
+                    "Blast/Public/lowlevel/include"
+                }
+            );
 
             Blast.SetupModuleBlastSupport(this, BlastLibs);
 

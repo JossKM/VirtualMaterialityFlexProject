@@ -7,11 +7,12 @@
 
 #include "Framework/Application/SlateApplication.h"
 #include "EditorStyleSet.h"
-#include "SUniformGridPanel.h"
+#include "Widgets/Layout/SUniformGridPanel.h"
 #include "Widgets/Docking/SDockTab.h"
-#include "ISlateStyle.h"
-#include "SButton.h"
-#include "SToolTip.h"
+#include "Styling/ISlateStyle.h"
+#include "Widgets/Input/SButton.h"
+#include "Widgets/SToolTip.h"
+#include "Widgets/Images/SImage.h"
 
 #define LOCTEXT_NAMESPACE "BlastMeshEditor"
 

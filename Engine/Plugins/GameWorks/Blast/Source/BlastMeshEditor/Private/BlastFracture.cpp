@@ -17,9 +17,9 @@
 #include "NvBlastGlobals.h"
 
 #include "Misc/MessageDialog.h"
-#include "ScopedSlowTask.h"
+#include "Misc/ScopedSlowTask.h"
 #include "Factories/FbxSkeletalMeshImportData.h"
-#include "RandomStream.h"
+#include "Math/RandomStream.h"
 #include "Misc/ScopeLock.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
