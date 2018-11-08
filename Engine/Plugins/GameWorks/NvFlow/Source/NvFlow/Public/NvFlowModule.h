@@ -4,7 +4,7 @@
 #include "UObject/ObjectMacros.h"
 #include "GameFramework/HUD.h"
 
-#include "ModuleInterface.h"
+#include "Modules/ModuleInterface.h"
 
 struct FNvFlowCommands;
 struct RendererHooksNvFlow;

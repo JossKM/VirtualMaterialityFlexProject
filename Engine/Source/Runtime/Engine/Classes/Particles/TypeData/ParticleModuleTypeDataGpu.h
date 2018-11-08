@@ -14,7 +14,7 @@
 #include "Particles/TypeData/ParticleModuleTypeDataBase.h"
 #include "Particles/ParticleSpriteEmitter.h"
 // NvFlow begin
-#include "GridInteractionNvFlow.h"
+#include "GameWorks/GridInteractionNvFlow.h"
 // NvFlow end
 #include "ParticleModuleTypeDataGpu.generated.h"
 

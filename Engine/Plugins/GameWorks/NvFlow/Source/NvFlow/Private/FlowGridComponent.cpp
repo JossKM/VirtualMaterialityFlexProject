@@ -16,7 +16,9 @@
 #include "Curves/CurveLinearColor.h"
 #include "RHIStaticStates.h"
 #include "PhysicsPublic.h"
-#include "Collision/PhysXCollision.h"
+#include "Collision/PxCollisionDefs.h"
+#include "Physics/PhysicsInterfaceUtils.h"
+#include "PhysicsEngine/PxQueryFilterCallback.h"
 
 #include "Engine/StaticMesh.h"
 
@@ -271,11 +273,11 @@ void UFlowGridComponent::UpdateShapes(float DeltaTime, uint32 NumSimSubSteps)
 
 	// buffer for overlaps
 	TArray<FOverlapResult> Overlaps;
-	TArray<PxShape*> Shapes;
+	TArray<FPhysicsShapeHandle> Shapes;
 
 	// get PhysX Scene
 	FPhysScene* PhysScene = GetWorld()->GetPhysicsScene();
-	PxScene* SyncScene = PhysScene->GetPhysXScene(PST_Sync);
+	PxScene* SyncScene = PhysScene->GetPxScene(PST_Sync);
 
 	// lock the scene to perform scene queries
 	SCENE_LOCK_READ(SyncScene);
@@ -298,7 +300,7 @@ void UFlowGridComponent::UpdateShapes(float DeltaTime, uint32 NumSimSubSteps)
 	GetWorld()->OverlapMultiByChannel(Overlaps, Center, FQuat::Identity, TraceChannel, Shape, QueryParams, ResponseParams);
 
 	PxFilterData PFilter = CreateQueryFilterData(TraceChannel, QueryParams.bTraceComplex, ResponseParams.CollisionResponse, QueryParams, FCollisionObjectQueryParams::DefaultObjectQueryParam, true);
-	FPxQueryFilterCallback PQueryCallback(QueryParams);
+	FPxQueryFilterCallback PQueryCallback(QueryParams, false);
 
 	for (int32 OverlapIdx = 0; OverlapIdx < Overlaps.Num(); ++OverlapIdx)
 	{
@@ -334,17 +336,25 @@ void UFlowGridComponent::UpdateShapes(float DeltaTime, uint32 NumSimSubSteps)
 		if (!Body)
 			continue;
 
-		PxRigidActor* PhysXActor = Body->GetPxRigidActor_AssumesLocked();
+		PxRigidActor* PhysXActor;
+		int32 NumSyncShapes;
+
+		FPhysicsCommand::ExecuteRead(Body->ActorHandle, [&](const FPhysicsActorHandle& Actor)
+		{
+			PhysXActor = FPhysicsInterface::GetPxRigidActor_AssumesLocked(Actor);
+			Shapes.SetNum(0);
+			NumSyncShapes = Body->GetAllShapes_AssumesLocked(Shapes);		
+		});
+
 		if (!PhysXActor)
 			continue;
 
-		Shapes.SetNum(0);
-
-		int32 NumSyncShapes;
-		NumSyncShapes = Body->GetAllShapes_AssumesLocked(Shapes);
-
 		// get emitter parameters, if available
 		AActor* Actor = Body->OwnerComponent->GetOwner();
+
+		if (!Actor)
+			continue;
+
 		UFlowEmitterComponent* FlowEmitterComponent = Actor->FindComponentByClass<UFlowEmitterComponent>();
 
 		// search in attached component actors, as needed
@@ -461,7 +471,7 @@ void UFlowGridComponent::UpdateShapes(float DeltaTime, uint32 NumSimSubSteps)
 
 			if (DistanceFieldVolumeData == nullptr)
 			{
-				PhysXShape = Shapes[ShapeIndex];
+				PhysXShape = Shapes[ShapeIndex].Shape;
 
 				if (!PhysXActor || !PhysXShape)
 					continue;

@@ -10,6 +10,7 @@
 #include "FlowMaterial.h"
 #include "FlowRenderMaterial.h"
 #include "FlowGridSceneProxy.h"
+#include "Logging/LogMacros.h"
 
 #include "NvFlowModule.h"
 
@@ -33,8 +34,8 @@ NFlowRendering.cpp: Translucent rendering implementation.
 #include "SceneUtils.h"
 #include "HardwareInfo.h"
 
-#include "Stats.h"
-#include "GridAccessHooksNvFlow.h"
+#include "Stats/Stats.h"
+#include "GameWorks/GridAccessHooksNvFlow.h"
 
 
 #if NVFLOW_ADAPTIVE

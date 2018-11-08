@@ -4,7 +4,7 @@
 #include "NvFlowInterop.h"
 
 #if PLATFORM_WINDOWS
-#include "AllowWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
 #undef D3D11_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
 #undef D3D11_ERROR_FILE_NOT_FOUND
 #undef D3D11_ERROR_TOO_MANY_UNIQUE_VIEW_OBJECTS
@@ -12,7 +12,7 @@
 #undef D3D10_ERROR_TOO_MANY_UNIQUE_STATE_OBJECTS
 #undef D3D10_ERROR_FILE_NOT_FOUND
 #include <d3d11.h>
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 
 #include "GameWorks/RHINvFlowD3D11.h"
 

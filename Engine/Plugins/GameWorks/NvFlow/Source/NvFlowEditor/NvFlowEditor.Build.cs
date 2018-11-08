@@ -14,7 +14,7 @@ namespace UnrealBuildTool.Rules
 
             PublicIncludePaths.AddRange(
                 new string[] { 
-                    "NvFlowEditor/Public"
+                    "../Plugins/GameWorks/NvFlow/Source/NvFlowEditor/Public"
                 }
             );
 

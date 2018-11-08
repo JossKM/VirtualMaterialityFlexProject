@@ -105,7 +105,7 @@ public:
 	void Destroy();
 
 	// NvFlow begin
-	inline FD3D12FenceCore* GetFenceCore() const { return FenceCore; }
+	inline FD3D12FenceCore* GetFenceCore(uint32 GPUIndex) const { return FenceCores[GPUIndex]; }
 	// NvFlow end
 
 protected:

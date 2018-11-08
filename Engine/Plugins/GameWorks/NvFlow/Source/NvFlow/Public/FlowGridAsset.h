@@ -8,7 +8,7 @@
 #include "UObject/Object.h"
 #include "Engine/EngineTypes.h"
 
-#include "GridInteractionNvFlow.h"
+#include "GameWorks/GridInteractionNvFlow.h"
 #include "FlowRenderMaterial.h"
 #include "FlowGridAsset.generated.h"
 

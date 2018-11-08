@@ -16,7 +16,7 @@ namespace UnrealBuildTool.Rules
 
             PublicIncludePaths.AddRange(
                 new string[] { 
-                    "NvFlow/Public",
+                    "../Plugins/GameWorks/NvFlow/Source/NvFlow/Public"
                 }
             );
 
@@ -88,7 +88,7 @@ namespace UnrealBuildTool.Rules
                     );
             }
 
-            SetupModulePhysXAPEXSupport(Target);
+            SetupModulePhysicsSupport(Target);
         }
 	}
 }

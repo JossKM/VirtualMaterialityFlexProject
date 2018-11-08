@@ -22,8 +22,8 @@
 #include "SceneUtils.h"
 #include "HardwareInfo.h"
 
-#include "Stats.h"
-#include "GridAccessHooksNvFlow.h"
+#include "Stats/Stats.h"
+#include "GameWorks/GridAccessHooksNvFlow.h"
 
 #include "NvFlowScene.h"
 
@@ -105,11 +105,11 @@ bool NvFlow::Scene::getExportParams(FRHICommandListImmediate& RHICmdList, GridEx
 #define MASK_FROM_PARTICLES_THREAD_COUNT 64
 
 BEGIN_UNIFORM_BUFFER_STRUCT(FNvFlowMaskFromParticlesParameters, )
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, TextureSizeX)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, TextureSizeY)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, ParticleCount)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, MaskDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FMatrix, WorldToVolume)
+UNIFORM_MEMBER(uint32, TextureSizeX)
+UNIFORM_MEMBER(uint32, TextureSizeY)
+UNIFORM_MEMBER(uint32, ParticleCount)
+UNIFORM_MEMBER(FIntVector, MaskDim)
+UNIFORM_MEMBER(FMatrix, WorldToVolume)
 END_UNIFORM_BUFFER_STRUCT(FNvFlowMaskFromParticlesParameters)
 
 IMPLEMENT_UNIFORM_BUFFER_STRUCT(FNvFlowMaskFromParticlesParameters, TEXT("NvFlowMaskFromParticles"));
@@ -232,7 +232,7 @@ private:
 	/** Output key buffer. */
 	FShaderResourceParameter OutMask;
 };
-IMPLEMENT_SHADER_TYPE(, FNvFlowMaskFromParticlesCS, TEXT("/Plugin/NvFlow/Private/NvFlowAllocShader.usf"), TEXT("ComputeMaskFromParticles"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNvFlowMaskFromParticlesCS, TEXT("/Engine/Private/NvFlowAllocShader.usf"), TEXT("ComputeMaskFromParticles"), SF_Compute);
 
 
 void NvFlow::Scene::emitCustomAllocCallback(IRHICommandContext* RHICmdCtx, const NvFlowGridEmitCustomAllocParams* params, const class FGlobalDistanceFieldParameterData* GlobalDistanceFieldParameterData)
@@ -285,29 +285,29 @@ void NvFlow::Scene::emitCustomAllocCallback(IRHICommandContext* RHICmdCtx, const
 #define COPY_THREAD_COUNT_Z 4
 
 BEGIN_UNIFORM_BUFFER_STRUCT(FNvFlowCopyGridDataParameters, )
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, ThreadDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDimBits)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(int32, IsVTR)
+UNIFORM_MEMBER(FIntVector, ThreadDim)
+UNIFORM_MEMBER(FIntVector, BlockDim)
+UNIFORM_MEMBER(FIntVector, BlockDimBits)
+UNIFORM_MEMBER(int32, IsVTR)
 END_UNIFORM_BUFFER_STRUCT(FNvFlowCopyGridDataParameters)
 
 IMPLEMENT_UNIFORM_BUFFER_STRUCT(FNvFlowCopyGridDataParameters, TEXT("NvFlowCopyGridData"));
 typedef TUniformBufferRef<FNvFlowCopyGridDataParameters> FNvFlowCopyGridDataUniformBufferRef;
 
 BEGIN_UNIFORM_BUFFER_STRUCT(FNvFlowApplyDistanceFieldParameters, )
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, ThreadDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDimBits)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(int32, IsVTR)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FVector, VDimInv)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FMatrix, VolumeToWorld)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, DistanceScale)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, MinActiveDist)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, MaxActiveDist)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, ValueCoupleRate)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FVector4, EmitValue)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, SlipFactor)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, SlipThickness)
+UNIFORM_MEMBER(FIntVector, ThreadDim)
+UNIFORM_MEMBER(FIntVector, BlockDim)
+UNIFORM_MEMBER(FIntVector, BlockDimBits)
+UNIFORM_MEMBER(int32, IsVTR)
+UNIFORM_MEMBER(FVector, VDimInv)
+UNIFORM_MEMBER(FMatrix, VolumeToWorld)
+UNIFORM_MEMBER(float, DistanceScale)
+UNIFORM_MEMBER(float, MinActiveDist)
+UNIFORM_MEMBER(float, MaxActiveDist)
+UNIFORM_MEMBER(float, ValueCoupleRate)
+UNIFORM_MEMBER(FVector4, EmitValue)
+UNIFORM_MEMBER(float, SlipFactor)
+UNIFORM_MEMBER(float, SlipThickness)
 END_UNIFORM_BUFFER_STRUCT(FNvFlowApplyDistanceFieldParameters)
 
 IMPLEMENT_UNIFORM_BUFFER_STRUCT(FNvFlowApplyDistanceFieldParameters, TEXT("NvFlowApplyDistanceField"));
@@ -430,7 +430,7 @@ private:
 	FShaderResourceParameter DataIn;
 	FShaderResourceParameter DataOut;
 };
-IMPLEMENT_SHADER_TYPE(, FNvFlowCopyGridDataCS, TEXT("/Plugin/NvFlow/Private/NvFlowCopyShader.usf"), TEXT("CopyGridData"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNvFlowCopyGridDataCS, TEXT("/Engine/Private/NvFlowCopyShader.usf"), TEXT("CopyGridData"), SF_Compute);
 
 
 class FNvFlowApplyDistanceFieldCS : public FGlobalShader
@@ -559,24 +559,24 @@ private:
 
 	FGlobalDistanceFieldParameters GlobalDistanceFieldParameters;
 };
-IMPLEMENT_SHADER_TYPE(, FNvFlowApplyDistanceFieldCS, TEXT("/Plugin/NvFlow/Private/NvFlowDistanceFieldShader.usf"), TEXT("ApplyDistanceField"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNvFlowApplyDistanceFieldCS, TEXT("/Engine/Private/NvFlowDistanceFieldShader.usf"), TEXT("ApplyDistanceField"), SF_Compute);
 
 
 #define COUPLE_PARTICLES_THREAD_COUNT 64
 
 BEGIN_UNIFORM_BUFFER_STRUCT(FNvFlowCoupleParticlesParameters, )
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, TextureSizeX)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, TextureSizeY)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(uint32, ParticleCount)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FMatrix, WorldToVolume)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, VDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDim)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(FIntVector, BlockDimBits)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(int32, IsVTR)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, AccelRate)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, DecelRate)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, Threshold)
-DECLARE_UNIFORM_BUFFER_STRUCT_MEMBER(float, InvVelocityScale)
+UNIFORM_MEMBER(uint32, TextureSizeX)
+UNIFORM_MEMBER(uint32, TextureSizeY)
+UNIFORM_MEMBER(uint32, ParticleCount)
+UNIFORM_MEMBER(FMatrix, WorldToVolume)
+UNIFORM_MEMBER(FIntVector, VDim)
+UNIFORM_MEMBER(FIntVector, BlockDim)
+UNIFORM_MEMBER(FIntVector, BlockDimBits)
+UNIFORM_MEMBER(int32, IsVTR)
+UNIFORM_MEMBER(float, AccelRate)
+UNIFORM_MEMBER(float, DecelRate)
+UNIFORM_MEMBER(float, Threshold)
+UNIFORM_MEMBER(float, InvVelocityScale)
 END_UNIFORM_BUFFER_STRUCT(FNvFlowCoupleParticlesParameters)
 
 IMPLEMENT_UNIFORM_BUFFER_STRUCT(FNvFlowCoupleParticlesParameters, TEXT("NvFlowCoupleParticles"));
@@ -719,7 +719,7 @@ private:
 	FShaderResourceParameter DataIn;
 	FShaderResourceParameter DataOut;
 };
-IMPLEMENT_SHADER_TYPE(, FNvFlowCoupleParticlesCS, TEXT("/Plugin/NvFlow/Private/NvFlowCoupleShader.usf"), TEXT("CoupleParticlesToGrid"), SF_Compute);
+IMPLEMENT_SHADER_TYPE(, FNvFlowCoupleParticlesCS, TEXT("/Engine/Private/NvFlowCoupleShader.usf"), TEXT("CoupleParticlesToGrid"), SF_Compute);
 
 
 void NvFlow::Scene::applyDistanceField(IRHICommandContext* RHICmdCtx, NvFlowUint dataFrontIdx, const NvFlowGridEmitCustomEmitLayerParams& layerParams, const class FGlobalDistanceFieldParameterData* GlobalDistanceFieldParameterData, float dt,

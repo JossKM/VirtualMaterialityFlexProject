@@ -14,9 +14,9 @@ void FD3D12CommandContext::NvFlowGetDeviceDesc(FRHINvFlowDeviceDesc* desc)
 
 	descD3D12->device = GetParentDevice()->GetDevice();
 	descD3D12->commandQueue = GetCommandListManager().GetD3DCommandQueue();
-	descD3D12->commandQueueFence = GetCommandListManager().GetFence().GetFenceCore()->GetFence();
+	descD3D12->commandQueueFence = GetCommandListManager().GetFence().GetFenceCore(0)->GetFence(); //hacked this to always use GPU index 0, needs a proper fix!
 	descD3D12->commandList = CommandListHandle.GraphicsCommandList();
-	descD3D12->lastFenceCompleted = GetCommandListManager().GetFence().GetLastCompletedFence();
+	descD3D12->lastFenceCompleted = GetCommandListManager().GetFence().GetLastCompletedFenceFast();
 	descD3D12->nextFenceValue = GetCommandListManager().GetFence().GetCurrentFence();
 }
 
@@ -105,7 +105,7 @@ public:
 
 	FD3D12NvFlowResourceRW(
 		FD3D12Device* InParent,
-		GPUNodeMask VisibleNodes,
+		FRHIGPUMask VisibleNodes,
 		ID3D12Resource* InResource,
 		D3D12_RESOURCE_DESC const& InDesc,
 		D3D12_RESOURCE_STATES* InResourceState
@@ -135,7 +135,7 @@ FShaderResourceViewRHIRef FD3D12CommandContext::NvFlowCreateSRV(const FRHINvFlow
 	const FRHINvFlowResourceViewDescD3D12* descD3D12 = static_cast<const FRHINvFlowResourceViewDescD3D12*>(desc);
 
 	FD3D12NvFlowResourceRW* NvFlowResource = new FD3D12NvFlowResourceRW(
-		GetParentDevice(), GetParentDevice()->GetNodeMask(), descD3D12->resource,
+		GetParentDevice(), GetParentDevice()->GetGPUMask(), descD3D12->resource,
 		descD3D12->resource->GetDesc(), descD3D12->currentState);
 
 	// initialize CommandList resource state to avoid getting to PendingBarrierResources CommandList
@@ -172,7 +172,7 @@ FRHINvFlowResourceRW* FD3D12CommandContext::NvFlowCreateResourceRW(const FRHINvF
 	const FRHINvFlowResourceRWViewDescD3D12* descD3D12 = static_cast<const FRHINvFlowResourceRWViewDescD3D12*>(desc);
 
 	FD3D12NvFlowResourceRW* NvFlowResourceRW = new FD3D12NvFlowResourceRW(
-		GetParentDevice(), GetParentDevice()->GetNodeMask(), descD3D12->resourceView.resource,
+		GetParentDevice(), GetParentDevice()->GetGPUMask(), descD3D12->resourceView.resource,
 		descD3D12->resourceView.resource->GetDesc(), descD3D12->resourceView.currentState);
 
 	// initialize CommandList resource state to avoid getting to PendingBarrierResources CommandList
