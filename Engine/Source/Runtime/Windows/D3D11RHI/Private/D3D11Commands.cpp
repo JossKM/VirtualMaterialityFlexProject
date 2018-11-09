@@ -2259,7 +2259,6 @@ void FD3D11DynamicRHI::RHIRenderHBAO(
 )
 {
 	static const auto CVarHBAOGBufferNormals = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.HBAO.GBufferNormals"));
-	static const auto CVarHBAOVisualizeAO = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.HBAO.VisualizeAO"));
 
 	if (!HBAOContext)
 	{
@@ -2293,22 +2292,25 @@ void FD3D11DynamicRHI::RHIRenderHBAO(
 	Input.DepthData.ProjectionMatrix.Layout = GFSDK_SSAO_ROW_MAJOR_ORDER;
 	Input.DepthData.MetersToViewSpaceUnits = 100.f;
 
-	FD3D11TextureBase* NormalTexture = GetD3D11TextureFromRHITexture(SceneNormalTextureRHI);
-	ID3D11ShaderResourceView* NormalSRV = NormalTexture->GetShaderResourceView();
-	
-	int32 bHBAOGbufferNormals = CVarHBAOGBufferNormals->GetValueOnRenderThread();
+	//Set Normal data
+	int32 bHBAOGbufferNormals = SceneNormalTextureRHI != NULL && CVarHBAOGBufferNormals->GetValueOnRenderThread();
 	Input.NormalData.Enable = bHBAOGbufferNormals;
-	Input.NormalData.pFullResNormalTextureSRV = NormalSRV;
-	Input.NormalData.DecodeScale = 2.f;
-	Input.NormalData.DecodeBias = -1.f;
-	Input.NormalData.WorldToViewMatrix.Data = GFSDK_SSAO_Float4x4(&ViewMatrix.M[0][0]);
-	Input.NormalData.WorldToViewMatrix.Layout = GFSDK_SSAO_ROW_MAJOR_ORDER;
+	if (Input.NormalData.Enable)
+	{
+		FD3D11TextureBase* NormalTexture = GetD3D11TextureFromRHITexture(SceneNormalTextureRHI);
+		ID3D11ShaderResourceView* NormalSRV = NormalTexture->GetShaderResourceView();
 
-	int32 bHBAOVisualizeAO = CVarHBAOVisualizeAO->GetValueOnRenderThread();
+		Input.NormalData.pFullResNormalTextureSRV = NormalSRV;
+		Input.NormalData.DecodeScale = 2.f;
+		Input.NormalData.DecodeBias = -1.f;
+		Input.NormalData.WorldToViewMatrix.Data = GFSDK_SSAO_Float4x4(&ViewMatrix.M[0][0]);
+		Input.NormalData.WorldToViewMatrix.Layout = GFSDK_SSAO_ROW_MAJOR_ORDER;
+	}
+
 	GFSDK_SSAO_Output_D3D11 Output;
 	ZeroMemory(&Output, sizeof(Output));
 	Output.pRenderTargetView = RenderTargetView;
-	Output.Blend.Mode = bHBAOVisualizeAO ? GFSDK_SSAO_OVERWRITE_RGB : GFSDK_SSAO_MULTIPLY_RGB;
+	Output.Blend.Mode = GFSDK_SSAO_MULTIPLY_RGB;
 
 	GFSDK_SSAO_Status Status;
 	Status = HBAOContext->RenderAO(Direct3DDeviceIMContext, Input, BaseParams, Output, GFSDK_SSAO_RenderMask::GFSDK_SSAO_RENDER_AO);

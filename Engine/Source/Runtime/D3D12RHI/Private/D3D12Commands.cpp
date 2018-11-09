@@ -2188,7 +2188,6 @@ void FD3D12CommandContext::RHIRenderHBAO(
 )
 {
 	static const auto CVarHBAOGBufferNormals = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.HBAO.GBufferNormals"));
-	static const auto CVarHBAOVisualizeAO = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.HBAO.VisualizeAO"));
 
 	// Just override the base so that the engine doesn't crash.
 	if (!OwningRHI.HBAOContext || OwningRHI.HBAODescriptorHeaps == NULL)
@@ -2240,7 +2239,7 @@ void FD3D12CommandContext::RHIRenderHBAO(
 	InputData.DepthData.MetersToViewSpaceUnits = 100.0f;
 
 	//Set Normal data
-	int32 bHBAOGbufferNormals = CVarHBAOGBufferNormals->GetValueOnRenderThread();
+	int32 bHBAOGbufferNormals = SceneNormalTextureRHI != NULL && CVarHBAOGBufferNormals->GetValueOnRenderThread();
 	InputData.NormalData.Enable = bHBAOGbufferNormals;
 	if (InputData.NormalData.Enable)
 	{
@@ -2259,7 +2258,6 @@ void FD3D12CommandContext::RHIRenderHBAO(
 	}
 
 	//Set Output data
-	int32 bHBAOVisualizeAO = CVarHBAOVisualizeAO->GetValueOnRenderThread();
 	FD3D12TextureBase* ColorTexture = GetD3D12TextureFromRHITexture(SceneColorTextureRHI);
 	FD3D12RenderTargetView* ColorRTV = ColorTexture->GetRenderTargetView(0, -1);
 	GFSDK_SSAO_Output_D3D12 Output;
@@ -2267,7 +2265,7 @@ void FD3D12CommandContext::RHIRenderHBAO(
 	HBAOColorRTV.CpuHandle = ColorRTV->GetView().ptr;
 	HBAOColorRTV.pResource = ColorTexture->GetResource()->GetResource();
 	Output.pRenderTargetView = &HBAOColorRTV;
-	Output.Blend.Mode = bHBAOVisualizeAO ? GFSDK_SSAO_OVERWRITE_RGB : GFSDK_SSAO_MULTIPLY_RGB;
+	Output.Blend.Mode = GFSDK_SSAO_MULTIPLY_RGB;
 
 	auto cmdList = CommandListHandle.GraphicsCommandList();
 	//Saving current states to restore them after RenderAO

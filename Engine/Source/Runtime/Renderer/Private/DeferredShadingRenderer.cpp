@@ -141,12 +141,6 @@ static TAutoConsoleVariable<int32> CVarHBAOGBufferNormals(
 	TEXT(" 1: fetch GBuffer normals\n"),
 	ECVF_RenderThreadSafe);
 
-static TAutoConsoleVariable<int32> CVarHBAOVisualizeAO(
-	TEXT("r.HBAO.VisualizeAO"),
-	0,
-	TEXT("To visualize the AO only"),
-	ECVF_Cheat | ECVF_RenderThreadSafe);
-
 static TAutoConsoleVariable<int32> CVarHBAODualLayerBlend(
 	TEXT("r.HBAO.DualLayerBlend"),
 	0,
@@ -1017,6 +1011,62 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 			NULL);
 	}
 
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	if (GMaxRHIShaderPlatform == SP_PCD3D_SM5 &&
+		CVarHBAOEnable.GetValueOnRenderThread() &&
+		ViewFamily.EngineShowFlags.HBAO)
+	{
+		for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ++ViewIndex)
+		{
+			const FViewInfo& View = Views[ViewIndex];
+
+			if (View.IsPerspectiveProjection() &&
+				View.FinalPostProcessSettings.HBAOPowerExponent > 0.f)
+			{
+				// Set the viewport to the current view
+				RHICmdList.SetViewport(View.ViewRect.Min.X, View.ViewRect.Min.Y, 0, View.ViewRect.Max.X, View.ViewRect.Max.Y, 1);
+
+				GFSDK_SSAO_Parameters Params;
+				Params.EnableDualLayerAO = CVarHBAODualLayerBlend.GetValueOnRenderThread();
+				Params.Radius = View.FinalPostProcessSettings.HBAORadius;
+				Params.Bias = View.FinalPostProcessSettings.HBAOBias;
+				Params.PowerExponent = View.FinalPostProcessSettings.HBAOPowerExponent;
+				Params.SmallScaleAO = View.FinalPostProcessSettings.HBAOSmallScaleAO;
+				Params.Blur.Enable = View.FinalPostProcessSettings.HBAOBlurRadius != AOBR_BlurRadius0;
+				Params.Blur.Sharpness = View.FinalPostProcessSettings.HBAOBlurSharpness;
+				Params.Blur.Radius = View.FinalPostProcessSettings.HBAOBlurRadius == AOBR_BlurRadius2 ? GFSDK_SSAO_BLUR_RADIUS_2 : GFSDK_SSAO_BLUR_RADIUS_4;
+				Params.ForegroundAO.Enable = View.FinalPostProcessSettings.HBAOForegroundAOEnable;
+				Params.ForegroundAO.ForegroundViewDepth = View.FinalPostProcessSettings.HBAOForegroundAODistance;
+				Params.BackgroundAO.Enable = View.FinalPostProcessSettings.HBAOBackgroundAOEnable;
+				Params.BackgroundAO.BackgroundViewDepth = View.FinalPostProcessSettings.HBAOBackgroundAODistance;
+				Params.DepthStorage = CVarHBAOHighPrecisionDepth.GetValueOnRenderThread() ? GFSDK_SSAO_FP32_VIEW_DEPTHS : GFSDK_SSAO_FP16_VIEW_DEPTHS;
+
+				if (!SceneContext.bScreenSpaceAOIsValid)
+				{
+					SceneContext.bScreenSpaceAOIsValid = true;
+
+					// We are the first users of the indirect occlusion texture so we must clear to unoccluded
+					FRHIRenderTargetView RtView = FRHIRenderTargetView(SceneContext.ScreenSpaceAO->GetRenderTargetItem().TargetableTexture, ERenderTargetLoadAction::EClear);
+					FRHISetRenderTargetsInfo Info(1, &RtView, FRHIDepthRenderTargetView());
+					RHICmdList.SetRenderTargetsAndClear(Info);
+				}
+
+				// Render HBAO and multiply the AO over the SceneColorSurface.RGB, preserving destination alpha
+				RHICmdList.RenderHBAO(
+					SceneContext.GetSceneDepthTexture(),
+					SceneContext.GetHBAOSceneDepthTexture(),
+					View.ViewMatrices.GetProjectionMatrix(),
+					SceneContext.GBufferA.IsValid() ? SceneContext.GetGBufferATexture() : NULL,
+					View.ViewMatrices.GetViewMatrix(),
+					SceneContext.ScreenSpaceAO->GetRenderTargetItem().TargetableTexture,
+					Params);
+			}
+		}
+	}
+#endif
+	// NVCHANGE_END: Add HBAO+
+
 	// only temporarily available after early z pass and until base pass
 	check(!SceneContext.DBufferA);
 	check(!SceneContext.DBufferB);
@@ -1424,51 +1474,6 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 		ServiceLocalQueue();
 	}
 
-	// NVCHANGE_BEGIN: Add HBAO+
-#if WITH_GFSDK_SSAO
-	if (GMaxRHIShaderPlatform == SP_PCD3D_SM5 &&
-		CVarHBAOEnable.GetValueOnRenderThread() &&
-		ViewFamily.EngineShowFlags.HBAO)
-	{
-		for (int32 ViewIndex = 0; ViewIndex < Views.Num(); ++ViewIndex)
-		{
-			const FViewInfo& View = Views[ViewIndex];
-
-			if (View.IsPerspectiveProjection() &&
-				View.FinalPostProcessSettings.HBAOPowerExponent > 0.f)
-			{
-				// Set the viewport to the current view
-				RHICmdList.SetViewport(View.ViewRect.Min.X, View.ViewRect.Min.Y, 0, View.ViewRect.Max.X, View.ViewRect.Max.Y, 1);
-
-				GFSDK_SSAO_Parameters Params;
-				Params.EnableDualLayerAO = CVarHBAODualLayerBlend.GetValueOnRenderThread();
-				Params.Radius = View.FinalPostProcessSettings.HBAORadius;
-				Params.Bias = View.FinalPostProcessSettings.HBAOBias;
-				Params.PowerExponent = View.FinalPostProcessSettings.HBAOPowerExponent;
-				Params.SmallScaleAO = View.FinalPostProcessSettings.HBAOSmallScaleAO;
-				Params.Blur.Enable = View.FinalPostProcessSettings.HBAOBlurRadius != AOBR_BlurRadius0;
-				Params.Blur.Sharpness = View.FinalPostProcessSettings.HBAOBlurSharpness;
-				Params.Blur.Radius = View.FinalPostProcessSettings.HBAOBlurRadius == AOBR_BlurRadius2 ? GFSDK_SSAO_BLUR_RADIUS_2 : GFSDK_SSAO_BLUR_RADIUS_4;
-				Params.ForegroundAO.Enable = View.FinalPostProcessSettings.HBAOForegroundAOEnable;
-				Params.ForegroundAO.ForegroundViewDepth = View.FinalPostProcessSettings.HBAOForegroundAODistance;
-				Params.BackgroundAO.Enable = View.FinalPostProcessSettings.HBAOBackgroundAOEnable;
-				Params.BackgroundAO.BackgroundViewDepth = View.FinalPostProcessSettings.HBAOBackgroundAODistance;
-				Params.DepthStorage = CVarHBAOHighPrecisionDepth.GetValueOnRenderThread() ? GFSDK_SSAO_FP32_VIEW_DEPTHS : GFSDK_SSAO_FP16_VIEW_DEPTHS;
-
-				// Render HBAO and multiply the AO over the SceneColorSurface.RGB, preserving destination alpha
-				RHICmdList.RenderHBAO(
-					SceneContext.GetSceneDepthTexture(),
-					SceneContext.GetHBAOSceneDepthTexture(),
-					View.ViewMatrices.GetProjectionMatrix(),
-					SceneContext.GetGBufferATexture(),
-					View.ViewMatrices.GetViewMatrix(),
-					SceneContext.GetSceneColorTexture(),
-					Params);
-			}
-		}
-	}
-#endif
-	// NVCHANGE_END: Add HBAO+
 
 	if (ViewFamily.EngineShowFlags.StationaryLightOverlap &&
 		FeatureLevel >= ERHIFeatureLevel::SM4)
