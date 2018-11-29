@@ -29,7 +29,7 @@
 #ifndef NVBLASTEXTAUTHORINGBONDGENERATOR_H
 #define NVBLASTEXTAUTHORINGBONDGENERATOR_H
 
-#include "NvBlastExtAuthoringTypes.h"
+#include "Blast/Public/extensions/authoringCommon/include/NvBlastExtAuthoringTypes.h"
 
 namespace physx
 {

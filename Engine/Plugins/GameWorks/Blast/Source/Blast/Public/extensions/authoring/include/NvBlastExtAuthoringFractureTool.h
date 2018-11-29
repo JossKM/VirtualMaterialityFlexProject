@@ -29,7 +29,7 @@
 #ifndef NVBLASTAUTHORINGFRACTURETOOL_H
 #define NVBLASTAUTHORINGFRACTURETOOL_H
 
-#include "NvBlastExtAuthoringTypes.h"
+#include "Blast/Public/extensions/authoringCommon/include/NvBlastExtAuthoringTypes.h"
 
 namespace Nv
 {

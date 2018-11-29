@@ -16,7 +16,7 @@
 #ifndef NVBLASTAUTHORINGCUTOUT_H
 #define NVBLASTAUTHORINGCUTOUT_H
 
-#include "NvBlastExtAuthoringTypes.h"
+#include "Blast/Public/extensions/authoringCommon/include/NvBlastExtAuthoringTypes.h"
 
 
 namespace Nv

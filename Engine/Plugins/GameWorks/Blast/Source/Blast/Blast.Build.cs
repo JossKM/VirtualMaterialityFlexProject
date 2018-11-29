@@ -123,6 +123,7 @@ namespace UnrealBuildTool.Rules
                 {
                     "Blast/Public/extensions/assetutils/include",
                     "Blast/Public/extensions/authoring/include",
+                    "Blast/Public/extensions/authoringCommon/include",
                     "Blast/Public/extensions/serialization/include",
                     "Blast/Public/extensions/shaders/include",
                     "Blast/Public/extensions/stress/include",
