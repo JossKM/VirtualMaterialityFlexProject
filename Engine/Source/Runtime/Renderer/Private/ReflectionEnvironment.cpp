@@ -491,6 +491,8 @@ class FReflectionEnvironmentSkyLightingPS : public FGlobalShader
 	class FSkyLight					: SHADER_PERMUTATION_BOOL("ENABLE_SKY_LIGHT");
 	class FDynamicSkyLight			: SHADER_PERMUTATION_BOOL("ENABLE_DYNAMIC_SKY_LIGHT");
 	class FSkyShadowing				: SHADER_PERMUTATION_BOOL("APPLY_SKY_SHADOWING");
+	// NVCHANGE_BEGIN: Add VXGI
+	class FVxgiSpecular				: SHADER_PERMUTATION_BOOL("APPLY_VXGI");
 
 	using FPermutationDomain = TShaderPermutationDomain<
 		FHasBoxCaptures,
@@ -499,7 +501,9 @@ class FReflectionEnvironmentSkyLightingPS : public FGlobalShader
 		FSpecularBounce,
 		FSkyLight,
 		FDynamicSkyLight,
-		FSkyShadowing>;
+		FSkyShadowing,
+		FVxgiSpecular>;
+	// NVCHANGE_END: Add VXGI
 
 	static FPermutationDomain RemapPermutation(FPermutationDomain PermutationVector)
 	{
@@ -527,7 +531,8 @@ class FReflectionEnvironmentSkyLightingPS : public FGlobalShader
 		return PermutationVector;
 	}
 
-	static FPermutationDomain BuildPermutationVector(const FViewInfo& View, bool bBoxCapturesOnly, bool bSphereCapturesOnly, bool bSupportDFAOIndirectOcclusion, bool bSpecularBounce, bool bEnableSkyLight, bool bEnableDynamicSkyLight, bool bApplySkyShadowing)
+	// NVCHANGE_BEGIN: Add VXGI
+	static FPermutationDomain BuildPermutationVector(const FViewInfo& View, bool bBoxCapturesOnly, bool bSphereCapturesOnly, bool bSupportDFAOIndirectOcclusion, bool bSpecularBounce, bool bEnableSkyLight, bool bEnableDynamicSkyLight, bool bApplySkyShadowing, bool bVxgiSpecular)
 	{
 		FPermutationDomain PermutationVector;
 
@@ -538,16 +543,18 @@ class FReflectionEnvironmentSkyLightingPS : public FGlobalShader
 		PermutationVector.Set<FSkyLight>(bEnableSkyLight);
 		PermutationVector.Set<FDynamicSkyLight>(bEnableDynamicSkyLight);
 		PermutationVector.Set<FSkyShadowing>(bApplySkyShadowing);
+		PermutationVector.Set<FVxgiSpecular>(bVxgiSpecular);
 
 		return RemapPermutation(PermutationVector);
 	}
+	// NVCHANGE_END: Add VXGI
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
 	{
 		if (!IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM4))
 		{
 			return false;
-		}
+	}
 
 		FPermutationDomain PermutationVector(Parameters.PermutationId);
 		return PermutationVector == RemapPermutation(PermutationVector);
@@ -588,7 +595,7 @@ public:
 		const FViewInfo& View,
 		FTextureRHIParamRef SSRTexture,
 		const TRefCountPtr<IPooledRenderTarget>& DynamicBentNormalAO
-	)
+		)
 	{
 		const FPixelShaderRHIParamRef ShaderRHI = GetPixelShader();
 
@@ -708,41 +715,41 @@ void GatherAndSortReflectionCaptures(const FViewInfo& View, const FScene* Scene,
 				NewSortEntry.CaptureOffsetAndAverageBrightness.W = ComponentStatePtr->AverageBrightness;
 			}
 
-			NewSortEntry.Guid = CurrentCapture->Guid;
-			NewSortEntry.PositionAndRadius = FVector4(CurrentCapture->Position, CurrentCapture->InfluenceRadius);
-			float ShapeTypeValue = (float)CurrentCapture->Shape;
+				NewSortEntry.Guid = CurrentCapture->Guid;
+				NewSortEntry.PositionAndRadius = FVector4(CurrentCapture->Position, CurrentCapture->InfluenceRadius);
+				float ShapeTypeValue = (float)CurrentCapture->Shape;
 			NewSortEntry.CaptureProperties = FVector4(CurrentCapture->Brightness, NewSortEntry.CaptureIndex, ShapeTypeValue, 0);
 
-			if (CurrentCapture->Shape == EReflectionCaptureShape::Plane)
-			{
-				//planes count as boxes in the compute shader.
-				++OutNumBoxCaptures;
-				NewSortEntry.BoxTransform = FMatrix(
-					FPlane(CurrentCapture->ReflectionPlane),
-					FPlane(CurrentCapture->ReflectionXAxisAndYScale),
-					FPlane(0, 0, 0, 0),
-					FPlane(0, 0, 0, 0));
+				if (CurrentCapture->Shape == EReflectionCaptureShape::Plane)
+				{
+					//planes count as boxes in the compute shader.
+					++OutNumBoxCaptures;
+					NewSortEntry.BoxTransform = FMatrix(
+						FPlane(CurrentCapture->ReflectionPlane),
+						FPlane(CurrentCapture->ReflectionXAxisAndYScale),
+						FPlane(0, 0, 0, 0),
+						FPlane(0, 0, 0, 0));
 
-				NewSortEntry.BoxScales = FVector4(0);
-			}
-			else if (CurrentCapture->Shape == EReflectionCaptureShape::Sphere)
-			{
-				++OutNumSphereCaptures;
-			}
-			else
-			{
-				++OutNumBoxCaptures;
-				NewSortEntry.BoxTransform = CurrentCapture->BoxTransform;
-				NewSortEntry.BoxScales = FVector4(CurrentCapture->BoxScales, CurrentCapture->BoxTransitionDistance);
-			}
+					NewSortEntry.BoxScales = FVector4(0);
+				}
+				else if (CurrentCapture->Shape == EReflectionCaptureShape::Sphere)
+				{
+					++OutNumSphereCaptures;
+				}
+				else
+				{
+					++OutNumBoxCaptures;
+					NewSortEntry.BoxTransform = CurrentCapture->BoxTransform;
+					NewSortEntry.BoxScales = FVector4(CurrentCapture->BoxScales, CurrentCapture->BoxTransitionDistance);
+				}
 
-			const FSphere BoundingSphere(CurrentCapture->Position, CurrentCapture->InfluenceRadius);
-			const float Distance = View.ViewMatrices.GetViewMatrix().TransformPosition(BoundingSphere.Center).Z + BoundingSphere.W;
-			OutFurthestReflectionCaptureDistance = FMath::Max(OutFurthestReflectionCaptureDistance, Distance);
+				const FSphere BoundingSphere(CurrentCapture->Position, CurrentCapture->InfluenceRadius);
+				const float Distance = View.ViewMatrices.GetViewMatrix().TransformPosition(BoundingSphere.Center).Z + BoundingSphere.W;
+				OutFurthestReflectionCaptureDistance = FMath::Max(OutFurthestReflectionCaptureDistance, Distance);
 
-			OutSortData.Add(NewSortEntry);
+				OutSortData.Add(NewSortEntry);
+			}
 		}
-	}
 
 	OutSortData.Sort();	
 }
@@ -826,9 +833,17 @@ void FDeferredShadingSceneRenderer::RenderDeferredReflectionsAndSkyLighting(FRHI
 
 		const bool bPlanarReflections = RenderDeferredPlanarReflections(RHICmdList, View, false, SSROutput);
 
-		bool bRequiresApply = bSkyLight || bDynamicSkyLight || bReflectionEnv || bSSR || bPlanarReflections;
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		const bool bVxgiSpecular = !!View.FinalPostProcessSettings.VxgiSpecularTracingEnabled || !!View.FinalPostProcessSettings.VxgiAreaLightsEnabled;
+#else
+		const bool bVxgiSpecular = 0;
+#endif
 
-		if (bRequiresApply)
+		bool bRequiresApply = bSkyLight || bDynamicSkyLight || bReflectionEnv || bSSR || bPlanarReflections || bVxgiSpecular;
+		// NVCHANGE_END: Add VXGI
+
+		if(bRequiresApply)
 		{
 			SCOPED_GPU_STAT(RHICmdList, ReflectionEnvironment);
 			SCOPED_DRAW_EVENTF(RHICmdList, ReflectionEnvironment, TEXT("ReflectionEnvironmentAndSky"));
@@ -839,7 +854,9 @@ void FDeferredShadingSceneRenderer::RenderDeferredReflectionsAndSkyLighting(FRHI
 
 			TShaderMapRef<FPostProcessVS> VertexShader(View.ShaderMap);
 
-			auto PermutationVector = FReflectionEnvironmentSkyLightingPS::BuildPermutationVector(View, bHasBoxCaptures, bHasSphereCaptures, DynamicBentNormalAO != NULL, bReflectionCapture, bSkyLight, bDynamicSkyLight, bApplySkyShadowing);
+			// NVCHANGE_BEGIN: Add VXGI
+			auto PermutationVector = FReflectionEnvironmentSkyLightingPS::BuildPermutationVector(View, bHasBoxCaptures, bHasSphereCaptures, DynamicBentNormalAO != NULL, bReflectionCapture, bSkyLight, bDynamicSkyLight, bApplySkyShadowing, bVxgiSpecular);
+			// NVCHANGE_END: Add VXGI
 
 			TShaderMapRef<FReflectionEnvironmentSkyLightingPS> PixelShader(View.ShaderMap, PermutationVector);
 
@@ -870,8 +887,8 @@ void FDeferredShadingSceneRenderer::RenderDeferredReflectionsAndSkyLighting(FRHI
 				}
 				else
 				{
-					GraphicsPSOInit.BlendState = TStaticBlendState<CW_RGBA, BO_Add, BF_One, BF_One, BO_Add, BF_One, BF_One>::GetRHI();
-				}
+				GraphicsPSOInit.BlendState = TStaticBlendState<CW_RGBA, BO_Add, BF_One, BF_One, BO_Add, BF_One, BF_One>::GetRHI();
+			}
 			}
 
 			GraphicsPSOInit.RasterizerState = TStaticRasterizerState<FM_Solid, CM_None>::GetRHI();
@@ -890,10 +907,10 @@ void FDeferredShadingSceneRenderer::RenderDeferredReflectionsAndSkyLighting(FRHI
 
 			if (bReflectionCapture)
 			{
-				DrawRectangle(
-					RHICmdList,
-					0, 0,
-					View.ViewRect.Width(), View.ViewRect.Height(),
+			DrawRectangle(
+				RHICmdList,
+				0, 0,
+				View.ViewRect.Width(), View.ViewRect.Height(),
 					0, 0,
 					View.ViewRect.Width(), View.ViewRect.Height(),
 					FIntPoint(View.ViewRect.Width(), View.ViewRect.Height()),
@@ -907,11 +924,11 @@ void FDeferredShadingSceneRenderer::RenderDeferredReflectionsAndSkyLighting(FRHI
 					RHICmdList,
 					0, 0,
 					View.ViewRect.Width(), View.ViewRect.Height(),
-					View.ViewRect.Min.X, View.ViewRect.Min.Y,
-					View.ViewRect.Width(), View.ViewRect.Height(),
-					FIntPoint(View.ViewRect.Width(), View.ViewRect.Height()),
-					SceneContext.GetBufferSizeXY(),
-					*VertexShader);
+				View.ViewRect.Min.X, View.ViewRect.Min.Y,
+				View.ViewRect.Width(), View.ViewRect.Height(),
+				FIntPoint(View.ViewRect.Width(), View.ViewRect.Height()),
+				SceneContext.GetBufferSizeXY(),
+				*VertexShader);
 			}
 
 			ResolveSceneColor(RHICmdList);

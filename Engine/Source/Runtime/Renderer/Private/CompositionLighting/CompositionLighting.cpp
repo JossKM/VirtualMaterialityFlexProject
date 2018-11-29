@@ -110,6 +110,14 @@ static bool IsSkylightActive(const FViewInfo& View)
 
 bool ShouldRenderScreenSpaceAmbientOcclusion(const FViewInfo& View)
 {
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	if (View.VxgiAmbientOcclusionMode != EVxgiAmbientOcclusionMode::None)
+		return true;
+#endif
+	// NVCHANGE_END: Add VXGI
+
+
 	bool bEnabled = true;
 
 	if (!IsLpvIndirectPassRequired(View))
@@ -307,7 +315,7 @@ void FCompositionLighting::ProcessAfterBasePass(FRHICommandListImmediate& RHICmd
 
 		if (bDoDecal && IsUsingGBuffers(View.GetShaderPlatform()))
 		{
-			// decals are before AmbientOcclusion so the decal can output a normal that AO is affected by
+		// decals are before AmbientOcclusion so the decal can output a normal that AO is affected by
 			FRenderingCompositePass* BeforeLightingPass = Context.Graph.RegisterPass(new(FMemStack::Get()) FRCPassPostProcessDeferredDecals(DRS_BeforeLighting));
 			BeforeLightingPass->SetInput(ePId_Input0, Context.FinalOutput);
 			Context.FinalOutput = FRenderingCompositeOutputRef(BeforeLightingPass);
@@ -324,14 +332,14 @@ void FCompositionLighting::ProcessAfterBasePass(FRHICommandListImmediate& RHICmd
 		// Forwared shading SSAO is applied before the basepass using only the depth buffer.
 		if (!IsForwardShadingEnabled(View.GetShaderPlatform()))
 		{
-			FRenderingCompositeOutputRef AmbientOcclusion;
+		FRenderingCompositeOutputRef AmbientOcclusion;
 
 			uint32 SSAOLevels = FSSAOHelper::ComputeAmbientOcclusionPassCount(Context.View);
-			if (SSAOLevels)
+		if (SSAOLevels)
+		{
+			if (!FSSAOHelper::IsAmbientOcclusionAsyncCompute(Context.View, SSAOLevels))
 			{
-				if(!FSSAOHelper::IsAmbientOcclusionAsyncCompute(Context.View, SSAOLevels))
-				{
-					AmbientOcclusion = AddPostProcessingAmbientOcclusion(RHICmdList, Context, SSAOLevels);
+				AmbientOcclusion = AddPostProcessingAmbientOcclusion(RHICmdList, Context, SSAOLevels);
 
 					if (bDoDecal)
 					{
@@ -339,7 +347,7 @@ void FCompositionLighting::ProcessAfterBasePass(FRHICommandListImmediate& RHICmd
 						Pass->AddDependency(Context.FinalOutput);
 
 						Context.FinalOutput = FRenderingCompositeOutputRef(Pass);
-					}
+			}
 				}
 				else
 				{
@@ -348,19 +356,19 @@ void FCompositionLighting::ProcessAfterBasePass(FRHICommandListImmediate& RHICmd
 						TEXT("Ambient occlusion decals are not supported with Async compute SSAO."));
 				}
 
-				if (FSSAOHelper::IsBasePassAmbientOcclusionRequired(Context.View))
-				{
-					FRenderingCompositePass* Pass = Context.Graph.RegisterPass(new(FMemStack::Get()) FRCPassPostProcessBasePassAO());
-					Pass->AddDependency(Context.FinalOutput);
-
-					Context.FinalOutput = FRenderingCompositeOutputRef(Pass);
-				}
-			}
-
-			if (IsAmbientCubemapPassRequired(Context.View))
+			if (FSSAOHelper::IsBasePassAmbientOcclusionRequired(Context.View))
 			{
-				AddPostProcessingAmbientCubemap(Context, AmbientOcclusion);
+				FRenderingCompositePass* Pass = Context.Graph.RegisterPass(new(FMemStack::Get()) FRCPassPostProcessBasePassAO());
+				Pass->AddDependency(Context.FinalOutput);
+
+				Context.FinalOutput = FRenderingCompositeOutputRef(Pass);
 			}
+		}
+
+		if (IsAmbientCubemapPassRequired(Context.View))
+		{
+			AddPostProcessingAmbientCubemap(Context, AmbientOcclusion);
+		}
 		}
 
 		// The graph setup should be finished before this line ----------------------------------------
@@ -514,29 +522,29 @@ void FCompositionLighting::ProcessAsyncSSAO(FRHICommandListImmediate& RHICmdList
 	check(IsInRenderingThread());
 	if (GSupportsEfficientAsyncCompute)
 	{
-		PrepareAsyncSSAO(RHICmdList, Views);
+	PrepareAsyncSSAO(RHICmdList, Views);
 
-		// so that the passes can register themselves to the graph
-		for (int32 i = 0; i < Views.Num(); ++i)
-		{
-			FViewInfo& View = Views[i];
-			FMemMark Mark(FMemStack::Get());
-			FRenderingCompositePassContext CompositeContext(RHICmdList, View);
+	// so that the passes can register themselves to the graph
+	for (int32 i = 0; i < Views.Num(); ++i)
+	{
+		FViewInfo& View = Views[i];
+		FMemMark Mark(FMemStack::Get());
+		FRenderingCompositePassContext CompositeContext(RHICmdList, View);
 
-			// Add the passes we want to add to the graph (commenting a line means the pass is not inserted into the graph) ----------		
+		// Add the passes we want to add to the graph (commenting a line means the pass is not inserted into the graph) ----------		
 			uint32 Levels = FSSAOHelper::ComputeAmbientOcclusionPassCount(View);		
-			if (FSSAOHelper::IsAmbientOcclusionAsyncCompute(View, Levels))
-			{
-				FPostprocessContext Context(RHICmdList, CompositeContext.Graph, View);
+		if (FSSAOHelper::IsAmbientOcclusionAsyncCompute(View, Levels))
+		{
+			FPostprocessContext Context(RHICmdList, CompositeContext.Graph, View);
 
-				FRenderingCompositeOutputRef AmbientOcclusion = AddPostProcessingAmbientOcclusion(RHICmdList, Context, Levels);
-				Context.FinalOutput = FRenderingCompositeOutputRef(AmbientOcclusion);			
+			FRenderingCompositeOutputRef AmbientOcclusion = AddPostProcessingAmbientOcclusion(RHICmdList, Context, Levels);
+			Context.FinalOutput = FRenderingCompositeOutputRef(AmbientOcclusion);			
 
-				// The graph setup should be finished before this line ----------------------------------------
-				CompositeContext.Process(Context.FinalOutput.GetPass(), TEXT("Composition_ProcessAsyncSSAO"));
-			}		
-		}
-		FinishAsyncSSAO(RHICmdList);
+			// The graph setup should be finished before this line ----------------------------------------
+			CompositeContext.Process(Context.FinalOutput.GetPass(), TEXT("Composition_ProcessAsyncSSAO"));
+		}		
+	}
+	FinishAsyncSSAO(RHICmdList);
 	}
 	else
 	{

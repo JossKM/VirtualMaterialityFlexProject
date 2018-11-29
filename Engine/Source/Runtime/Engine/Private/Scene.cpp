@@ -547,6 +547,85 @@ FPostProcessSettings::FPostProcessSettings()
 	ScreenSpaceReflectionMaxRoughness = 0.6f;
 	bMobileHQGaussian = false;
 
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	{
+		HBAOPowerExponent = 2.f;
+		HBAORadius = 2.f;
+		HBAOBias = 0.1f;
+		HBAOSmallScaleAO = 1.f;
+		HBAOBlurRadius = AOBR_BlurRadius2;
+		HBAOBlurSharpness = 16.f;
+		HBAOMaxViewDepth = 9500.f;
+		HBAODepthSharpness = 50.0f;
+		HBAOForegroundAOEnable = false;
+		HBAOForegroundAODistance = 100.f;
+		HBAOBackgroundAOEnable = false;
+		HBAOBackgroundAODistance = 1000.f;
+	}
+#endif
+	// NVCHANGE_END: Add HBAO+
+
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	{
+		VXGI::BasicDiffuseTracingParameters DefaultParams;
+		VxgiDiffuseTracingEnabled = false;
+		VxgiDiffuseTracingIntensity = DefaultParams.irradianceScale;
+		VxgiDiffuseTracingResolution = VXGIDTR_Quarter;
+		VxgiDiffuseLightLeaking = VXGILLM_Minimal;
+		VxgiDiffuseTracingQuality = 0.25f;
+		VxgiDiffuseTracingDirectionalSamplingRate = DefaultParams.directionalSamplingRate;
+		VxgiDiffuseTracingSoftness = DefaultParams.softness;
+		VxgiDiffuseTracingStep = DefaultParams.tracingStep;
+		VxgiDiffuseTracingOpacityCorrectionFactor = DefaultParams.opacityCorrectionFactor;
+		VxgiDiffuseTracingInitialOffsetBias = DefaultParams.initialOffsetBias;
+		VxgiDiffuseTracingInitialOffsetDistanceFactor = DefaultParams.initialOffsetDistanceFactor;
+		bVxgiDiffuseTracingTemporalReprojectionEnabled = DefaultParams.enableTemporalReprojection;
+		VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight = DefaultParams.temporalReprojectionWeight;
+		VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels = DefaultParams.temporalReprojectionMaxDistanceInVoxels;
+		VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent = DefaultParams.temporalReprojectionNormalWeightExponent;
+		VxgiDiffuseTracingTemporalReprojectionDetailReconstruction = DefaultParams.temporalReprojectionDetailReconstruction;
+		
+		VxgiAmbientRange = DefaultParams.ambientRange;
+		VxgiAmbientScale = 2.0f;
+		VxgiAmbientBias = DefaultParams.ambientBias;
+		VxgiAmbientPowerExponent = DefaultParams.ambientPower;
+		VxgiAmbientMixIntensity = 1.0f;
+
+		VXGI::IndirectIrradianceMapTracingParameters DefaultMultiBounceParams;
+		VxgiMultiBounceEnabled = false;
+		VxgiMultiBounceFeedbackGain = DefaultMultiBounceParams.irradianceScale;
+		VxgiMultiBounceLightLeaking = VXGILLM_Moderate;
+	}
+	{
+		VXGI::BasicSpecularTracingParameters DefaultParams;
+		VxgiSpecularTracingEnabled = false;
+		VxgiSpecularTracingIntensity = DefaultParams.irradianceScale;
+		VxgiSpecularTracingStep = DefaultParams.tracingStep;
+		VxgiSpecularTracingOpacityCorrectionFactor = DefaultParams.opacityCorrectionFactor;
+		VxgiSpecularTracingInitialOffsetBias = DefaultParams.initialOffsetBias;
+		VxgiSpecularTracingInitialOffsetDistanceFactor = DefaultParams.initialOffsetDistanceFactor;
+		bVxgiSpecularTracingTemporalFilterEnabled = false;
+		bVxgiSpecularTracingConeJitterEnabled = false;
+		VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight = DefaultParams.temporalReprojectionWeight;
+	}
+	{
+		VXGI::BasicAreaLightTracingParameters DefaultParams;
+		VxgiAreaLightsEnabled = false;
+		VxgiAreaLightTracingResolution = VXGIDTR_Quarter;
+		bVxgiAreaLightTemporalReprojectionEnabled = true;
+		VxgiAreaLightTracingStep = DefaultParams.tracingStep;
+		VxgiAreaLightOpacityCorrectionFactor = DefaultParams.opacityCorrectionFactor;
+		VxgiAreaLightInitialOffsetBias = DefaultParams.initialOffsetBias;
+		VxgiAreaLightInitialOffsetDistanceFactor = DefaultParams.initialOffsetBias;
+		VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels = DefaultParams.temporalReprojectionMaxDistanceInVoxels;
+		VxgiAreaLightTemporalReprojectionNormalWeightExponent = DefaultParams.temporalReprojectionNormalWeightExponent;
+	}
+#endif
+	// NVCHANGE_END: Add VXGI
+
 #if DO_CHECK && WITH_EDITOR
 	static bool bCheckedMembers = false;
 	if (!bCheckedMembers)
@@ -719,6 +798,124 @@ FPostProcessSettings::FPostProcessSettings(const FPostProcessSettings& Settings)
 	, bOverride_ScreenSpaceReflectionQuality(Settings.bOverride_ScreenSpaceReflectionQuality)
 	, bOverride_ScreenSpaceReflectionMaxRoughness(Settings.bOverride_ScreenSpaceReflectionMaxRoughness)
 	, bOverride_ScreenSpaceReflectionRoughnessScale(Settings.bOverride_ScreenSpaceReflectionRoughnessScale)
+
+	// NVCHANGE_BEGIN: Add VXGI
+	, bOverride_VxgiDiffuseTracingEnabled(Settings.bOverride_VxgiDiffuseTracingEnabled)
+	, bOverride_VxgiSpecularTracingEnabled(Settings.bOverride_VxgiSpecularTracingEnabled)
+	, bOverride_VxgiDiffuseTracingIntensity(Settings.bOverride_VxgiDiffuseTracingIntensity)
+	, bOverride_VxgiSpecularTracingIntensity(Settings.bOverride_VxgiSpecularTracingIntensity)
+	, bOverride_VxgiDiffuseTracingResolution(Settings.bOverride_VxgiDiffuseTracingResolution)
+	, bOverride_VxgiDiffuseLightLeaking(Settings.bOverride_VxgiDiffuseLightLeaking)
+	, bOverride_VxgiDiffuseTracingQuality(Settings.bOverride_VxgiDiffuseTracingQuality)
+	, bOverride_VxgiDiffuseTracingDirectionalSamplingRate(Settings.bOverride_VxgiDiffuseTracingDirectionalSamplingRate)
+	, bOverride_VxgiDiffuseTracingStep(Settings.bOverride_VxgiDiffuseTracingStep)
+	, bOverride_VxgiSpecularTracingStep(Settings.bOverride_VxgiSpecularTracingStep)
+	, bOverride_VxgiDiffuseTracingOpacityCorrectionFactor(Settings.bOverride_VxgiDiffuseTracingOpacityCorrectionFactor)
+	, bOverride_VxgiSpecularTracingOpacityCorrectionFactor(Settings.bOverride_VxgiSpecularTracingOpacityCorrectionFactor)
+	, bOverride_VxgiDiffuseTracingSoftness(Settings.bOverride_VxgiDiffuseTracingSoftness)
+	, bOverride_VxgiDiffuseTracingInitialOffsetBias(Settings.bOverride_VxgiDiffuseTracingInitialOffsetBias)
+	, bOverride_VxgiDiffuseTracingInitialOffsetDistanceFactor(Settings.bOverride_VxgiDiffuseTracingInitialOffsetDistanceFactor)
+	, bOverride_bVxgiAmbientOcclusionEnabled(Settings.bOverride_bVxgiAmbientOcclusionEnabled)
+	, bOverride_VxgiAmbientRange(Settings.bOverride_VxgiAmbientRange)
+	, bOverride_VxgiAmbientScale(Settings.bOverride_VxgiAmbientScale)
+	, bOverride_VxgiAmbientBias(Settings.bOverride_VxgiAmbientBias)
+	, bOverride_VxgiAmbientPowerExponent(Settings.bOverride_VxgiAmbientPowerExponent)
+	, bOverride_VxgiAmbientMixIntensity(Settings.bOverride_VxgiAmbientMixIntensity)
+	, bOverride_VxgiSpecularTracingInitialOffsetBias(Settings.bOverride_VxgiSpecularTracingInitialOffsetBias)
+	, bOverride_VxgiSpecularTracingInitialOffsetDistanceFactor(Settings.bOverride_VxgiSpecularTracingInitialOffsetDistanceFactor)
+	, bOverride_bVxgiSpecularTracingTemporalFilterEnabled(Settings.bOverride_bVxgiSpecularTracingTemporalFilterEnabled)
+	, bOverride_VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight(Settings.bOverride_VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight)
+	, bOverride_bVxgiSpecularTracingConeJitterEnabled(Settings.bOverride_bVxgiSpecularTracingConeJitterEnabled)
+	, bOverride_bVxgiDiffuseTracingTemporalReprojectionEnabled(Settings.bOverride_bVxgiDiffuseTracingTemporalReprojectionEnabled)
+	, bOverride_VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight(Settings.bOverride_VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight)
+	, bOverride_VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels(Settings.bOverride_VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels)
+	, bOverride_VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent(Settings.bOverride_VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent)
+	, bOverride_VxgiDiffuseTracingTemporalReprojectionDetailReconstruction(Settings.bOverride_VxgiDiffuseTracingTemporalReprojectionDetailReconstruction)
+	, bOverride_VxgiMultiBounceEnabled(Settings.bOverride_VxgiMultiBounceEnabled)
+	, bOverride_VxgiMultiBounceFeedbackGain(Settings.bOverride_VxgiMultiBounceFeedbackGain)
+	, bOverride_VxgiMultiBounceLightLeaking(Settings.bOverride_VxgiMultiBounceLightLeaking)
+	, bOverride_VxgiAreaLightsEnabled(Settings.bOverride_VxgiAreaLightsEnabled)
+	, bOverride_VxgiAreaLightTracingResolution(Settings.bOverride_VxgiAreaLightTracingResolution)
+	, bOverride_bVxgiAreaLightTemporalReprojectionEnabled(Settings.bOverride_bVxgiAreaLightTemporalReprojectionEnabled)
+	, bOverride_VxgiAreaLightTracingStep(Settings.bOverride_VxgiAreaLightTracingStep)
+	, bOverride_VxgiAreaLightOpacityCorrectionFactor(Settings.bOverride_VxgiAreaLightOpacityCorrectionFactor)
+	, bOverride_VxgiAreaLightInitialOffsetBias(Settings.bOverride_VxgiAreaLightInitialOffsetBias)
+	, bOverride_VxgiAreaLightInitialOffsetDistanceFactor(Settings.bOverride_VxgiAreaLightInitialOffsetDistanceFactor)
+	, bOverride_VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels(Settings.bOverride_VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels)
+	, bOverride_VxgiAreaLightTemporalReprojectionNormalWeightExponent(Settings.bOverride_VxgiAreaLightTemporalReprojectionNormalWeightExponent)
+
+	, VxgiDiffuseTracingEnabled(Settings.VxgiDiffuseTracingEnabled)
+	, VxgiSpecularTracingEnabled(Settings.VxgiSpecularTracingEnabled)
+	, VxgiDiffuseTracingIntensity(Settings.VxgiDiffuseTracingIntensity)
+	, VxgiSpecularTracingIntensity(Settings.VxgiSpecularTracingIntensity)
+	, VxgiDiffuseTracingResolution(Settings.VxgiDiffuseTracingResolution)
+	, VxgiDiffuseLightLeaking(Settings.VxgiDiffuseLightLeaking)
+	, VxgiDiffuseTracingQuality(Settings.VxgiDiffuseTracingQuality)
+	, VxgiDiffuseTracingDirectionalSamplingRate(Settings.VxgiDiffuseTracingDirectionalSamplingRate)
+	, VxgiDiffuseTracingStep(Settings.VxgiDiffuseTracingStep)
+	, VxgiSpecularTracingStep(Settings.VxgiSpecularTracingStep)
+	, VxgiDiffuseTracingOpacityCorrectionFactor(Settings.VxgiDiffuseTracingOpacityCorrectionFactor)
+	, VxgiSpecularTracingOpacityCorrectionFactor(Settings.VxgiSpecularTracingOpacityCorrectionFactor)
+	, VxgiDiffuseTracingSoftness(Settings.VxgiDiffuseTracingSoftness)
+	, VxgiDiffuseTracingInitialOffsetBias(Settings.VxgiDiffuseTracingInitialOffsetBias)
+	, VxgiDiffuseTracingInitialOffsetDistanceFactor(Settings.VxgiDiffuseTracingInitialOffsetDistanceFactor)
+	, bVxgiAmbientOcclusionEnabled(Settings.bVxgiAmbientOcclusionEnabled)
+	, VxgiAmbientRange(Settings.VxgiAmbientRange)
+	, VxgiAmbientScale(Settings.VxgiAmbientScale)
+	, VxgiAmbientBias(Settings.VxgiAmbientBias)
+	, VxgiAmbientPowerExponent(Settings.VxgiAmbientPowerExponent)
+	, VxgiAmbientMixIntensity(Settings.VxgiAmbientMixIntensity)
+	, VxgiSpecularTracingInitialOffsetBias(Settings.VxgiSpecularTracingInitialOffsetBias)
+	, VxgiSpecularTracingInitialOffsetDistanceFactor(Settings.VxgiSpecularTracingInitialOffsetDistanceFactor)
+	, bVxgiSpecularTracingTemporalFilterEnabled(Settings.bVxgiSpecularTracingTemporalFilterEnabled)
+	, VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight(Settings.VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight)
+	, bVxgiSpecularTracingConeJitterEnabled(Settings.bVxgiSpecularTracingConeJitterEnabled)
+	, bVxgiDiffuseTracingTemporalReprojectionEnabled(Settings.bVxgiDiffuseTracingTemporalReprojectionEnabled)
+	, VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight(Settings.VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight)
+	, VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels(Settings.VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels)
+	, VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent(Settings.VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent)
+	, VxgiDiffuseTracingTemporalReprojectionDetailReconstruction(Settings.VxgiDiffuseTracingTemporalReprojectionDetailReconstruction)
+	, VxgiMultiBounceEnabled(Settings.VxgiMultiBounceEnabled)
+	, VxgiMultiBounceFeedbackGain(Settings.VxgiMultiBounceFeedbackGain)
+	, VxgiMultiBounceLightLeaking(Settings.VxgiMultiBounceLightLeaking)
+	, VxgiAreaLightsEnabled(Settings.VxgiAreaLightsEnabled)
+	, VxgiAreaLightTracingResolution(Settings.VxgiAreaLightTracingResolution)
+	, bVxgiAreaLightTemporalReprojectionEnabled(Settings.bVxgiAreaLightTemporalReprojectionEnabled)
+	, VxgiAreaLightTracingStep(Settings.VxgiAreaLightTracingStep)
+	, VxgiAreaLightOpacityCorrectionFactor(Settings.VxgiAreaLightOpacityCorrectionFactor)
+	, VxgiAreaLightInitialOffsetBias(Settings.VxgiAreaLightInitialOffsetBias)
+	, VxgiAreaLightInitialOffsetDistanceFactor(Settings.VxgiAreaLightInitialOffsetDistanceFactor)
+	, VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels(Settings.VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels)
+	, VxgiAreaLightTemporalReprojectionNormalWeightExponent(Settings.VxgiAreaLightTemporalReprojectionNormalWeightExponent)
+	// NVCHANGE_END: Add VXGI
+
+	// NVCHANGE_BEGIN: Add HBAO+
+	, bOverride_HBAOPowerExponent(Settings.bOverride_HBAOPowerExponent)
+	, bOverride_HBAORadius(Settings.bOverride_HBAORadius)
+	, bOverride_HBAOBias(Settings.bOverride_HBAOBias)
+	, bOverride_HBAOSmallScaleAO(Settings.bOverride_HBAOSmallScaleAO)
+	, bOverride_HBAOBlurRadius(Settings.bOverride_HBAOBlurRadius)
+	, bOverride_HBAOBlurSharpness(Settings.bOverride_HBAOBlurSharpness)
+	, bOverride_HBAOMaxViewDepth(Settings.bOverride_HBAOMaxViewDepth)
+	, bOverride_HBAODepthSharpness(Settings.bOverride_HBAODepthSharpness)
+	, bOverride_HBAOForegroundAOEnable(Settings.bOverride_HBAOForegroundAOEnable)
+	, bOverride_HBAOForegroundAODistance(Settings.bOverride_HBAOForegroundAODistance)
+	, bOverride_HBAOBackgroundAOEnable(Settings.bOverride_HBAOBackgroundAOEnable)
+	, bOverride_HBAOBackgroundAODistance(Settings.bOverride_HBAOBackgroundAODistance)
+
+	, HBAOPowerExponent(Settings.HBAOPowerExponent)
+	, HBAORadius(Settings.HBAORadius)
+	, HBAOBias(Settings.HBAOBias)
+	, HBAOSmallScaleAO(Settings.HBAOSmallScaleAO)
+	, HBAOBlurRadius(Settings.HBAOBlurRadius)
+	, HBAOBlurSharpness(Settings.HBAOBlurSharpness)
+	, HBAOMaxViewDepth(Settings.HBAOMaxViewDepth)
+	, HBAODepthSharpness(Settings.HBAODepthSharpness)
+	, HBAOForegroundAOEnable(Settings.HBAOForegroundAOEnable)
+	, HBAOForegroundAODistance(Settings.HBAOForegroundAODistance)
+	, HBAOBackgroundAOEnable(Settings.HBAOBackgroundAOEnable)
+	, HBAOBackgroundAODistance(Settings.HBAOBackgroundAODistance)
+	// NVCHANGE_END: Add HBAO+
 
 	, bMobileHQGaussian(Settings.bMobileHQGaussian)
 	, BloomMethod(Settings.BloomMethod)

@@ -1009,6 +1009,7 @@ inline bool IsFeatureLevelSupported(EShaderPlatform InShaderPlatform, ERHIFeatur
 	return InFeatureLevel <= GetMaxSupportedFeatureLevel(InShaderPlatform);
 }
 
+
 inline bool RHINeedsToSwitchVerticalAxis(EShaderPlatform Platform)
 {
 #if WITH_EDITOR

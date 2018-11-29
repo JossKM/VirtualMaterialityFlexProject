@@ -207,6 +207,11 @@ Engine/Binaries/DotNET/SwarmAgent.Options.xml
 # Ignore CLion directory
 .idea/
 
+# NVCHANGE_BEGIN: Add VXGI
+BuildScripts/
+!/*.pdf
+# NVCHANGE_END: Add VXGI
+
 # Additional files which show up in the Blast repo at least
 BuildGraph.Automation.xml
 *.exp

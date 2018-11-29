@@ -69,6 +69,11 @@ struct FD3D12LowLevelGraphicsPipelineStateDesc
 
 	FORCEINLINE FString GetName() const { return FString::Printf(TEXT("%llu"), CombinedHash); }
 
+	// NVCHANGE_BEGIN: Add VXGI
+	const void* NvidiaShaderExtensions[4];
+	uint32 NumNvidiaShaderExtensions;
+	// NVCHANGE_END: Add VXGI
+
 #if PLATFORM_XBOXONE
 	void Destroy();
 #endif

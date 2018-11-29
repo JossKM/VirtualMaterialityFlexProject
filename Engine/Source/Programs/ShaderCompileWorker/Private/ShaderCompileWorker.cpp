@@ -18,7 +18,13 @@
 // this is for the protocol, not the data, bump if FShaderCompilerInput or ProcessInputFromArchive changes (also search for the second one with the same name, todo: put into one header file)
 const int32 ShaderCompileWorkerInputVersion = 9;
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+// This version number is checked at load time in Engine\Source\Runtime\Engine\Private\ShaderCompiler\ShaderCompiler.cpp
+const int32 ShaderCompileWorkerOutputVersion = 1005;
+#else
 const int32 ShaderCompileWorkerOutputVersion = 5;
+#endif
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
 const int32 ShaderCompileWorkerSingleJobHeader = 'S';
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
@@ -226,7 +232,7 @@ public:
 				{
 					TimeToLive = TokenTime;
 					break;
-				}
+	}
 			}
 		}
 	}
@@ -973,7 +979,7 @@ INT32_MAIN_INT32_ARGC_TCHAR_ARGV()
 		if (XGEMain(ArgC, ArgV, ReturnCode))
 		{
 			return ReturnCode;
-		}
+				}
 	}
 #endif
 

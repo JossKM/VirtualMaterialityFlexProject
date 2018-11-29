@@ -9,6 +9,10 @@
 #include "Misc/ScopeRWLock.h"
 #include "Stats/StatsMisc.h"
 
+#include <Windows/AllowWindowsPlatformTypes.h>
+#include <nvapi.h>
+#include <Windows/HideWindowsPlatformTypes.h>
+
 // UE-65533
 // Using asynchronous PSO creation to preload the PSO cache significantly speeds up startup.
 // An crash bug of low repro rate currently prevents us from using this feature, so as a workaround PSOs are created synchronously.
@@ -246,7 +250,7 @@ void FD3D12PipelineStateCache::RebuildFromDiskCache(ID3D12RootSignature* Graphic
 					(*PipelineState)->Create(Args);
 				#endif
 				});
-			}
+		}
 		}
 		else
 		{
@@ -287,13 +291,13 @@ void FD3D12PipelineStateCache::RebuildFromDiskCache(ID3D12RootSignature* Graphic
 		{
 			// Only reload PSOs that match the LDA mask, or else it will fail.
 			if ((uint32)FRHIGPUMask::All() == Desc->Desc.NodeMask)
-			{
-				Desc->CombinedHash = FD3D12PipelineStateCache::HashPSODesc(*Desc);
+		{
+	Desc->CombinedHash = FD3D12PipelineStateCache::HashPSODesc(*Desc);
 
 				// Add PSO to low level cache.
 				FD3D12PipelineState* PipelineState = nullptr;
 				AddToLowLevelCache(*Desc, &PipelineState, [&](FD3D12PipelineState* PipelineState, const FD3D12ComputePipelineStateDesc& Desc)
-				{
+	{
 					// Actually create the PSO.
 					const ComputePipelineCreationArgs Args(&Desc, PipelineLibrary.GetReference());
 				#if D3D12RHI_USE_ASYNC_PRELOAD
@@ -302,14 +306,14 @@ void FD3D12PipelineStateCache::RebuildFromDiskCache(ID3D12RootSignature* Graphic
 					PipelineState->Create(Args);
 				#endif
 				});
-			}
-		}
-		else
-		{
+	}
+	}
+	else
+	{
 			UE_LOG(LogD3D12RHI, Warning, TEXT("PSO Cache read error!"));
 			break;
-		}
 	}
+		}
 }
 
 void FD3D12PipelineStateCache::AddToDiskCache(const FD3D12LowLevelGraphicsPipelineStateDesc& Desc, FD3D12PipelineState* PipelineState)
@@ -320,8 +324,13 @@ void FD3D12PipelineStateCache::AddToDiskCache(const FD3D12LowLevelGraphicsPipeli
 	const FD3D12_GRAPHICS_PIPELINE_STATE_DESC &PsoDesc = Desc.Desc;
 
 	//TODO: Optimize by only storing unique pointers
-	if (!DiskCache.IsInErrorState())
+	// NVCHANGE_BEGIN: Add VXGI
+	// Do not write the PSOs with NV extensions because the extension descriptors are opaque, their size is generally unknown,
+	// and they contain pointers inside. Writing them to disk requires a deep copy.
+	if (!DiskCache.IsInErrorState() && Desc.NumNvidiaShaderExtensions == 0)
+	// NVCHANGE_END: Add VXGI
 	{
+		DiskCache.BeginAppendPSO();
 		DiskCache.AppendData(&Desc, sizeof(Desc));
 
 		ID3DBlob* const pRSBlob = Desc.pRootSignature ? Desc.pRootSignature->GetRootSignatureBlob() : nullptr;
@@ -387,7 +396,7 @@ void FD3D12PipelineStateCache::AddToDiskCache(const FD3D12LowLevelGraphicsPipeli
 
 		WriteOutShaderBlob(PSO_CACHE_GRAPHICS, PipelineState->GetPipelineState());
 
-		DiskCache.Flush(DiskCache.GetNumPSOs() + 1);
+		DiskCache.Flush();
 	}
 }
 
@@ -400,6 +409,7 @@ void FD3D12PipelineStateCache::AddToDiskCache(const FD3D12ComputePipelineStateDe
 
 	if (!DiskCache.IsInErrorState())
 	{
+		DiskCache.BeginAppendPSO();
 		DiskCache.AppendData(&Desc, sizeof(Desc));
 
 		ID3DBlob* const pRSBlob = Desc.pRootSignature ? Desc.pRootSignature->GetRootSignatureBlob() : nullptr;
@@ -421,7 +431,7 @@ void FD3D12PipelineStateCache::AddToDiskCache(const FD3D12ComputePipelineStateDe
 
 		WriteOutShaderBlob(PSO_CACHE_COMPUTE, PipelineState->GetPipelineState());
 
-		DiskCache.Flush(DiskCache.GetNumPSOs() + 1);
+		DiskCache.Flush();
 	}
 }
 
@@ -429,37 +439,38 @@ void FD3D12PipelineStateCache::WriteOutShaderBlob(PSO_CACHE_TYPE Cache, ID3D12Pi
 {
 	if (!DiskCaches[Cache].IsInErrorState() && !DiskBinaryCache.IsInErrorState())
 	{
-		if (UseCachedBlobs())
+	if (UseCachedBlobs())
+	{
+		TRefCountPtr<ID3DBlob> cachedBlob;
+		HRESULT result = APIPso->GetCachedBlob(cachedBlob.GetInitReference());
+		VERIFYD3D12RESULT(result);
+		if (SUCCEEDED(result))
 		{
-			TRefCountPtr<ID3DBlob> cachedBlob;
-			HRESULT result = APIPso->GetCachedBlob(cachedBlob.GetInitReference());
-			VERIFYD3D12RESULT(result);
-			if (SUCCEEDED(result))
-			{
-				SIZE_T bufferSize = cachedBlob->GetBufferSize();
+			SIZE_T bufferSize = cachedBlob->GetBufferSize();
 
-				SIZE_T currentOffset = DiskBinaryCache.GetCurrentOffset();
-				DiskBinaryCache.AppendData(cachedBlob->GetBufferPointer(), bufferSize);
+			SIZE_T currentOffset = DiskBinaryCache.GetCurrentOffset();
+			DiskBinaryCache.BeginAppendPSO();
+			DiskBinaryCache.AppendData(cachedBlob->GetBufferPointer(), bufferSize);
 
-				DiskCaches[Cache].AppendData(&currentOffset, sizeof(currentOffset));
-				DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
+			DiskCaches[Cache].AppendData(&currentOffset, sizeof(currentOffset));
+			DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
 
-				DiskBinaryCache.Flush(DiskBinaryCache.GetNumPSOs() + 1);
-			}
-			else
-			{
-				check(false);
-				SIZE_T bufferSize = 0;
-				DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
-				DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
-			}
+			DiskBinaryCache.Flush();
 		}
 		else
 		{
+			check(false);
 			SIZE_T bufferSize = 0;
 			DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
 			DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
 		}
+	}
+	else
+	{
+		SIZE_T bufferSize = 0;
+		DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
+		DiskCaches[Cache].AppendData(&bufferSize, sizeof(bufferSize));
+	}
 	}
 }
 
@@ -489,7 +500,7 @@ void FD3D12PipelineStateCache::Close()
 		}
 	}
 
-	DiskBinaryCache.Close(0);
+	DiskBinaryCache.Close();
 
 	CleanupPipelineStateCaches();
 
@@ -620,7 +631,7 @@ static void CreatePipelineState(ID3D12PipelineState*&PSO, ID3D12Device* Device, 
 		if (FAILED(r))
 		{
 			UE_LOG(LogD3D12RHI, Error, TEXT("Failed to create PipelineState with hash %s"), Name);
-		}
+	}
 	}
 
 	check(PSO);
@@ -717,6 +728,13 @@ void FD3D12PipelineState::Create(const ComputePipelineCreationArgs& InCreationAr
 
 void FD3D12PipelineState::CreateAsync(const ComputePipelineCreationArgs& InCreationArgs)
 {
+	// NVCHANGE_BEGIN: Add VXGI
+	// Workaround for a stack overflow crash in nvwgf2umx.dll
+	{
+		Create(InCreationArgs);
+		return;
+	}
+	// NVCHANGE_END: Add VXGI
 	check(PipelineState.GetReference() == nullptr && Worker == nullptr);
 	Worker = new FAsyncTask<FD3D12PipelineStateWorker>(GetParentAdapter(), InCreationArgs);
 	if (Worker)
@@ -727,12 +745,41 @@ void FD3D12PipelineState::CreateAsync(const ComputePipelineCreationArgs& InCreat
 
 void FD3D12PipelineState::Create(const GraphicsPipelineCreationArgs& InCreationArgs)
 {
+	// NVCHANGE_BEGIN: Add VXGI
+	if (InCreationArgs.Args.Desc->NumNvidiaShaderExtensions)
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC D3D12Desc = InCreationArgs.Args.Desc->Desc.GraphicsDescV0();
+
+		NvAPI_Status status = NvAPI_D3D12_CreateGraphicsPipelineState(
+			GetParentAdapter()->GetD3DDevice(),
+			&D3D12Desc,
+			InCreationArgs.Args.Desc->NumNvidiaShaderExtensions,
+			(const NVAPI_D3D12_PSO_EXTENSION_DESC**)InCreationArgs.Args.Desc->NvidiaShaderExtensions,
+			PipelineState.GetInitReference());
+
+		check(status == NVAPI_OK);
+		check(PipelineState);
+
+		return;
+	}
+	// NVCHANGE_END: Add VXGI
+
 	check(PipelineState.GetReference() == nullptr);
 	CreatePipelineStateWrapper(PipelineState.GetInitReference(), GetParentAdapter(), &InCreationArgs.Args);
 }
 
 void FD3D12PipelineState::CreateAsync(const GraphicsPipelineCreationArgs& InCreationArgs)
 {
+	// NVCHANGE_BEGIN: Add VXGI
+	// The condition is commented out as a workaround for a stack overflow crash in nvwgf2umx.dll
+	// Otherwise it is there just because workers do not implement the NV extensions yet.
+	//if (Desc->NumNvidiaShaderExtensions)
+	{
+		Create(InCreationArgs);
+		return;
+	}
+	// NVCHANGE_END: Add VXGI
+
 	check(PipelineState.GetReference() == nullptr && Worker == nullptr);
 	Worker = new FAsyncTask<FD3D12PipelineStateWorker>(GetParentAdapter(), InCreationArgs);
 	if (Worker)

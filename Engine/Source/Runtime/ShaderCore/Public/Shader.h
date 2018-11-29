@@ -23,6 +23,12 @@
 #include "UObject/DebugSerializationFlags.h"
 #endif
 
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+#include "GFSDK_VXGI.h"
+#endif
+// NVCHANGE_END: Add VXGI
+
 class FGlobalShaderType;
 class FMaterialShaderType;
 class FNiagaraShaderType;
@@ -99,7 +105,7 @@ class FShaderResourceId
 {
 public:
 
-	FShaderResourceId() {}
+	FShaderResourceId() { SpecificShaderTypeName = nullptr; }
 
 	FShaderResourceId(const FShaderTarget& InTarget, const FSHAHash& InOutputHash, const TCHAR* InSpecificShaderTypeName, int32 InSpecificPermutationId) :
 		OutputHash(InOutputHash),
@@ -300,6 +306,14 @@ public:
 	*/
 	SHADERCORE_API static FSHAHash &FilterShaderSourceHashForSerialization(const FArchive& Ar, FSHAHash &HashToSerialize);
 
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	VXGI::IUserDefinedShaderSet* GetVxgiUserDefinedShaderSet();
+
+	const TArray<FShaderParameterMap>& GetParameterMapsForVxgiShaders() const { return ParameterMapForVxgiShaderPermutation; }
+#endif
+	// NVCHANGE_END: Add VXGI
+
 private:
 	// compression functions
 	void UncompressCode(TArray<uint8>& UncompressedCode) const;
@@ -319,6 +333,16 @@ private:
 	 * This is used to find existing shader resources in memory or the DDC.
 	 */
 	FSHAHash OutputHash;
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	VXGI::IUserDefinedShaderSet* VxgiUserDefinedShaderSet;
+	bool bIsVxgiShaderSet;
+	TArray<FShaderParameterMap> ParameterMapForVxgiShaderPermutation;
+	TArray<TArray<uint8> > ShaderResouceTableVxgiShaderPermutation;
+	TArray<bool> UsesGlobalCBForVxgiPSPermutation;
+	TArray<uint8> VxgiGSCode;
+#endif
+	// NVCHANGE_END: Add VXGI
 
 	/** Compiled bytecode. */
 	TArray<uint8> Code;
@@ -666,8 +690,13 @@ public:
 	{
 		return Resource->GetVertexShader();
 	}
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual // We need to make GetPixelShader virtual to override it in TVXGIVoxelizationShaderPermutationPS
+#endif
+	// NVCHANGE_END: Add VXGI
 	/** @return the shader's pixel shader */
-	inline const FPixelShaderRHIParamRef GetPixelShader() const
+	const FPixelShaderRHIParamRef GetPixelShader() const
 	{
 		return Resource->GetPixelShader();
 	}
@@ -692,6 +721,15 @@ public:
 		return Resource->GetComputeShader();
 	}
 
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	VXGI::IUserDefinedShaderSet* GetVxgiUserDefinedShaderSet()
+	{
+		return Resource->GetVxgiUserDefinedShaderSet();
+	}
+#endif
+	// NVCHANGE_END: Add VXGI
+	
 	// Accessors.
 	inline FShaderType* GetType() const { return Type; }
 	inline int32 GetPermutationId() const { return PermutationId; }
@@ -934,6 +972,11 @@ public:
 	FShader* ConstructForDeserialization() const;
 
 	/** Calculates a Hash based on this shader type's source code and includes */
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual //We need to override this to add the VXGI hash
+#endif
+	// NVCHANGE_END: Add VXGI
 	const FSHAHash& GetSourceHash(EShaderPlatform ShaderPlatform) const;
 
 	/** Serializes a shader type reference by name. */
@@ -1028,7 +1071,7 @@ public:
 		ReferencedUniformBufferStructsCache.Empty();
 		GenerateReferencedUniformBuffers(SourceFilename, Name, ShaderFileToUniformBufferVariables, ReferencedUniformBufferStructsCache);
 		bCachedUniformBufferStructDeclarations = false;
-	}
+		}
 
 	void AddToShaderIdMap(FShaderId Id, FShader* Shader)
 	{

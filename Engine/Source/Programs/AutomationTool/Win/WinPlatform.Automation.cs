@@ -37,6 +37,14 @@ public abstract class BaseWinPlatform : Platform
         SC.StageFiles(StagedFileType.NonUFS, DirectoryReference.Combine(SC.LocalRoot, "Engine/Binaries/ThirdParty/NVIDIA/TXAA"), "*.dll", StageFilesSearch.TopDirectoryOnly);
         // NVCHANGE_END: Add TXAA
 
+        // NVCHANGE_BEGIN: Add VXGI
+        SC.StageFiles(StagedFileType.NonUFS, DirectoryReference.Combine(SC.LocalRoot, "Engine/Binaries/ThirdParty/GameWorks/VXGI"), "*.dll", StageFilesSearch.TopDirectoryOnly);
+        // NVCHANGE_END: Add VXGI
+
+        // NVCHANGE_BEGIN: Add HBAO+
+        SC.StageFiles(StagedFileType.NonUFS, DirectoryReference.Combine(SC.LocalRoot, "Engine/Binaries/ThirdParty/GameWorks/GFSDK_SSAO"), "*.dll", StageFilesSearch.TopDirectoryOnly);
+        // NVCHANGE_END: Add HBAO+
+
         // Stage all the build products
         foreach (StageTarget Target in SC.StageTargets)
 		{

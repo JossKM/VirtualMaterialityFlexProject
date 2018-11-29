@@ -252,7 +252,7 @@ static void GetShadowProjectionShaders(
 		case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionFromTranslucencyPS<5> >(); break;
 		default:
 			check(0);
-		}
+	}
 	}
 	else if (ShadowInfo->IsWholeSceneDirectionalShadow())
 	{
@@ -260,7 +260,7 @@ static void GetShadowProjectionShaders(
 
 		if (CVarFilterMethod.GetValueOnRenderThread() == 1)
 		{
-			if (ShadowInfo->CascadeSettings.FadePlaneLength > 0)
+		if (ShadowInfo->CascadeSettings.FadePlaneLength > 0)
 				*OutShadowProjPS = View.ShaderMap->GetShader<TDirectionalPercentageCloserShadowProjectionPS<5, true> >();
 			else
 				*OutShadowProjPS = View.ShaderMap->GetShader<TDirectionalPercentageCloserShadowProjectionPS<5, false> >();
@@ -269,8 +269,8 @@ static void GetShadowProjectionShaders(
 		{
 			if (ShadowInfo->bTransmission)
 			{
-				switch (Quality)
-				{
+			switch (Quality)
+			{
 				case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, true, false, true> >(); break;
 				case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, true, false, true> >(); break;
 				case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, true, false, true> >(); break;
@@ -284,22 +284,22 @@ static void GetShadowProjectionShaders(
 			{
 				switch (Quality)
 				{
-				case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, true> >(); break;
-				case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, true> >(); break;
-				case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, true> >(); break;
-				case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, true> >(); break;
-				case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, true> >(); break;
-				default:
-					check(0);
+			case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, true> >(); break;
+			case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, true> >(); break;
+			case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, true> >(); break;
+			case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, true> >(); break;
+			case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, true> >(); break;
+			default:
+				check(0);
 				}
-			}
+		}
 		}
 		else
 		{
 			if (ShadowInfo->bTransmission)
 			{
-				switch (Quality)
-				{
+			switch (Quality)
+			{
 				case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, false, false, true> >(); break;
 				case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, false, false, true> >(); break;
 				case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, false, false, true> >(); break;
@@ -313,16 +313,16 @@ static void GetShadowProjectionShaders(
 			{ 
 				switch (Quality)
 				{
-				case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, false> >(); break;
-				case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, false> >(); break;
-				case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, false> >(); break;
-				case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, false> >(); break;
-				case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, false> >(); break;
-				default:
-					check(0);
+			case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, false> >(); break;
+			case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, false> >(); break;
+			case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, false> >(); break;
+			case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, false> >(); break;
+			case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, false> >(); break;
+			default:
+				check(0);
 				}
 			}
-		}
+	}
 	}
 	else
 	{
@@ -339,7 +339,7 @@ static void GetShadowProjectionShaders(
 			case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TModulatedShadowProjection<5> >(); break;
 			default:
 				check(0);
-			}
+		}
 		}
 		else if (ShadowInfo->bTransmission)
 		{
@@ -362,18 +362,18 @@ static void GetShadowProjectionShaders(
 			}
 			else
 			{
-				switch (Quality)
-				{
-				case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, false> >(); break;
-				case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, false> >(); break;
-				case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, false> >(); break;
-				case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, false> >(); break;
-				case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, false> >(); break;
-				default:
-					check(0);
+			switch (Quality)
+			{
+			case 1: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<1, false> >(); break;
+			case 2: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<2, false> >(); break;
+			case 3: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<3, false> >(); break;
+			case 4: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<4, false> >(); break;
+			case 5: *OutShadowProjPS = View.ShaderMap->GetShader<TShadowProjectionPS<5, false> >(); break;
+			default:
+				check(0);
 				}
-			}
 		}
+	}
 	}
 
 	check(*OutShadowProjVS);
@@ -553,7 +553,7 @@ void FProjectedShadowInfo::SetupFrustumForProjection(const FViewInfo* View, TArr
 		const FPlane Front(FrontTopRight, FrontTopLeft, FrontBottomLeft);
 		const float FrontDistance = Front.PlaneDot(ShadowViewOrigin);
 
-		const FPlane Right(BackBottomRight, BackTopRight, FrontTopRight);
+        const FPlane Right(BackBottomRight, BackTopRight, FrontTopRight);
 		const float RightDistance = Right.PlaneDot(ShadowViewOrigin);
 
 		const FPlane Back(BackTopLeft, BackTopRight, BackBottomRight);
@@ -988,11 +988,11 @@ void FProjectedShadowInfo::RenderProjection(FRHICommandListImmediate& RHICmdList
 			SetDepthBoundsTest(RHICmdList, CascadeSettings.SplitNear, CascadeSettings.SplitFar, View->ViewMatrices.GetProjectionMatrix());
 		}
 
-		RHICmdList.SetStencilRef(0);
+        RHICmdList.SetStencilRef(0);
 
 		ShadowProjVS->SetParameters(RHICmdList, *View, this);
 		ShadowProjPS->SetParameters(RHICmdList, ViewIndex, *View, this);
-	}
+		}
 
 	if (IsWholeSceneDirectionalShadow())
 	{
@@ -1449,9 +1449,9 @@ bool FSceneRenderer::RenderShadowProjections(FRHICommandListImmediate& RHICmdLis
 					{
 						ProjectedShadowInfo->RenderProjection(RHICmdList, ViewIndex, &View, this, bProjectingForForwardShading, bMobileModulatedProjections);
 					}
+					}
 				}
 			}
-		}
 
 		// Reset the scissor rectangle.
 		RHICmdList.SetScissorRect(false, 0, 0, 0, 0);
@@ -1497,8 +1497,8 @@ bool FDeferredShadingSceneRenderer::RenderShadowProjections(FRHICommandListImmed
 					{
 						ViewIndex = i;
 						break;
-					}
-				}
+		}
+	}
 
 				InjectTranslucentVolumeLighting(RHICmdList, *LightSceneInfo, ProjectedShadowInfo, *ProjectedShadowInfo->DependentView, ViewIndex);
 			}

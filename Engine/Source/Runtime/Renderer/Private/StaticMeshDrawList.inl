@@ -356,6 +356,22 @@ void TStaticMeshDrawList<DrawingPolicyType>::ReleaseRHI()
 }
 
 template<typename DrawingPolicyType>
+void TStaticMeshDrawList<DrawingPolicyType>::IterateOverMeshes(TFunctionRef<void(FStaticMesh*)> ProcessMesh)
+{
+	for (int32 Index = 0; Index < OrderedDrawingPolicies.Num(); Index++)
+	{
+		FDrawingPolicyLink* DrawingPolicyLink = &DrawingPolicySet[OrderedDrawingPolicies[Index]];
+		const int32 NumElements = DrawingPolicyLink->Elements.Num();
+		uint32 Count = 0;
+		for (int32 ElementIndex = 0; ElementIndex < NumElements; ElementIndex++)
+		{
+			const FElement& Element = DrawingPolicyLink->Elements[ElementIndex];
+			ProcessMesh(Element.Mesh);
+		}
+	}
+}
+
+template<typename DrawingPolicyType>
 bool TStaticMeshDrawList<DrawingPolicyType>::DrawVisibleInner(
 	FRHICommandList& RHICmdList,
 	const FViewInfo& View,
@@ -383,19 +399,19 @@ bool TStaticMeshDrawList<DrawingPolicyType>::DrawVisibleInner(
 		{
 			if (StaticMeshVisibilityMap.AccessCorrespondingBit(FRelativeBitReference(CompactElementPtr->MeshId)))
 			{
-				const FElement& Element = DrawingPolicyLink->Elements[ElementIndex];
-				STAT(StatInc += Element.Mesh->GetNumPrimitives();)
-				int32 SubCount = Element.Mesh->Elements.Num();
-				// Avoid the cache miss looking up batch visibility if there is only one element.
+					const FElement& Element = DrawingPolicyLink->Elements[ElementIndex];
+					STAT(StatInc += Element.Mesh->GetNumPrimitives();)
+					int32 SubCount = Element.Mesh->Elements.Num();
+					// Avoid the cache miss looking up batch visibility if there is only one element.
 				uint64 BatchElementMask = Element.Mesh->bRequiresPerElementVisibility ? BatchVisibilityArray[Element.Mesh->BatchVisibilityId] : ((1ull << SubCount) - 1);
 				Count += DrawElement(RHICmdList, View, PolicyContext, DrawRenderState, Element, BatchElementMask, DrawingPolicyLink, bDrawnShared);
 				if (++NumDraws % 16 == 0)
-				{
+			{
 					// Periodically kick the RHI thread when some work has accumulated.
 					RHICmdList.MaybeDispatchToRHIThread();
 				}
-			}
-		}
+				}
+				}
 		bDirty = bDirty || !!Count;
 		if (bUpdateCounts)
 		{
@@ -461,7 +477,7 @@ public:
 		, LastPolicy(InLastPolicy)
 		, PerDrawingPolicyCounts(InPerDrawingPolicyCounts)
 	{
-	}
+		}
 
 	FORCEINLINE TStatId GetStatId() const
 	{
@@ -501,7 +517,7 @@ public:
 		else
 		{
 			this->Caller.DrawVisibleInner(this->RHICmdList, this->View, this->PolicyContext, this->DrawRenderState, this->StaticMeshVisibilityMap, this->BatchVisibilityArray, this->FirstPolicy, this->LastPolicy, true);
-		}
+			}
 		this->RHICmdList.HandleRTThreadTaskCompletion(MyCompletionGraphEvent);
 	}
 };
@@ -813,7 +829,7 @@ int32 TStaticMeshDrawList<DrawingPolicyType>::DrawVisibleFrontToBack(
 		{
 			// Periodically kick the RHI thread when some work has accumulated.
 			RHICmdList.MaybeDispatchToRHIThread();
-		}
+	}
 	}
 	INC_DWORD_STAT_BY(STAT_StaticMeshTriangles, StatInc);
 

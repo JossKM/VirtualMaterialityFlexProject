@@ -375,7 +375,7 @@ public:
 		if (GSupportsDepthBoundsTest)
 		{
 			RHIEnableDepthBoundsTest(FallbackGraphicsState->Initializer.bDepthBounds);
-		}
+	}
 	}
 
 	/** Set the shader resource view of a surface.  This is used for binding TextureMS parameter types that need a multi sampled view. */
@@ -587,16 +587,16 @@ public:
 				if (!InInfo.ColorRenderTargets[Index].RenderTarget)
 				{
 					break;
-				}
+	}
 
 				*LastTexture = InInfo.ColorRenderTargets[Index].RenderTarget;
 				++LastTexture;
-			}
+	}
 
 			//Use RWBarrier since we don't transition individual subresources.  Basically treat the whole texture as R/W as we walk down the mip chain.
 			int32 NumTextures = (int32)(LastTexture - Textures);
 			if (NumTextures)
-			{
+	{
 				RHITransitionResources(EResourceTransitionAccess::ERWSubResBarrier, Textures, NumTextures);
 			}
 		}
@@ -615,7 +615,7 @@ public:
 			if (!RenderPassInfo.ColorRenderTargets[Index].RenderTarget)
 			{
 				break;
-			}
+	}
 			if (RenderPassInfo.ColorRenderTargets[Index].ResolveTarget)
 			{
 				RHICopyToResolveTarget(RenderPassInfo.ColorRenderTargets[Index].RenderTarget, RenderPassInfo.ColorRenderTargets[Index].ResolveTarget, RenderPassInfo.ResolveParameters);
@@ -623,9 +623,9 @@ public:
 		}
 
 		if (RenderPassInfo.DepthStencilRenderTarget.DepthStencilTarget && RenderPassInfo.DepthStencilRenderTarget.ResolveTarget)
-		{
+	{
 			RHICopyToResolveTarget(RenderPassInfo.DepthStencilRenderTarget.DepthStencilTarget, RenderPassInfo.DepthStencilRenderTarget.ResolveTarget, RenderPassInfo.ResolveParameters);
-		}
+	}
 	}
 
 	virtual void RHIBeginComputePass(const TCHAR* InName)
@@ -656,6 +656,34 @@ public:
 		}
 	}
 	// NvFlow end
+
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	virtual void RHIRenderHBAO(
+		const FTextureRHIParamRef SceneDepthTextureRHI,
+		const FTextureRHIParamRef SceneDepthTextureRHI2ndLayer,
+		const FMatrix& ProjectionMatrix,
+		const FTextureRHIParamRef SceneNormalTextureRHI,
+		const FMatrix& ViewMatrix,
+		const FTextureRHIParamRef SceneColorTextureRHI,
+		const GFSDK_SSAO_Parameters& AOParams)
+	{
+		checkNoEntry();
+	}
+#endif
+	// NVCHANGE_END: Add HBAO+
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual void RHIVXGICleanupAfterVoxelization() { checkNoEntry(); }
+
+	virtual void RHISetViewportsAndScissorRects(uint32 Count, const FViewportBounds* Viewports, const FScissorRect* ScissorRects) { checkNoEntry(); }
+	virtual void RHIDispatchIndirectComputeShaderStructured(FStructuredBufferRHIParamRef ArgumentBuffer, uint32 ArgumentOffset) { checkNoEntry(); }
+	virtual void RHIDrawIndirect(uint32 PrimitiveType, FStructuredBufferRHIParamRef ArgumentBuffer, uint32 ArgumentOffset) { checkNoEntry(); }
+	virtual void RHICopyStructuredBufferData(FStructuredBufferRHIParamRef DestBuffer, uint32 DestOffset, FStructuredBufferRHIParamRef SrcBuffer, uint32 SrcOffset, uint32 DataSize) { checkNoEntry(); }
+	virtual void RHISetEnableUAVBarriers(bool bEnable, const FTextureRHIParamRef* Textures, uint32 NumTextures, const FStructuredBufferRHIParamRef* Buffers, uint32 NumBuffers) { checkNoEntry(); }
+#endif
+	// NVCHANGE_END: Add VXGI
 
 	virtual void RHICopyTexture(FTextureRHIParamRef SourceTexture, FTextureRHIParamRef DestTexture, const FRHICopyTextureInfo& CopyInfo)
 	{

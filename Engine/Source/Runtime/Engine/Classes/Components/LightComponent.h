@@ -223,6 +223,16 @@ class ENGINE_API ULightComponent : public ULightComponentBase
 	int32 FlowGridShadowChannel;
 	// NvFlow end
 
+	// NVCHANGE_BEGIN: Add VXGI
+
+	/**
+	* Whether to let this light cast VXGI indirect lighting and reflections. Only available for Movable lights.
+	*/
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = VXGI, meta = (DisplayName = "VXGI Indirect Lighting"))
+	bool bCastVxgiIndirectLighting;
+
+	// NVCHANGE_END: Add VXGI
+
 public:
 	/** Set intensity of the light */
 	UFUNCTION(BlueprintCallable, Category="Rendering|Components|Light")

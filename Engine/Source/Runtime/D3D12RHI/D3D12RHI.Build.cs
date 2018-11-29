@@ -40,6 +40,20 @@ public class D3D12RHI : ModuleRules
 			AddEngineThirdPartyPrivateStaticDependencies(Target, "NVAPI");
 			AddEngineThirdPartyPrivateStaticDependencies(Target, "AMD_AGS");
 			AddEngineThirdPartyPrivateStaticDependencies(Target, "IntelMetricsDiscovery");
+
+            // NVCHANGE_BEGIN: Add VXGI
+            if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
+            {
+                AddEngineThirdPartyPrivateStaticDependencies(Target, "VXGI");
+            }
+			// NVCHANGE_END: Add VXGI
+
+			// NVCHANGE_BEGIN: Add HBAO+
+			if ((Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32))
+			{
+				AddEngineThirdPartyPrivateStaticDependencies(Target, "GFSDK_SSAO");
+			}
+			// NVCHANGE_END: Add HBAO+
 		}
 	}
 }

@@ -69,6 +69,52 @@ FD3D12DynamicRHI* FD3D12Device::GetOwningRHI()
 	return GetParentAdapter()->GetOwningRHI();
 }
 
+// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+void FD3D12DynamicRHI::CreateHBAOContext(FD3D12Device* InParent, FD3D12SubAllocatedOnlineHeap::SubAllocationDesc& SubHeapDesc)
+{
+	//Last sub-divided portion of GlobalHeap is used for HBAO context only
+	//TODO: size(num of descriptors) of sub-divided heap is big for HBAO only, 
+	ID3D12Device* device = this->GetRHIDevice()->GetDevice();
+	FD3D12DynamicRHI* OwningRHI = InParent->GetOwningRHI();
+	if (GMaxRHIFeatureLevel >= ERHIFeatureLevel::SM5)
+	{
+		FString HBAOBinariesPath = FPaths::EngineDir() / TEXT("Binaries/ThirdParty/GameWorks/GFSDK_SSAO/");
+#if PLATFORM_64BITS
+		OwningRHI->HBAOModuleHandle = LoadLibraryW(*(HBAOBinariesPath + "GFSDK_SSAO_D3D12.win64.dll"));
+#else
+		OwningRHI->HBAOModuleHandle = LoadLibraryW(*(HBAOBinariesPath + "GFSDK_SSAO_D3D12.win32.dll"));
+#endif
+		check(OwningRHI->HBAOModuleHandle);
+
+		//Create RTV Heap
+		D3D12_DESCRIPTOR_HEAP_DESC D3D12DescritorHeapDesc = {};
+		ID3D12DescriptorHeap* D3D12DescriptorHeap_RTV;
+		D3D12DescritorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		D3D12DescritorHeapDesc.NumDescriptors = GFSDK_SSAO_NUM_DESCRIPTORS_RTV_HEAP_D3D12;
+		D3D12DescritorHeapDesc.NodeMask = 1;
+		D3D12DescritorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		VERIFYD3D12RESULT(device->CreateDescriptorHeap(&D3D12DescritorHeapDesc, IID_PPV_ARGS(&D3D12DescriptorHeap_RTV)));
+
+		//Save Heap info for setting inputData for RenderAO in D3D12CommandContext
+		OwningRHI->HBAODescriptorHeaps = new(GFSDK_SSAO_DescriptorHeaps_D3D12);
+		GFSDK_SSAO_DescriptorHeaps_D3D12* DescriptorHeaps = OwningRHI->HBAODescriptorHeaps;
+		DescriptorHeaps->CBV_SRV_UAV.pDescHeap = SubHeapDesc.ParentHeap->GetHeap();
+		DescriptorHeaps->CBV_SRV_UAV.BaseIndex = SubHeapDesc.BaseSlot + 3; // +3 for dual depth(for dualLayerAO) and normal SRV
+		DescriptorHeaps->CBV_SRV_UAV.NumDescriptors = GFSDK_SSAO_NUM_DESCRIPTORS_CBV_SRV_UAV_HEAP_D3D12;
+
+		DescriptorHeaps->RTV.pDescHeap = D3D12DescriptorHeap_RTV;
+		DescriptorHeaps->RTV.BaseIndex = 0;
+		DescriptorHeaps->RTV.NumDescriptors = GFSDK_SSAO_NUM_DESCRIPTORS_RTV_HEAP_D3D12;
+
+		GFSDK_SSAO_Status status;
+		status = GFSDK_SSAO_CreateContext_D3D12(device, 1, *DescriptorHeaps, &(OwningRHI->HBAOContext));
+		check(status == GFSDK_SSAO_OK);
+	}
+}
+#endif
+	// NVCHANGE_END: Add HBAO+
+
 void FD3D12Device::CreateCommandContexts()
 {
 	check(CommandContextArray.Num() == 0);
@@ -76,14 +122,23 @@ void FD3D12Device::CreateCommandContexts()
 
 	const uint32 NumContexts = FTaskGraphInterface::Get().GetNumWorkerThreads() + 1;
 	const uint32 NumAsyncComputeContexts = GEnableAsyncCompute ? 1 : 0;
+
 	const uint32 TotalContexts = NumContexts + NumAsyncComputeContexts;
-	
+
+
 	// We never make the default context free for allocation by the context containers
 	CommandContextArray.Reserve(NumContexts);
 	FreeCommandContexts.Reserve(NumContexts - 1);
 	AsyncComputeContextArray.Reserve(NumAsyncComputeContexts);
 
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	//Last portion of global view heap will be used for HBAO context
+	const uint32 DescriptorSuballocationPerContext = (GlobalViewHeap.GetTotalSize() - GFSDK_SSAO_NUM_DESCRIPTORS_CBV_SRV_UAV_HEAP_D3D12)  / TotalContexts;
+#else
 	const uint32 DescriptorSuballocationPerContext = GlobalViewHeap.GetTotalSize() / TotalContexts;
+#endif
+	// NVCHANGE_END: Add HBAO+
 	uint32 CurrentGlobalHeapOffset = 0;
 
 	for (uint32 i = 0; i < NumContexts; ++i)
@@ -117,6 +172,16 @@ void FD3D12Device::CreateCommandContexts()
 
 		AsyncComputeContextArray.Add(NewCmdContext);
 	}
+
+// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	//HBAO context creation
+	{
+		FD3D12SubAllocatedOnlineHeap::SubAllocationDesc SubHeapDesc(&GlobalViewHeap, CurrentGlobalHeapOffset, DescriptorSuballocationPerContext);
+		GetOwningRHI()->CreateHBAOContext(this, SubHeapDesc);
+	}
+#endif
+// NVCHANGE_END: Add HBAO+
 
 	CommandContextArray[0]->OpenCommandList();
 	if (GEnableAsyncCompute)
@@ -253,6 +318,7 @@ void FD3D12Device::SetupAfterDeviceCreation()
 	CreateCommandContexts();
 
 	UpdateMSAASettings();
+
 }
 
 void FD3D12Device::UpdateConstantBufferPageProperties()
@@ -330,6 +396,20 @@ void FD3D12Device::Cleanup()
 	TimestampQueryHeap.Destroy();
 
 	D3DX12Residency::DestroyResidencyManager(ResidencyManager);
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	if (GetOwningRHI()->HBAOContext)
+	{
+		GetOwningRHI()->HBAOContext->Release();
+		GetOwningRHI()->HBAOContext = nullptr;
+	}
+	if (GetOwningRHI()->HBAOModuleHandle)
+	{
+		FreeLibrary(GetOwningRHI()->HBAOModuleHandle);
+		GetOwningRHI()->HBAOModuleHandle = nullptr;
+	}
+#endif
+	// NVCHANGE_END: Add HBAO+
 }
 
 ID3D12CommandQueue* FD3D12Device::GetD3DCommandQueue(ED3D12CommandQueueType InQueueType) const

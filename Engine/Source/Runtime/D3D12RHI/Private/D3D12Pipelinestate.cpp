@@ -61,11 +61,19 @@ FD3D12LowLevelGraphicsPipelineStateDesc GetLowLevelGraphicsPipelineStateDesc(con
 		Desc.Desc.StreamOutput = BoundShaderState->GetGeometryShader()->StreamOutput;
 	}
 
+	// NVCHANGE_BEGIN: Add VXGI
+	auto addNvidiaExtensions = [&Desc](const TArray<const void*>& Extensions) {
+		check(Desc.NumNvidiaShaderExtensions + Extensions.Num() < _countof(Desc.NvidiaShaderExtensions));
+		FMemory::Memcpy(Desc.NvidiaShaderExtensions + Desc.NumNvidiaShaderExtensions, Extensions.GetData(), Extensions.Num() * sizeof(void*));
+		Desc.NumNvidiaShaderExtensions += Extensions.Num();
+	};
+
 #define COPY_SHADER(Initial, Name) \
 	if (FD3D12##Name##Shader* Shader = BoundShaderState->Get##Name##Shader()) \
 	{ \
 		Desc.Desc.Initial##S = Shader->ShaderBytecode.GetShaderBytecode(); \
 		Desc.Initial##SHash = Shader->ShaderBytecode.GetHash(); \
+		addNvidiaExtensions(Shader->NvidiaShaderExtensions); \
 	}
 	COPY_SHADER(V, Vertex);
 	COPY_SHADER(P, Pixel);
@@ -73,6 +81,7 @@ FD3D12LowLevelGraphicsPipelineStateDesc GetLowLevelGraphicsPipelineStateDesc(con
 	COPY_SHADER(H, Hull);
 	COPY_SHADER(G, Geometry);
 #undef COPY_SHADER
+	// NVCHANGE_END: Add VXGI
 
 #if PLATFORM_WINDOWS
 	// TODO: [PSO API] For now, keep DBT enabled, if available, until it is added as part of a member to the Initializer's DepthStencilState

@@ -168,6 +168,10 @@ FD3D12Resource::FD3D12Resource(FD3D12Device* ParentDevice,
 	, HeapType(InHeapType)
 	, GPUVirtualAddress(0)
 	, ResourceBaseAddress(nullptr)
+	// NVCHANGE_BEGIN: Add VXGI
+	, bEnableUAVBarriers(true)
+	, bFirstUAVBarrierPlaced(false)
+	// NVCHANGE_END: Add VXGI
 {
 #if UE_BUILD_DEBUG
 	FPlatformAtomics::InterlockedIncrement(&TotalResourceCount);

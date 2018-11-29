@@ -58,6 +58,11 @@
 #include "UObject/EditorObjectVersion.h"
 #include "UObject/ReleaseObjectVersion.h"
 
+
+// NVCHANGE_BEGIN: Add VXGI
+#include "Materials/MaterialExpressionVxgiVoxelization.h"
+// NVCHANGE_END: Add VXGI
+
 #if WITH_EDITOR
 #include "Logging/TokenizedMessage.h"
 #include "Logging/MessageLog.h"
@@ -248,10 +253,10 @@ void FMaterialResource::GetShaderMapId(EShaderPlatform Platform, FMaterialShader
 		else
 #endif
 		{
-			FStaticParameterSet CompositedStaticParameters;
-			MaterialInstance->GetStaticParameterValues(CompositedStaticParameters);
+		FStaticParameterSet CompositedStaticParameters;
+		MaterialInstance->GetStaticParameterValues(CompositedStaticParameters);
 			OutId.UpdateParameterSet(CompositedStaticParameters);		
-		}
+	}
 	}
 }
 
@@ -394,6 +399,13 @@ public:
 		FMaterialRenderProxy(bInSelected, bInHovered),
 		Material(InMaterial)
 	{}
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual FVxgiMaterialProperties GetVxgiMaterialProperties() const override { return Material->GetVxgiMaterialProperties(); }
+	virtual bool IsTwoSided() const override { return Material->IsTwoSided(); }
+#endif
+	// NVCHANGE_END: Add VXGI
 
 private:
 
@@ -693,9 +705,9 @@ void SerializeInlineShaderMaps(
 			{
 				FMaterialResource& LoadedResource = OutLoadedResources[OutLoadedResources.AddDefaulted()];
 				LoadedResource.SerializeInlineShaderMap(ResourceAr);
-			}
-#endif
 		}
+#endif
+	}
 	}
 }
 
@@ -746,9 +758,9 @@ void ProcessSerializedInlineShaderMaps(UMaterialInterface* Owner, TArray<FMateri
 				{	
 					DesiredQLMaterialResource[LoadedFeatureLevel] = &Resource;
 					BestQLRef = LoadedQLPriority;
+					}
 				}
-			}
-		}
+				}
 
 		for (int32 FeatureIdx = 0; FeatureIdx < ERHIFeatureLevel::Num; ++FeatureIdx)
 		{
@@ -774,7 +786,7 @@ void ProcessSerializedInlineShaderMaps(UMaterialInterface* Owner, TArray<FMateri
 	{ 
 #if STORE_ONLY_ACTIVE_SHADERMAPS
 		if (LoadedResources.Num() > 0)
-		{
+	{
 			check(LoadedResources.Num() == 1);
 			FMaterialShaderMap* LoadedShaderMap = LoadedResources[0].GetGameThreadShaderMap();
 			if (LoadedShaderMap)
@@ -906,6 +918,24 @@ UMaterial::UMaterial(const FObjectInitializer& ObjectInitializer)
 	bAllowDevelopmentShaderCompile = true;
 	bIsMaterialEditorStatsMaterial = false;
 
+	// NVCHANGE_BEGIN: Add VXGI
+	bVxgiConeTracingEnable = false;
+	bUsedWithVxgiVoxelization = true;
+	bVxgiAllowTesselationDuringVoxelization = false;
+	bVxgiAdaptiveMaterialSamplingRate = false;
+	VxgiOpacityScale = 1.0f;
+
+	if (UObject* Outer = GetOuter())
+	{
+		// Guess the special materials from the file path, disable voxelization on them
+
+		FString OuterName = Outer->GetName();
+		if (OuterName.StartsWith("/Engine/"))
+			bUsedWithVxgiVoxelization = false;
+	}
+
+	// NVCHANGE_END: Add VXGI
+
 #if WITH_EDITORONLY_DATA
 	MaterialGraph = NULL;
 #endif //WITH_EDITORONLY_DATA
@@ -1013,9 +1043,9 @@ void UMaterial::GetUsedTextures(TArray<UTexture*>& OutTextures, EMaterialQuality
 						if (Atlas)
 						{
 							OutTextures.AddUnique(Atlas.Get());
-						}
-					}
-				}
+			}
+		}
+	}
 #endif 
 			}
 		}
@@ -1273,6 +1303,11 @@ bool UMaterial::GetUsageByFlag(EMaterialUsage Usage) const
 		case MATUSAGE_InstancedStaticMeshes: UsageValue = bUsedWithInstancedStaticMeshes; break;
 		case MATUSAGE_Clothing: UsageValue = bUsedWithClothing; break;
 		case MATUSAGE_GeometryCache: UsageValue = bUsedWithGeometryCache; break;
+			// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		case MATUSAGE_VxgiVoxelization: UsageValue = bUsedWithVxgiVoxelization; break;
+#endif
+			// NVCHANGE_END: Add VXGI
 		default: UE_LOG(LogMaterial, Fatal,TEXT("Unknown material usage: %u"), (int32)Usage);
 	};
 	return UsageValue;
@@ -1627,6 +1662,14 @@ void UMaterial::SetUsageByFlag(EMaterialUsage Usage, bool NewValue)
 		{
 			bUsedWithGeometryCache = NewValue; break;
 		}
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		case MATUSAGE_VxgiVoxelization:
+		{
+			bUsedWithVxgiVoxelization = NewValue; break;
+		}
+#endif
+		// NVCHANGE_END: Add VXGI
 		default: UE_LOG(LogMaterial, Fatal,TEXT("Unknown material usage: %u"), (int32)Usage);
 	};
 #if WITH_EDITOR
@@ -1653,6 +1696,11 @@ FString UMaterial::GetUsageName(EMaterialUsage Usage) const
 		case MATUSAGE_InstancedStaticMeshes: UsageName = TEXT("bUsedWithInstancedStaticMeshes"); break;
 		case MATUSAGE_Clothing: UsageName = TEXT("bUsedWithClothing"); break;
 		case MATUSAGE_GeometryCache: UsageName = TEXT("bUsedWithGeometryCache"); break;
+			// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		case MATUSAGE_VxgiVoxelization: UsageName = TEXT("bUsedWithVxgiVoxelization"); break;
+#endif
+			// NVCHANGE_END: Add VXGI
 		default: UE_LOG(LogMaterial, Fatal,TEXT("Unknown material usage: %u"), (int32)Usage);
 	};
 	return UsageName;
@@ -2304,11 +2352,11 @@ bool UMaterial::GetScalarParameterValue(const FMaterialParameterInfo& ParameterI
 
 					if (Parameter)
 					{
-						Parameter->IsNamedParameter(ParameterInfo, OutValue);
-						return !bOveriddenOnly;
-					}
+					Parameter->IsNamedParameter(ParameterInfo, OutValue);
+					return !bOveriddenOnly;
 				}
 			}
+		}
 		}
 		else
 		{
@@ -3583,7 +3631,7 @@ void UMaterial::GetQualityLevelUsage(TArray<bool, TInlineAllocator<EMaterialQual
 		{
 			OutQualityLevelsUsed[Quality] &= !MaterialQualitySettings->GetQualityOverrides((EMaterialQualityLevel::Type)Quality).bDiscardQualityDuringCook;
 			bAnyQualityEnabled |= OutQualityLevelsUsed[Quality];
-		}
+	}
 
 		// As a fallback re-enable High (Default) quality if project has disabled everything incorrectly
 		if (!bAnyQualityEnabled || bUsedAsSpecialEngineMaterial)
@@ -3617,7 +3665,7 @@ void UMaterial::GetQualityLevelNodeUsage(TArray<bool, TInlineAllocator<EMaterial
 			if (QualitySwitchNode->Default.IsConnected())
 			{
 				OutQualityLevelsUsed[EMaterialQualityLevel::High] = true;
-			}
+		}
 		}
 		else if (MaterialFunctionNode && MaterialFunctionNode->MaterialFunction)
 		{
@@ -3644,10 +3692,10 @@ void UMaterial::GetQualityLevelNodeUsage(TArray<bool, TInlineAllocator<EMaterial
 						if (SwitchNode->Default.IsConnected())
 						{
 							OutQualityLevelsUsed[EMaterialQualityLevel::High] = true;
-						}
 					}
 				}
 			}
+		}
 		}
 		else if (MaterialLayersNode)
 		{
@@ -3671,11 +3719,11 @@ void UMaterial::GetQualityLevelNodeUsage(TArray<bool, TInlineAllocator<EMaterial
 						if (SwitchNode->Default.IsConnected())
 						{
 							OutQualityLevelsUsed[EMaterialQualityLevel::High] = true;
-						}
 					}
 				}
 			}
 		}
+	}
 	}
 
 	// Always append a default high quality level if nothing else is set
@@ -4322,6 +4370,18 @@ void UMaterial::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEve
 		{
 			bRequiresCompilation = false;
 		}
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		else if (PropertyThatChanged->GetNameCPP() == TEXT("VxgiOpacityScale"))
+		{
+			bRequiresCompilation = false;
+		}
+		else if (PropertyThatChanged->GetNameCPP() == TEXT("bVxgiAdaptiveMaterialSamplingRate"))
+		{
+			bRequiresCompilation = false;
+		}
+#endif
+		// NVCHANGE_END: Add VXGI
 	}
 
 	TranslucencyDirectionalLightingIntensity = FMath::Clamp(TranslucencyDirectionalLightingIntensity, .1f, 10.0f);
@@ -5160,26 +5220,26 @@ bool UMaterial::GetAllReferencedExpressions(TArray<UMaterialExpression*>& OutExp
 	}
 	else
 	{
-	    for (int32 MPIdx = 0; MPIdx < MP_MAX; MPIdx++)
-	    {
-		    EMaterialProperty MaterialProp = EMaterialProperty(MPIdx);
-		    TArray<UMaterialExpression*> MPRefdExpressions;
+	for (int32 MPIdx = 0; MPIdx < MP_MAX; MPIdx++)
+	{
+		EMaterialProperty MaterialProp = EMaterialProperty(MPIdx);
+		TArray<UMaterialExpression*> MPRefdExpressions;
 			if (GetExpressionsInPropertyChain(MaterialProp, MPRefdExpressions, InStaticParameterSet, InFeatureLevel, InQuality, InShadingPath) == true)
+		{
+			for (int32 AddIdx = 0; AddIdx < MPRefdExpressions.Num(); AddIdx++)
 			{
-			    for (int32 AddIdx = 0; AddIdx < MPRefdExpressions.Num(); AddIdx++)
-			    {
-				    OutExpressions.AddUnique(MPRefdExpressions[AddIdx]);
-			    }
-		    }
-	    }
-    
-	    TArray<class UMaterialExpressionCustomOutput*> CustomOutputExpressions;
-	    GetAllCustomOutputExpressions(CustomOutputExpressions);
-	    for (UMaterialExpressionCustomOutput* Expression : CustomOutputExpressions)
-	    {
-		    TArray<FExpressionInput*> ProcessedInputs;
-			RecursiveGetExpressionChain(Expression, ProcessedInputs, OutExpressions, InStaticParameterSet, InFeatureLevel, InQuality, InShadingPath);
+				OutExpressions.AddUnique(MPRefdExpressions[AddIdx]);
+			}
 		}
+	}
+    
+	TArray<class UMaterialExpressionCustomOutput*> CustomOutputExpressions;
+	GetAllCustomOutputExpressions(CustomOutputExpressions);
+	for (UMaterialExpressionCustomOutput* Expression : CustomOutputExpressions)
+	{
+		TArray<FExpressionInput*> ProcessedInputs;
+			RecursiveGetExpressionChain(Expression, ProcessedInputs, OutExpressions, InStaticParameterSet, InFeatureLevel, InQuality, InShadingPath);
+	}
 	}
 
 	return true;
@@ -6034,6 +6094,21 @@ bool UMaterial::IsPropertyActive(EMaterialProperty InProperty) const
 	}
 	return Active;
 }
+
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+FVxgiMaterialProperties UMaterial::GetVxgiMaterialProperties() const
+{
+	FVxgiMaterialProperties Properties;
+	Properties.bVxgiConeTracingEnabled = bVxgiConeTracingEnable;
+	Properties.bUsedWithVxgiVoxelization = bUsedWithVxgiVoxelization;
+	Properties.bVxgiAllowTesselationDuringVoxelization = bVxgiAllowTesselationDuringVoxelization;
+	Properties.bVxgiAdaptiveMaterialSamplingRate = bVxgiAdaptiveMaterialSamplingRate;
+	Properties.VxgiOpacityScale = VxgiOpacityScale;
+	return Properties;
+}
+#endif
+// NVCHANGE_END: Add VXGI
 
 #if WITH_EDITORONLY_DATA
 void UMaterial::FlipExpressionPositions(const TArray<UMaterialExpression*>& Expressions, const TArray<UMaterialExpressionComment*>& Comments, bool bScaleCoords, UMaterial* InMaterial)

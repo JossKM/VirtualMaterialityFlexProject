@@ -184,6 +184,10 @@ USceneCaptureComponent::USceneCaptureComponent(const FObjectInitializer& ObjectI
 	ShowFlags.SetHMDDistortion(0);
 
     CaptureStereoPass = EStereoscopicPass::eSSP_FULL;
+
+	// NVCHANGE_BEGIN: Add VXGI
+	bEnableVxgi = false;
+	// NVCHANGE_END: Add VXGI
 }
 
 void USceneCaptureComponent::OnRegister()

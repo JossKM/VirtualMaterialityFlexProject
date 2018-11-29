@@ -179,7 +179,7 @@ static TAutoConsoleVariable<int32> CVarDefaultAntiAliasing(
 	TEXT(" 1: FXAA (faster than TemporalAA but much more shimmering for non static cases)\n")
 	TEXT(" 2: TemporalAA (default)\n")
 	TEXT(" 3: MSAA (Forward shading only)"),
-	ECVF_RenderThreadSafe);
+    ECVF_RenderThreadSafe);
 
 // see ELightUnits
 static TAutoConsoleVariable<int32> CVarDefaultPointLightUnits(
@@ -633,7 +633,15 @@ FSceneView::FSceneView(const FSceneViewInitOptions& InitOptions)
 	, PrimaryScreenPercentageMethod(EPrimaryScreenPercentageMethod::SpatialUpscale)
 	, ForwardLightingResources(nullptr)
 	, FeatureLevel(InitOptions.ViewFamily ? InitOptions.ViewFamily->GetFeatureLevel() : GMaxRHIFeatureLevel)
-{
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	, bEnableVxgiForSceneCapture(false)
+	, bIsVxgiVoxelization(false)
+	, VxgiVoxelizationPass(0)
+	, VxgiAmbientOcclusionMode(EVxgiAmbientOcclusionMode::None)
+#endif
+	// NVCHANGE_END: Add VXGI
+{	
 	check(UnscaledViewRect.Min.X >= 0);
 	check(UnscaledViewRect.Min.Y >= 0);
 	check(UnscaledViewRect.Width() > 0);
@@ -1371,11 +1379,85 @@ void FSceneView::OverridePostProcessSettings(const FPostProcessSettings& Src, fl
 		LERP_PP(ScreenSpaceReflectionQuality);
 		LERP_PP(ScreenSpaceReflectionIntensity);
 		LERP_PP(ScreenSpaceReflectionMaxRoughness);
+		// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+		LERP_PP(HBAOPowerExponent);
+		LERP_PP(HBAORadius);
+		LERP_PP(HBAOBias);
+		LERP_PP(HBAOSmallScaleAO);
+		LERP_PP(HBAOBlurSharpness);
+		LERP_PP(HBAOMaxViewDepth);
+		LERP_PP(HBAODepthSharpness);
 
 		if (Src.bOverride_DepthOfFieldBladeCount)
 		{
 			Dest.DepthOfFieldBladeCount = Src.DepthOfFieldBladeCount;
 		}
+
+		if (Src.bOverride_HBAOBlurRadius)
+		{
+			Dest.HBAOBlurRadius = Src.HBAOBlurRadius;
+		}
+		if (Src.bOverride_HBAOForegroundAOEnable)  Dest.HBAOForegroundAOEnable = Src.HBAOForegroundAOEnable;
+		LERP_PP(HBAOForegroundAODistance);
+		if (Src.bOverride_HBAOBackgroundAOEnable)  Dest.HBAOBackgroundAOEnable = Src.HBAOBackgroundAOEnable;
+		LERP_PP(HBAOBackgroundAODistance);
+#endif
+		// NVCHANGE_END: Add HBAO+
+
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+#define IF_PP_ASSIGN(NAME) if(Src.bOverride_ ## NAME) Dest . NAME = Src . NAME;
+
+		IF_PP_ASSIGN(VxgiDiffuseTracingEnabled);
+		LERP_PP(VxgiDiffuseTracingIntensity);
+		IF_PP_ASSIGN(VxgiDiffuseTracingResolution);
+		IF_PP_ASSIGN(VxgiDiffuseLightLeaking);
+		LERP_PP(VxgiDiffuseTracingQuality);
+		LERP_PP(VxgiDiffuseTracingDirectionalSamplingRate);
+		LERP_PP(VxgiDiffuseTracingSoftness);
+		LERP_PP(VxgiDiffuseTracingStep);
+		LERP_PP(VxgiDiffuseTracingOpacityCorrectionFactor);
+		LERP_PP(VxgiDiffuseTracingInitialOffsetBias);
+		LERP_PP(VxgiDiffuseTracingInitialOffsetDistanceFactor);
+		IF_PP_ASSIGN(bVxgiDiffuseTracingTemporalReprojectionEnabled);
+		LERP_PP(VxgiDiffuseTracingTemporalReprojectionPreviousFrameWeight);
+		LERP_PP(VxgiDiffuseTracingTemporalReprojectionMaxDistanceInVoxels);
+		LERP_PP(VxgiDiffuseTracingTemporalReprojectionNormalWeightExponent);
+		LERP_PP(VxgiDiffuseTracingTemporalReprojectionDetailReconstruction);
+
+		IF_PP_ASSIGN(bVxgiAmbientOcclusionEnabled);
+		LERP_PP(VxgiAmbientRange);
+		LERP_PP(VxgiAmbientScale);
+		LERP_PP(VxgiAmbientBias);
+		LERP_PP(VxgiAmbientPowerExponent);
+		LERP_PP(VxgiAmbientMixIntensity);
+
+		IF_PP_ASSIGN(VxgiSpecularTracingEnabled);
+		LERP_PP(VxgiSpecularTracingIntensity);
+		LERP_PP(VxgiSpecularTracingStep);
+		LERP_PP(VxgiSpecularTracingOpacityCorrectionFactor);
+		LERP_PP(VxgiSpecularTracingInitialOffsetBias);
+		LERP_PP(VxgiSpecularTracingInitialOffsetDistanceFactor);
+		IF_PP_ASSIGN(bVxgiSpecularTracingTemporalFilterEnabled);
+		IF_PP_ASSIGN(bVxgiSpecularTracingConeJitterEnabled);
+		LERP_PP(VxgiSpecularTracingTemporalReprojectionPreviousFrameWeight);
+
+		IF_PP_ASSIGN(VxgiMultiBounceEnabled);
+		LERP_PP(VxgiMultiBounceFeedbackGain);
+		IF_PP_ASSIGN(VxgiMultiBounceLightLeaking);
+
+		IF_PP_ASSIGN(VxgiAreaLightsEnabled);
+		IF_PP_ASSIGN(VxgiAreaLightTracingResolution);
+		IF_PP_ASSIGN(bVxgiAreaLightTemporalReprojectionEnabled);
+		LERP_PP(VxgiAreaLightTracingStep);
+		LERP_PP(VxgiAreaLightOpacityCorrectionFactor);
+		LERP_PP(VxgiAreaLightInitialOffsetBias);
+		LERP_PP(VxgiAreaLightInitialOffsetDistanceFactor);
+		LERP_PP(VxgiAreaLightTemporalReprojectionMaxDistanceInVoxels);
+		LERP_PP(VxgiAreaLightTemporalReprojectionNormalWeightExponent);
+#endif
+		// NVCHANGE_END: Add VXGI
 
 		// cubemaps are getting blended additively - in contrast to other properties, maybe we should make that consistent
 		if (Src.AmbientCubemap && Src.bOverride_AmbientCubemapIntensity)
@@ -1960,11 +2042,11 @@ void FSceneView::EndFinalPostprocessSettings(const FSceneViewInitOptions& ViewIn
 	if (Family->EngineShowFlags.ScreenPercentage)
 	{
 		FinalPostProcessSettings.ScreenPercentage = FMath::Clamp(FinalPostProcessSettings.ScreenPercentage, 1.f, 400.0f);
-	}
+		}
 	else
-	{
+		{
 		FinalPostProcessSettings.ScreenPercentage = 100;
-	}
+		}
 
 	check(VerifyMembersChecks());
 }
@@ -2245,7 +2327,7 @@ void FSceneView::SetupCommonViewUniformBufferParameters(
 	SetupViewRectUniformBufferParameters(ViewUniformShaderParameters, BufferSize, EffectiveViewRect, InViewMatrices, InPrevViewMatrices);
 }
 
-FSceneViewFamily::FSceneViewFamily(const ConstructionValues& CVS)
+FSceneViewFamily::FSceneViewFamily( const ConstructionValues& CVS )
 	:
 	ViewMode(VMI_Lit),
 	RenderTarget(CVS.RenderTarget),
@@ -2266,6 +2348,13 @@ FSceneViewFamily::FSceneViewFamily(const ConstructionValues& CVS)
 	SecondaryViewFraction(1.0f),
 	SecondaryScreenPercentageMethod(ESecondaryScreenPercentageMethod::LowerPixelDensitySimulation),
 	ScreenPercentageInterface(nullptr)
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	, bVxgiAvailable(false)
+	, bVxgiEnabled(false)
+	, bVxgiAmbientOcclusionMode(false)
+#endif
+	// NVCHANGE_END: Add VXGI
 {
 	// If we do not pass a valid scene pointer then SetWorldTimes must be called to initialized with valid times.
 	ensure(CVS.bTimesSet);
@@ -2338,16 +2427,16 @@ FSceneViewFamily::FSceneViewFamily(const ConstructionValues& CVS)
 	if (bIsMobileLDR)
 	{
 		EngineShowFlags.ScreenPercentage = false;
-	}
+		}
 }
 
 FSceneViewFamily::~FSceneViewFamily()
 {
 	// If a screen percentage was given for the view family, delete it since any new copy of a view family will Fork it.
 	if (ScreenPercentageInterface)
-	{
+			{
 		delete ScreenPercentageInterface;
-	}
+			}
 }
 
 ERHIFeatureLevel::Type FSceneViewFamily::GetFeatureLevel() const

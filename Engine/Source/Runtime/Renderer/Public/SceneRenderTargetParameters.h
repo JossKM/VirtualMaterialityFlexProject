@@ -58,6 +58,19 @@ BEGIN_UNIFORM_BUFFER_STRUCT(FSceneTexturesUniformParameters, RENDERER_API)
 	UNIFORM_MEMBER_TEXTURE(Texture2D, EyeAdaptation)
 	UNIFORM_MEMBER_TEXTURE(Texture2D, SceneColorCopyTexture)
 	UNIFORM_MEMBER_SAMPLER(SamplerState, SceneColorCopyTextureSampler)
+
+	// NVCHANGE_BEGIN: Add VXGI
+	UNIFORM_MEMBER_TEXTURE(Texture2D, VxgiDiffuseTexture)
+	UNIFORM_MEMBER_TEXTURE(Texture2D, VxgiSpecularTexture)
+	UNIFORM_MEMBER_TEXTURE(Texture2D, VxgiConfidenceTexture)
+	UNIFORM_MEMBER_TEXTURE(Texture2D, VxgiAreaLightDiffuseTexture)
+	UNIFORM_MEMBER_TEXTURE(Texture2D, VxgiAreaLightSpecularTexture)
+	UNIFORM_MEMBER_SAMPLER(SamplerState, VxgiDiffuseTextureSampler)
+	UNIFORM_MEMBER_SAMPLER(SamplerState, VxgiSpecularTextureSampler)
+	UNIFORM_MEMBER_SAMPLER(SamplerState, VxgiConfidenceTextureSampler)
+	UNIFORM_MEMBER_SAMPLER(SamplerState, VxgiAreaLightDiffuseTextureSampler)
+	UNIFORM_MEMBER_SAMPLER(SamplerState, VxgiAreaLightSpecularTextureSampler)
+	// NVCHANGE_END: Add VXGI
 END_UNIFORM_BUFFER_STRUCT(FSceneTexturesUniformParameters)
 
 enum class ESceneTextureSetupMode : uint32

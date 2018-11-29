@@ -205,6 +205,11 @@
 #include "Materials/MaterialExpressionAtmosphericLightColor.h"
 #include "Materials/MaterialExpressionMaterialLayerOutput.h"
 #include "Materials/MaterialExpressionCurveAtlasRowParameter.h"
+// NVCHANGE_BEGIN: Add VXGI
+#include "Materials/MaterialExpressionVxgiVoxelization.h"
+#include "Materials/MaterialExpressionVxgiTraceCone.h"
+// NVCHANGE_END: Add VXGI
+
 #include "EditorSupportDelegates.h"
 #include "MaterialCompiler.h"
 #if WITH_EDITOR
@@ -879,7 +884,7 @@ FName UMaterialExpression::GetInputName(int32 InputIndex) const
 					}
 
 							return StructName;
-						}
+			}
 			}
 			Index++;
 		}
@@ -1427,7 +1432,7 @@ bool UMaterialExpressionTextureSample::CanEditChange(const UProperty* InProperty
 		else if (PropertyFName == GET_MEMBER_NAME_CHECKED(UMaterialExpressionTextureSample, AutomaticViewMipBias))
 		{
 			bIsEditable = AutomaticViewMipBiasValue.GetTracedInput().Expression == NULL;
-		}
+	}
 	}
 
 	return bIsEditable;
@@ -1688,7 +1693,7 @@ int32 UMaterialExpressionTextureSample::Compile(class FMaterialCompiler* Compile
 				else if (TextureType == MCT_VolumeTexture && !Coordinates.GetTracedInput().Expression)
 				{
 					return CompilerError(Compiler, TEXT("UVW input required for volume sample"));
-				}
+			}
 			}
 
 			int32 CoordinateIndex = Coordinates.GetTracedInput().Expression ? Coordinates.Compile(Compiler) : Compiler->TextureCoordinate(ConstCoordinate, false, false);
@@ -3464,6 +3469,106 @@ bool  UMaterialExpressionStaticComponentMaskParameter::SetParameterValue(FName I
 	return false;
 }
 #endif
+
+// NVCHANGE_BEGIN: Add VXGI
+
+//
+//	UMaterialExpressionVxgiVoxelization
+//
+
+UMaterialExpressionVxgiVoxelization::UMaterialExpressionVxgiVoxelization(const class FObjectInitializer& PCIP)
+	: Super(PCIP)
+{
+	// Structure to hold one-time initialization
+	struct FConstructorStatics
+	{
+		FText NAME_Constants;
+		FConstructorStatics()
+			: NAME_Constants(LOCTEXT("Constants", "Constants"))
+		{
+		}
+	};
+	static FConstructorStatics ConstructorStatics;
+
+#if WITH_EDITORONLY_DATA
+	MenuCategories.Add(ConstructorStatics.NAME_Constants);
+
+	bShaderInputData = true;
+#endif
+}
+
+#if WITH_EDITOR
+int32 UMaterialExpressionVxgiVoxelization::Compile(class FMaterialCompiler* Compiler, int32 OutputIndex)
+{
+#if WITH_GFSDK_VXGI
+	return Compiler->VxgiVoxelization();
+#else
+	return Compiler->Constant(0);
+#endif
+}
+
+void UMaterialExpressionVxgiVoxelization::GetCaption(TArray<FString>& OutCaptions) const
+{
+	OutCaptions.Add(TEXT("IsVxgiVoxelization"));
+}
+#endif // WITH_EDITOR
+//
+//	UMaterialExpressionVxgiTraceCone
+//
+
+UMaterialExpressionVxgiTraceCone::UMaterialExpressionVxgiTraceCone(const class FObjectInitializer& PCIP)
+	: Super(PCIP)
+{
+	// Structure to hold one-time initialization
+	struct FConstructorStatics
+	{
+		FText NAME_Lighting;
+		FConstructorStatics()
+			: NAME_Lighting(LOCTEXT("Lighting", "Lighting"))
+		{
+		}
+	};
+	static FConstructorStatics ConstructorStatics;
+
+#if WITH_EDITORONLY_DATA
+	MenuCategories.Add(ConstructorStatics.NAME_Lighting);
+
+	bShaderInputData = true;
+
+	Outputs.Reset();
+	Outputs.Add(FExpressionOutput(TEXT("Irradiance"), 1, 1, 1, 1, 0));
+#endif
+
+	MaxSamples = 128;
+}
+
+#if WITH_EDITOR
+int32 UMaterialExpressionVxgiTraceCone::Compile(class FMaterialCompiler* Compiler, int32 OutputIndex)
+{
+#if WITH_GFSDK_VXGI
+	if (!StartPos.Expression || !Direction.Expression || !ConeFactor.Expression)
+	{
+		return CompilerError(Compiler, TEXT("Cone tracing requires StartPos, Direction and ConeFactor arguments"));
+	}
+
+	int32 StartPosArg = StartPos.Compile(Compiler);
+	int32 DirectionArg = Direction.Compile(Compiler);
+	int32 ConeFactorArg = ConeFactor.Compile(Compiler);
+	int32 InitialOffsetArg = InitialOffset.Expression ? InitialOffset.Compile(Compiler) : Compiler->Constant(1.f);
+	int32 TracingStepArg = TracingStep.Expression ? TracingStep.Compile(Compiler) : Compiler->Constant(1.f);
+
+	return Compiler->VxgiTraceCone(StartPosArg, DirectionArg, ConeFactorArg, InitialOffsetArg, TracingStepArg, MaxSamples);
+#else
+	return Compiler->Constant(0);
+#endif
+}
+
+void UMaterialExpressionVxgiTraceCone::GetCaption(TArray<FString>& OutCaptions) const
+{
+	OutCaptions.Add(TEXT("VxgiTraceCone"));
+}
+#endif // WITH_EDITOR
+// NVCHANGE_END: Add VXGI
 
 //
 //	UMaterialExpressionTime
@@ -8273,14 +8378,14 @@ uint32 UMaterialExpressionIf::GetInputType(int32 InputIndex)
 			(B.GetTracedInput().Expression && !B.Expression->ContainsInputLoop() && B.Expression->IsResultMaterialAttributes(B.OutputIndex)))
 		{
 			return MCT_MaterialAttributes;
-		}
-		else
-		{
+	}
+	else
+	{
 			return MCT_Float;
 		}	
 	}
 
-	return MCT_Unknown;
+		return MCT_Unknown;
 }
 
 bool UMaterialExpressionIf::IsResultMaterialAttributes(int32 OutputIndex)
@@ -9438,13 +9543,13 @@ void UMaterialExpressionCustom::PostEditChangeProperty(FPropertyChangedEvent& Pr
 	if( PropertyThatChanged && PropertyThatChanged->GetFName() == GET_MEMBER_NAME_CHECKED(FCustomInput, InputName))
 	{
 		for( FCustomInput& Input : Inputs )
-	{
+		{
 			FString InputName = Input.InputName.ToString();
 			if (InputName.ReplaceInline(TEXT(" "),TEXT("")) > 0)
 		{
 				Input.InputName = *InputName;
-			}
 		}
+	}
 	}
 
 	if (PropertyChangedEvent.MemberProperty && GraphNode)
@@ -10104,15 +10209,15 @@ int32 UMaterialFunction::Compile(FMaterialCompiler* Compiler, const FFunctionExp
 
 	if (ValidateFunctionUsage(Compiler, Output))
 	{
-		if (Output.ExpressionOutput->A.GetTracedInput().Expression)
-		{
-			// Compile the given function output
-			ReturnValue = Output.ExpressionOutput->A.Compile(Compiler);
-		}
-		else
-		{
-			ReturnValue = Compiler->Errorf(TEXT("Missing function output connection '%s'"), *Output.ExpressionOutput->OutputName.ToString());
-		}
+	if (Output.ExpressionOutput->A.GetTracedInput().Expression)
+	{
+		// Compile the given function output
+		ReturnValue = Output.ExpressionOutput->A.Compile(Compiler);
+	}
+	else
+	{
+		ReturnValue = Compiler->Errorf(TEXT("Missing function output connection '%s'"), *Output.ExpressionOutput->OutputName.ToString());
+	}
 	}
 
 	return ReturnValue;
@@ -11596,9 +11701,9 @@ int32 UMaterialExpressionFunctionInput::CompilePreviewValue(FMaterialCompiler* C
 		if (Preview.Expression->GetOuter() == GetOuter())
 		{
 			ExpressionResult = Preview.Compile(Compiler);
-		}
-		else
-		{
+	}
+	else
+	{
 			FMaterialFunctionCompileState* FunctionState = Compiler->PopFunction();
 			ExpressionResult = Preview.Compile(Compiler);
 			Compiler->PushFunction(FunctionState);

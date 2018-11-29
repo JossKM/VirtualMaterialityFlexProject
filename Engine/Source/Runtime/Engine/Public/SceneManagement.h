@@ -909,19 +909,25 @@ public:
 	float OcclusionExponent;
 	float MinOcclusion;
 	FLinearColor OcclusionTint;
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	bool bCastVxgiIndirectLighting;
+#endif
+	// NVCHANGE_END: Add VXGI
 };
 
 struct FLightParameters
 {
-	FVector4	LightPositionAndInvRadius;
-	FVector4	LightColorAndFalloffExponent;
-	FVector		NormalizedLightDirection;
-	FVector		NormalizedLightTangent;
-	FVector2D	SpotAngles;
+	FVector4 LightPositionAndInvRadius;
+	FVector4 LightColorAndFalloffExponent;
+	FVector NormalizedLightDirection;
+	FVector NormalizedLightTangent;
+	FVector2D SpotAngles;
 	float		SpecularScale;
-	float		LightSourceRadius;
-	float		LightSoftSourceRadius;
-	float		LightSourceLength;
+	float LightSourceRadius;
+	float LightSoftSourceRadius;
+	float LightSourceLength;
 	FTexture*	SourceTexture;
 };
 
@@ -1110,6 +1116,11 @@ public:
 	inline bool Transmission() const { return bTransmission; }
 	inline bool UseRayTracedDistanceFieldShadows() const { return bUseRayTracedDistanceFieldShadows; }
 	inline float GetRayStartOffsetDepthScale() const { return RayStartOffsetDepthScale; }
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	inline bool CastVxgiIndirectLighting(const FSceneViewFamily* ViewFamily) const { return bCastVxgiIndirectLighting && (ViewFamily == nullptr || ViewFamily->bVxgiEnabled && !ViewFamily->bVxgiAmbientOcclusionMode); }
+#endif
+	// NVCHANGE_END: Add VXGI
 	inline uint8 GetLightType() const { return LightType; }
 	inline uint8 GetLightingChannelMask() const { return LightingChannelMask; }
 	inline FName GetComponentName() const { return ComponentName; }
@@ -1272,6 +1283,12 @@ protected:
 
 	/** Whether to render csm shadows for movable objects only (mobile). */
 	uint8 bUseWholeSceneCSMForMovableObjects : 1;
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	const uint32 bCastVxgiIndirectLighting : 1;
+#endif
+	// NVCHANGE_END: Add VXGI
 
 	/** The light type (ELightComponentType) */
 	const uint8 LightType;

@@ -19,6 +19,12 @@ class FDistanceFieldAOParameters;
 class UStaticMeshComponent;
 class FExponentialHeightFogSceneInfo;
 
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+#include "GFSDK_VXGI.h"
+#endif
+// NVCHANGE_END: Add VXGI
+
 class FLightShaftsOutput
 {
 public:

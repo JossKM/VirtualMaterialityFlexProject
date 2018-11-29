@@ -71,7 +71,7 @@ void FDiskCacheInterface::GrowMapping(SIZE_T size, bool firstrun)
 	if (mCurrentOffset + size > mCurrentFileMapSize)
 	{
 		mCurrentFileMapSize = Align(mCurrentOffset + size, mFileGrowSize);
-	}
+		}
 	else
 	{
 		return;
@@ -136,6 +136,11 @@ void FDiskCacheInterface::GrowMapping(SIZE_T size, bool firstrun)
 	}
 
 	mFileStart = (byte*)mMapAddress;
+}
+
+void FDiskCacheInterface::BeginAppendPSO()
+{
+	mHeader.mNumPsos += 1;
 }
 
 bool FDiskCacheInterface::AppendData(const void* pData, size_t size)
@@ -207,9 +212,8 @@ void FDiskCacheInterface::Reset(RESET_TYPE type)
 	}
 }
 
-void FDiskCacheInterface::Close(uint32 numberOfPSOs)
+void FDiskCacheInterface::Close()
 {
-	mHeader.mNumPsos = numberOfPSOs;
 
 	check(mCurrentOffset >= sizeof(FDiskCacheHeader));
 	mHeader.mSizeInBytes = mCurrentOffset - sizeof(FDiskCacheHeader);
@@ -265,9 +269,8 @@ void FDiskCacheInterface::ClearDiskCache()
 	UE_LOG(LogD3D12RHI, Warning, TEXT("Deleted PSO Cache with result %d"), result);
 }
 
-void FDiskCacheInterface::Flush(uint32 numberOfPSOs)
+void FDiskCacheInterface::Flush()
 {
-	mHeader.mNumPsos = numberOfPSOs;
 
 	check(mCurrentOffset >= sizeof(FDiskCacheHeader));
 	mHeader.mSizeInBytes = mCurrentOffset - sizeof(FDiskCacheHeader);

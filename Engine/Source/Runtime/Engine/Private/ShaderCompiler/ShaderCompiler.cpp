@@ -82,7 +82,13 @@ FString GetMaterialShaderMapDDCKey()
 // this is for the protocol, not the data, bump if FShaderCompilerInput or ProcessInputFromArchive changes (also search for the second one with the same name, todo: put into one header file)
 const int32 ShaderCompileWorkerInputVersion = 9;
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+const int32 ShaderCompileWorkerOutputVersion = 1005;
+#else
 const int32 ShaderCompileWorkerOutputVersion = 5;
+#endif
+// NVCHANGE_END: Add VXGI
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
 const int32 ShaderCompileWorkerSingleJobHeader = 'S';
 // this is for the protocol, not the data, bump if FShaderCompilerOutput or WriteToOutputArchive changes (also search for the second one with the same name, todo: put into one header file)
@@ -750,7 +756,7 @@ void FShaderCompileUtilities::DoReadTaskResults(const TArray<FShaderCommonCompil
 				{
 					FString Text = FString::Printf(TEXT("Worker returned %u stage pipeline jobs, %u expected"), NumStageJobs, CurrentJob->StageJobs.Num());
 					ModalErrorOrLog(Text, OutputFile.Tell(), FileSize);
-				}
+			}
 			}
 
 			CurrentJob->bSucceeded = true;
@@ -3174,10 +3180,10 @@ void GlobalBeginCompileShader(
 		}
 		else
 		{
-			static IConsoleVariable* CVarForwardShading = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ForwardShading"));
+	static IConsoleVariable* CVarForwardShading = IConsoleManager::Get().FindConsoleVariable(TEXT("r.ForwardShading"));
 			bForwardShading = CVarForwardShading ? (CVarForwardShading->GetInt() != 0) : false;
 		}
-		Input.Environment.SetDefine(TEXT("FORWARD_SHADING"), bForwardShading);
+	Input.Environment.SetDefine(TEXT("FORWARD_SHADING"), bForwardShading);
 	}
 
 	{
@@ -3214,7 +3220,7 @@ void GlobalBeginCompileShader(
 		if (PropagateAlpha < 0 || PropagateAlpha > 2)
 		{
 			PropagateAlpha = 0;
-		}
+	}
 		Input.Environment.SetDefine(TEXT("POST_PROCESS_ALPHA"), PropagateAlpha);
 	}
 
@@ -3658,12 +3664,12 @@ FShader* FGlobalShaderTypeCompiler::FinishCompileShader(FGlobalShaderType* Shade
 		}
 		else if (CVarShowShaderWarnings->GetInt())
 		{
-			UE_LOG(LogShaderCompilers, Warning, TEXT("Warnings compiling global shader %s %s %s:\n"), CurrentJob.ShaderType->GetName(), ShaderPipelineType ? TEXT("ShaderPipeline") : TEXT(""), ShaderPipelineType ? ShaderPipelineType->GetName() : TEXT(""));
-			for (int32 ErrorIndex = 0; ErrorIndex < CurrentJob.Output.Errors.Num(); ErrorIndex++)
-			{
-				UE_LOG(LogShaderCompilers, Warning, TEXT("	%s"), *CurrentJob.Output.Errors[ErrorIndex].GetErrorString());
-			}
+		UE_LOG(LogShaderCompilers, Warning, TEXT("Warnings compiling global shader %s %s %s:\n"), CurrentJob.ShaderType->GetName(), ShaderPipelineType ? TEXT("ShaderPipeline") : TEXT(""), ShaderPipelineType ? ShaderPipelineType->GetName() : TEXT(""));
+		for (int32 ErrorIndex = 0; ErrorIndex < CurrentJob.Output.Errors.Num(); ErrorIndex++)
+		{
+			UE_LOG(LogShaderCompilers, Warning, TEXT("	%s"), *CurrentJob.Output.Errors[ErrorIndex].GetErrorString());
 		}
+	}
 	}
 
 	return Shader;
@@ -3714,7 +3720,7 @@ void VerifyGlobalShaders(EShaderPlatform Platform, bool bLoadedFromCacheFile)
 
 		int32 PermutationCountToCompile = 0;
 		for (int32 PermutationId = 0; PermutationId < GlobalShaderType->GetPermutationCount(); PermutationId++)
-		{
+			{
 			if (GlobalShaderType->ShouldCompilePermutation(Platform, PermutationId) && !GlobalShaderMap->HasShader(GlobalShaderType, PermutationId))
 			{
 				if (bErrorOnMissing)
@@ -3742,7 +3748,7 @@ void VerifyGlobalShaders(EShaderPlatform Platform, bool bLoadedFromCacheFile)
 		{
 			UE_LOG(LogShaders, Warning, TEXT("	%s (%i out of %i)"),
 				GlobalShaderType->GetName(), PermutationCountToCompile, GlobalShaderType->GetPermutationCount());
-		}
+	}
 	}
 
 	// Now the pipeline jobs; if it's a shareable pipeline, do not add duplicate jobs
@@ -3904,11 +3910,11 @@ void SaveGlobalShaderMapToDerivedDataCache(EShaderPlatform Platform)
 			}
 		}
 
-		FMemoryWriter Ar(SaveData, true);
+	FMemoryWriter Ar(SaveData, true);
 		SerializeGlobalShaders(Ar, GGlobalShaderMap[Platform], &ShaderKeysToSave);
 
 		GetDerivedDataCacheRef().Put(*GetGlobalShaderMapKeyString(ShaderMapId, Platform, ShaderFilenameDependencies.Value), SaveData);
-		COOK_STAT(Timer.AddMiss(SaveData.Num()));
+	COOK_STAT(Timer.AddMiss(SaveData.Num()));
 	}
 }
 
@@ -3984,10 +3990,10 @@ bool IsGlobalShaderMapComplete(const TCHAR* TypeNameSubstring)
 					{
 						if (!GlobalShaderMap->HasShader(GlobalShaderType, PermutationId))
 						{
-							return false;
-						}
+						return false;
 					}
 				}
+			}
 			}
 
 			// Then the pipelines as it may be sharing shaders
@@ -4133,25 +4139,25 @@ void CompileGlobalShaderMap(EShaderPlatform Platform, bool bRefreshShaderMap)
 			{
 				SlowTask.EnterProgressFrame(ProgressStep);
 				CachedData.Reset();
-				COOK_STAT(auto Timer = GlobalShaderCookStats::UsageStats.TimeSyncWork());
+			COOK_STAT(auto Timer = GlobalShaderCookStats::UsageStats.TimeSyncWork());
 
 				GetDerivedDataCacheRef().WaitAsynchronousCompletion(AsyncDDCRequestHandles[HandleIndex]);
 				if (GetDerivedDataCacheRef().GetAsynchronousResults(AsyncDDCRequestHandles[HandleIndex], CachedData))
-				{
-					COOK_STAT(Timer.AddHit(CachedData.Num()));
-					FMemoryReader Ar(CachedData, true);
+			{
+				COOK_STAT(Timer.AddHit(CachedData.Num()));
+				FMemoryReader Ar(CachedData, true);
 
-					// Deserialize from the cached data
+				// Deserialize from the cached data
 					SerializeGlobalShaders(Ar, GGlobalShaderMap[Platform], nullptr);
-				}
-				else
-				{
-					// it's a miss, but we haven't built anything yet. Save the counting until we actually have it built.
-					COOK_STAT(Timer.TrackCyclesOnly());
-				}
+			}
+			else
+			{
+				// it's a miss, but we haven't built anything yet. Save the counting until we actually have it built.
+				COOK_STAT(Timer.TrackCyclesOnly());
+			}
 
 				++HandleIndex;
-			}
+		}
 		}
 
 		// If any shaders weren't loaded, compile them now.
@@ -4368,8 +4374,8 @@ void BeginRecompileGlobalShaders(const TArray<FShaderType*>& OutdatedShaderTypes
 					for (int32 PermutationId = 0; PermutationId < CurrentGlobalShaderType->GetPermutationCount(); PermutationId++)
 					{
 						GlobalShaderMap->RemoveShaderTypePermutaion(CurrentGlobalShaderType, PermutationId);
-					}
 				}
+			}
 			}
 
 			for (int32 PipelineTypeIndex = 0; PipelineTypeIndex < OutdatedShaderPipelineTypes.Num(); ++PipelineTypeIndex)

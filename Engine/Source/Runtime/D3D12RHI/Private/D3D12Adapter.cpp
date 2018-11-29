@@ -211,6 +211,12 @@ void FD3D12Adapter::CreateRootDevice(bool bWithDebug)
 				// but will hopefully be resolved when the RHI switches to use the engine's resource tracking system.
 				(D3D12_MESSAGE_ID)1008,
 
+				// The debug runtime on Win10 RS5 doesn't understand how the NVIDIA driver assigns descriptor handles.
+				D3D12_MESSAGE_ID_COPY_DESCRIPTORS_INVALID_RANGES,
+
+				// The engine calls GetGPUVirtualAddress on all resources, not just buffers.
+				D3D12_MESSAGE_ID_GETGPUVIRTUALADDRESS_INVALID_RESOURCE_DIMENSION,
+
 #if ENABLE_RESIDENCY_MANAGEMENT
 				// TODO: Remove this when the debug layers work for executions which are guarded by a fence
 				D3D12_MESSAGE_ID_INVALID_USE_OF_NON_RESIDENT_RESOURCE
@@ -355,11 +361,11 @@ void FD3D12Adapter::InitializeDevices()
 
 			// The redirectors allow to broadcast to any GPU set
 			DefaultContextRedirector.SetPhysicalContext(&Devices[GPUIndex]->GetDefaultCommandContext());
-			if (GEnableAsyncCompute)
-			{
+				if (GEnableAsyncCompute)
+				{
 				DefaultAsyncComputeContextRedirector.SetPhysicalContext(&Devices[GPUIndex]->GetDefaultAsyncComputeContext());
+				}
 			}
-		}
 
 		DefaultContextRedirector.SetGPUMask(FRHIGPUMask::All());
 		DefaultAsyncComputeContextRedirector.SetGPUMask(FRHIGPUMask::All());
@@ -374,14 +380,14 @@ void FD3D12Adapter::InitializeDevices()
 
 		for (uint32 GPUIndex : FRHIGPUMask::All())
 		{
-			// Safe to init as we have a device;
+		// Safe to init as we have a device;
 			UploadHeapAllocator[GPUIndex] = new FD3D12DynamicHeapAllocator(this,
 				Devices[GPUIndex],
-				Name,
-				kManualSubAllocationStrategy,
-				DEFAULT_CONTEXT_UPLOAD_POOL_MAX_ALLOC_SIZE,
-				DEFAULT_CONTEXT_UPLOAD_POOL_SIZE,
-				DEFAULT_CONTEXT_UPLOAD_POOL_ALIGNMENT);
+			Name,
+			kManualSubAllocationStrategy,
+			DEFAULT_CONTEXT_UPLOAD_POOL_MAX_ALLOC_SIZE,
+			DEFAULT_CONTEXT_UPLOAD_POOL_SIZE,
+			DEFAULT_CONTEXT_UPLOAD_POOL_ALIGNMENT);
 
 			UploadHeapAllocator[GPUIndex]->Init();
 		}
@@ -525,7 +531,7 @@ void FD3D12Adapter::EndFrame()
 	for (uint32 GPUIndex : FRHIGPUMask::All())
 	{
 		GetUploadHeapAllocator(GPUIndex).CleanUpAllocations();
-	}
+		}
 	GetDeferredDeletionQueue().ReleaseResources();
 }
 

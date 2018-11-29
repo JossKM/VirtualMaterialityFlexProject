@@ -336,6 +336,30 @@ public:
 #if WITH_TXAA
     virtual void RHIResolveTXAA(FTextureRHIParamRef Target, FTextureRHIParamRef Source, FTextureRHIParamRef Feedback, FTextureRHIParamRef Velocity, FTextureRHIParamRef Depth, const FVector2D& Jitter) override;
 #endif
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual void RHIVXGICleanupAfterVoxelization() final override;
+	virtual void RHISetViewportsAndScissorRects(uint32 Count, const FViewportBounds* Viewports, const FScissorRect* ScissorRects) final override;
+	virtual void RHIDispatchIndirectComputeShaderStructured(FStructuredBufferRHIParamRef ArgumentBuffer, uint32 ArgumentOffset) final override;
+	virtual void RHIDrawIndirect(uint32 PrimitiveType, FStructuredBufferRHIParamRef ArgumentBuffer, uint32 ArgumentOffset) final override;
+	virtual void RHICopyStructuredBufferData(FStructuredBufferRHIParamRef DestBuffer, uint32 DestOffset, FStructuredBufferRHIParamRef SrcBuffer, uint32 SrcOffset, uint32 DataSize) final override;
+	virtual void RHISetEnableUAVBarriers(bool bEnable, const FTextureRHIParamRef* Textures, uint32 NumTextures, const FStructuredBufferRHIParamRef* Buffers, uint32 NumBuffers) final override;
+#endif
+	// NVCHANGE_END: Add VXGI
+
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	virtual void RHIRenderHBAO(
+		const FTextureRHIParamRef SceneDepthTextureRHI,
+		const FTextureRHIParamRef SceneDepthTextureRHI2ndLayer,
+		const FMatrix& ProjectionMatrix,
+		const FTextureRHIParamRef SceneNormalTextureRHI,
+		const FMatrix& ViewMatrix,
+		const FTextureRHIParamRef SceneColorTextureRHI,
+		const GFSDK_SSAO_Parameters& AOParams) final override;
+#endif
+	// NVCHANGE_END: Add HBAO+
+
 
 	virtual void RHIBeginRenderPass(const FRHIRenderPassInfo& InInfo, const TCHAR* InName) final override
 	{
@@ -389,15 +413,15 @@ public:
 		{
 			return Object->GetParentDevice() == GetParentDevice();
 		});
-	}
+		}
 
 	template<typename Predicate>
 	static inline FD3D12TextureBase* RetrieveTextureBase(FRHITexture* Texture, Predicate Func)
-	{
+		{
 		FD3D12TextureBase* Result = Texture ? (FD3D12TextureBase*)Texture->GetTextureBaseRHI() : nullptr;
 #if WITH_MGPU
 		if (Result && GNumExplicitGPUsForRendering > 1)
-		{
+			{
 			if (Result->GetBaseShaderResource() != Result)
 			{
 				Result = (FD3D12TextureBase*)Result->GetBaseShaderResource();
@@ -408,8 +432,8 @@ public:
 			}
 		}
 #endif // WITH_MGPU
-		return Result;
-	}
+			return Result;
+		}
 
 	FORCEINLINE_DEBUGGABLE FD3D12TextureBase* RetrieveTextureBase(FRHITexture* Texture)
 	{

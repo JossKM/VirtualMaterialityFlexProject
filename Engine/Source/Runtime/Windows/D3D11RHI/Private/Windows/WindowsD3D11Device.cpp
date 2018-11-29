@@ -212,7 +212,7 @@ static void SafeCreateDXGIFactory(IDXGIFactory1** DXGIFactory1)
 				CreateDXGIFactory2FnPtr = (FCreateDXGIFactory2)(GetProcAddress(DxgiDLL, "CreateDXGIFactory2"));
 #pragma warning(pop)
 				FreeLibrary(DxgiDLL);
-			}
+	}
 			if (CreateDXGIFactory2FnPtr)
 			{
 				bIsQuadBufferStereoEnabled = true;
@@ -455,7 +455,7 @@ static void SetHDRMonitorModeAMD(uint32 IHVDisplayIndex, bool bEnableHDR, EDispl
 			HDRDisplaySettings.minLuminance = MinOutputNits;
 			HDRDisplaySettings.maxContentLightLevel = MaxCLL;
 			HDRDisplaySettings.maxFrameAverageLightLevel = MaxFALL;
-		}
+	}
 
 		AGSReturnCode AmdStatus = agsSetDisplayMode(AmdInfo.AmdAgsContext, AmdHDRDeviceIndex, AmdHDRDisplayIndex, &HDRDisplaySettings);
 
@@ -635,7 +635,7 @@ static bool SupportsHDROutput(FD3D11DynamicRHI* D3DRHI)
 							UE_LOG(LogD3D11RHI, Log, TEXT("HDR output is supported on display %i (AMD Device: 0x%x, Display: 0x%x)."), DisplayIndex, AMDDeviceIndex, AMDDisplayIndex);
 							D3DRHI->SetHDRDetectedDisplayIndices(DisplayIndex, (uint32)(AMDDeviceIndex << 16) | (uint32)AMDDisplayIndex);
 							return true;
-						}
+		}
 					}
 				}
 			}
@@ -654,17 +654,17 @@ void FD3D11DynamicRHIModule::StartupModule()
 #if NV_AFTERMATH
 	// Note - can't check device type here, we'll check for that before actually initializing Aftermath
 
-	FString AftermathBinariesRoot = FPaths::EngineDir() / TEXT("Binaries/ThirdParty/NVIDIA/NVaftermath/Win64/");
-	if (LoadLibraryW(*(AftermathBinariesRoot + "GFSDK_Aftermath_Lib.x64.dll")) == nullptr)
-	{
-		UE_LOG(LogD3D11RHI, Warning, TEXT("Failed to load GFSDK_Aftermath_Lib.x64.dll"));
+		FString AftermathBinariesRoot = FPaths::EngineDir() / TEXT("Binaries/ThirdParty/NVIDIA/NVaftermath/Win64/");
+		if (LoadLibraryW(*(AftermathBinariesRoot + "GFSDK_Aftermath_Lib.x64.dll")) == nullptr)
+		{
+			UE_LOG(LogD3D11RHI, Warning, TEXT("Failed to load GFSDK_Aftermath_Lib.x64.dll"));
 		GNVAftermathModuleLoaded = false;
-	}
-	else
-	{
+		}
+		else
+		{
 		UE_LOG(LogD3D11RHI, Log, TEXT("Loaded GFSDK_Aftermath_Lib.x64.dll"));
 		GNVAftermathModuleLoaded = true;
-	}
+		}
 
 #endif
 }
@@ -910,6 +910,12 @@ void FD3D11DynamicRHI::Init()
 #else
 	GSupportsDepthBoundsTest = false;
 #endif
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	CreateVxgiInterface();
+#endif
+	// NVCHANGE_END: Add VXGI
 }
 
 bool FD3D11DynamicRHI::IsQuadBufferStereoEnabled()
@@ -1372,7 +1378,7 @@ void FD3D11DynamicRHI::InitD3DDevice()
 				// If agsInit returns anything but AGS_SUCCESS, the context pointer should be
 				// guaranteed to be NULL, but we'll set it here explicitly, just to be safe.
 				AmdAgsContext = NULL;
-			}
+		}
 		}
 		else
 		{
@@ -1461,19 +1467,19 @@ void FD3D11DynamicRHI::InitD3DDevice()
 		
 		if (!bDeviceCreated)
 		{
-			// Creating the Direct3D device.
-			VERIFYD3D11RESULT(D3D11CreateDevice(
-				Adapter,
-				DriverType,
-				NULL,
-				DeviceFlags,
-				&FeatureLevel,
-				1,
-				D3D11_SDK_VERSION,
-				Direct3DDevice.GetInitReference(),
-				&ActualFeatureLevel,
-				Direct3DDeviceIMContext.GetInitReference()
-			));
+		// Creating the Direct3D device.
+		VERIFYD3D11RESULT(D3D11CreateDevice(
+			Adapter,
+			DriverType,
+			NULL,
+			DeviceFlags,
+			&FeatureLevel,
+			1,
+			D3D11_SDK_VERSION,
+			Direct3DDevice.GetInitReference(),
+			&ActualFeatureLevel,
+			Direct3DDeviceIMContext.GetInitReference()
+		));
 		}
 
 		// We should get the feature level we asked for as earlier we checked to ensure it is supported.
@@ -1543,7 +1549,7 @@ void FD3D11DynamicRHI::InitD3DDevice()
 			START_NV_AFTERMATH();
 		}
 		else if (IsRHIDeviceAMD() && AmdAgsContext)
-		{
+			{
 			if ((AmdSupportedExtensionFlags & AGS_DX11_EXTENSION_DEPTH_BOUNDS_TEST) != 0)
 			{
 				GSupportsDepthBoundsTest = true;
@@ -1652,6 +1658,31 @@ void FD3D11DynamicRHI::InitD3DDevice()
 		{
 			GRHISupportsHDROutput = SupportsHDROutput(this);
 		}
+
+		// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+		if (GMaxRHIFeatureLevel >= ERHIFeatureLevel::SM5)
+		{
+			FString HBAOBinariesPath = FPaths::EngineDir() / TEXT("Binaries/ThirdParty/GameWorks/GFSDK_SSAO/");
+#if PLATFORM_64BITS
+			HBAOModuleHandle = LoadLibraryW(*(HBAOBinariesPath + "GFSDK_SSAO_D3D11.win64.dll"));
+#else
+			HBAOModuleHandle = LoadLibraryW(*(HBAOBinariesPath + "GFSDK_SSAO_D3D11.win32.dll"));
+#endif
+			check(HBAOModuleHandle);
+
+			GFSDK_SSAO_Status status;
+			status = GFSDK_SSAO_CreateContext_D3D11(Direct3DDevice, &HBAOContext);
+			check(status == GFSDK_SSAO_OK);
+
+			GFSDK_SSAO_Version Version;
+			status = GFSDK_SSAO_GetVersion(&Version);
+			check(status == GFSDK_SSAO_OK);
+
+			UE_LOG(LogD3D11RHI, Log, TEXT("HBAO+ %d.%d.%d.%d"), Version.Major, Version.Minor, Version.Branch, Version.Revision);
+		}
+#endif
+		// NVCHANGE_END: Add HBAO+
 
 #if WITH_TXAA
         if (GMaxRHIFeatureLevel >= ERHIFeatureLevel::SM5)

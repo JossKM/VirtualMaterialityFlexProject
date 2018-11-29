@@ -1007,7 +1007,9 @@ public:
 		return Ar;
 	}
 
+#if !WITH_GFSDK_VXGI
 private:
+#endif
 
 	FSceneTextureShaderParameters SceneTextureParameters;
 	FShaderParameter ScreenToShadowMatrix;
@@ -1104,7 +1106,7 @@ public:
 		if (View.Family->Scene)
 		{
 			Scene = View.Family->Scene->GetRenderScene();
-		}
+	}
 
 		FSceneRenderTargets& SceneContext = FSceneRenderTargets::Get(RHICmdList);
 		{
@@ -1408,7 +1410,10 @@ public:
 		return Ar;
 	}
 
+#if !WITH_GFSDK_VXGI
 private:
+#endif
+
 	FShaderResourceParameter ShadowDepthTexture;
 	FShaderResourceParameter ShadowDepthTexture2;
 	FShaderResourceParameter ShadowDepthCubeComparisonSampler;

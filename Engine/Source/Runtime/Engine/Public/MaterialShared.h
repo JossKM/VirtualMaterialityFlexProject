@@ -1,4 +1,4 @@
-﻿// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
+// Copyright 1998-2018 Epic Games, Inc. All Rights Reserved.
 
 /*=============================================================================
 	MaterialShared.h: Shared material definitions.
@@ -24,6 +24,10 @@
 #include "Misc/Optional.h"
 #include "Serialization/MemoryWriter.h"
 #include "Serialization/ArchiveProxy.h"
+
+#if WITH_GFSDK_VXGI
+#include "Engine/Classes/Materials/MaterialInterface.h"
+#endif
 
 class FMaterial;
 class FMaterialCompiler;
@@ -1216,6 +1220,13 @@ public:
 	virtual bool IsUsedWithAPEXCloth() const { return false; }
 	virtual bool IsUsedWithUI() const { return false; }
 	virtual bool IsUsedWithGeometryCache() const { return false; }
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual FVxgiMaterialProperties GetVxgiMaterialProperties() const { return FVxgiMaterialProperties(); }
+#endif
+	//This is not normally exposed but we need to check and void this since the preview material compiles with less permutation for quicker feedback
+	virtual bool IsPreviewMaterial() const { return false; }
+	// NVCHANGE_END: Add VXGI
 	ENGINE_API virtual enum EMaterialTessellationMode GetTessellationMode() const;
 	virtual bool IsCrackFreeDisplacementEnabled() const { return false; }
 	virtual bool IsAdaptiveTessellationEnabled() const { return false; }
@@ -1741,6 +1752,13 @@ public:
 		return DeferredUniformExpressionCacheRequests.Num() > 0;
 	}
 
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	virtual FVxgiMaterialProperties GetVxgiMaterialProperties() const { return FVxgiMaterialProperties(); }
+	virtual bool IsTwoSided() const { return false; }
+#endif
+	// NVCHANGE_END: Add VXGI
+
 private:
 
 	/** true if the material is selected. */
@@ -1910,6 +1928,12 @@ public:
 	ENGINE_API virtual bool IsUsedWithInstancedStaticMeshes() const override;
 	ENGINE_API virtual bool IsUsedWithAPEXCloth() const override;
 	ENGINE_API virtual bool IsUsedWithGeometryCache() const override;
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	ENGINE_API virtual FVxgiMaterialProperties GetVxgiMaterialProperties() const override;
+	ENGINE_API virtual bool IsPreviewMaterial() const override;
+#endif
+	// NVCHANGE_END: Add VXGI
 	ENGINE_API virtual enum EMaterialTessellationMode GetTessellationMode() const override;
 	ENGINE_API virtual bool IsCrackFreeDisplacementEnabled() const override;
 	ENGINE_API virtual bool IsAdaptiveTessellationEnabled() const override;

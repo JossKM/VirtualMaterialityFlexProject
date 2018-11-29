@@ -305,7 +305,9 @@ public:
 			FPlane Far;
 			FPlane Near;
 			const FVector LightDirection = -GetDirection();
-			ComputeShadowCullingVolume(View.bReverseCulling, CascadeFrustumVerts, LightDirection, OutInitializer.CascadeSettings.ShadowBoundsAccurate, Near, Far);
+			// NVCHANGE_BEGIN: Add VXGI -- added ViewFamily parameter
+			ComputeShadowCullingVolume(View.Family, View.bReverseCulling, CascadeFrustumVerts, LightDirection, OutInitializer.CascadeSettings.ShadowBoundsAccurate, Near, Far);
+			// NVCHANGE_END: Add VXGI
 		}
 		return true;
 	}
@@ -418,7 +420,9 @@ private:
 	}
 
 	// Computes a shadow culling volume (convex hull) based on a set of 8 vertices and a light direction
-	void ComputeShadowCullingVolume(bool bReverseCulling, const FVector* CascadeFrustumVerts, const FVector& LightDirection, FConvexVolume& ConvexVolumeOut, FPlane& NearPlaneOut, FPlane& FarPlaneOut) const
+	// NVCHANGE_BEGIN: Add VXGI -- added ViewFamily parameter
+	void ComputeShadowCullingVolume(const FSceneViewFamily* ViewFamily, bool bReverseCulling, const FVector* CascadeFrustumVerts, const FVector& LightDirection, FConvexVolume& ConvexVolumeOut, FPlane& NearPlaneOut, FPlane& FarPlaneOut) const
+	// NVCHANGE_END: Add VXGI
 	{
 		// For mobile platforms that switch vertical axis and MobileHDR == false the sense of bReverseCulling is inverted.
 		bReverseCulling = XOR(bReverseCulling, (RHINeedsToSwitchVerticalAxis(GShaderPlatformForFeatureLevel[GMaxRHIFeatureLevel]) && !IsMobileHDR()));
@@ -465,6 +469,16 @@ private:
 
 		NearPlaneOut = SubFrustumPlanes[0];
 		FarPlaneOut = SubFrustumPlanes[5];
+
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		if (bCastVxgiIndirectLighting && ViewFamily->bVxgiEnabled && !ViewFamily->bVxgiAmbientOcclusionMode)
+		{
+			ConvexVolumeOut = FConvexVolume();
+			return;
+		}
+#endif
+		// NVCHANGE_END: Add VXGI
 
 		// Add the planes from the camera's frustum which form the back face of the frustum when in light space.
 		for (int32 i = 0; i < 6; i++)
@@ -587,7 +601,7 @@ private:
 		// Get FOV and AspectRatio from the view's projection matrix.
 		float AspectRatio = ProjectionMatrix.M[1][1] / ProjectionMatrix.M[0][0];
 		float HalfFOV = View.ShadowViewMatrices.IsPerspectiveProjection() ? FMath::Atan(1.0f / ProjectionMatrix.M[0][0]) : PI/4.0f;
-
+		
 		// Build the camera frustum for this cascade
 		const float StartHorizontalLength = SplitNear * FMath::Tan(HalfFOV);
 		const FVector StartCameraRightOffset = ViewMatrix.GetColumn(0) * StartHorizontalLength;
@@ -642,7 +656,9 @@ private:
 		if (OutCascadeSettings)
 		{
 			// this function is needed, since it's also called by the LPV code.
-			ComputeShadowCullingVolume(View.bReverseCulling, CascadeFrustumVerts, LightDirection, OutCascadeSettings->ShadowBoundsAccurate, OutCascadeSettings->NearFrustumPlane, OutCascadeSettings->FarFrustumPlane);
+			// NVCHANGE_BEGIN: Add VXGI -- added View.Family parameter
+			ComputeShadowCullingVolume(View.Family, View.bReverseCulling, CascadeFrustumVerts, LightDirection, OutCascadeSettings->ShadowBoundsAccurate, OutCascadeSettings->NearFrustumPlane, OutCascadeSettings->FarFrustumPlane);
+			// NVCHANGE_END: Add VXGI
 		}
 
 		return CascadeSphere;

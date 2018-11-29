@@ -48,6 +48,19 @@ DECLARE_LOG_CATEGORY_EXTERN(LogD3D12RHI, Log, All);
 
 #include "D3D12Residency.h"
 
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+#include "GFSDK_VXGI.h"
+#include "D3D12NvRHI.h"
+#endif
+// NVCHANGE_END: Add VXGI
+
+// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+#include "GFSDK_SSAO.h"
+#endif
+// NVCHANGE_END: Add HBAO
+
 // D3D RHI public headers.
 #include "../Public/D3D12Util.h"
 #include "../Public/D3D12State.h"
@@ -204,6 +217,15 @@ public:
 	virtual void PostInit() override;
 	virtual void Shutdown() override;
 	virtual const TCHAR* GetName() override { return TEXT("D3D12"); }
+
+	// NVCHANGE_BEGIN: Add HBAO+
+#if WITH_GFSDK_SSAO
+	GFSDK_SSAO_Context_D3D12* HBAOContext;
+	GFSDK_SSAO_DescriptorHeaps_D3D12* HBAODescriptorHeaps;
+	HMODULE HBAOModuleHandle;
+	virtual void CreateHBAOContext(FD3D12Device* device, FD3D12SubAllocatedOnlineHeap::SubAllocationDesc& heapInfo);
+#endif
+	// NVCHANGE_END: Add HBAO+
 
 	template<typename TRHIType>
 	static FORCEINLINE typename TD3D12ResourceTraits<TRHIType>::TConcreteType* ResourceCast(TRHIType* Resource)
@@ -464,6 +486,38 @@ public:
 
 	void UpdateBuffer(FD3D12Resource* Dest, uint32 DestOffset, FD3D12Resource* Source, uint32 SourceOffset, uint32 NumBytes);
 
+	// NVCHANGE_BEGIN: Add VXGI
+private:
+	// These extensions can potentially be used for other purposes, not just VXGI.
+	TArray<const void*> NvidiaShaderExtensions;
+public:
+#if WITH_GFSDK_VXGI
+	NVRHI::FRendererInterfaceD3D12* VxgiRendererD3D12;
+	virtual VXGI::IGlobalIllumination* RHIVXGIGetInterface() final override;
+	virtual NVRHI::IRendererInterface* RHIVXGIGetRendererInterface() final override;
+    virtual bool RHIVXGIIsInitialized() final override;
+	virtual EVxgiTier RHIGetVXGITier() final override;
+	virtual void RHIVXGISetVoxelizationParameters(const VXGI::VoxelizationParameters& Parameters) final override;
+	virtual void RHIVXGISetPixelShaderResourceAttributes(NVRHI::ShaderHandle PixelShader, const TArray<uint8>& ShaderResourceTable, bool bUsesGlobalCB) final override;
+	virtual void RHIVXGIApplyDrawStateOverrideShaders(const NVRHI::DrawCallState& DrawCallState, const FBoundShaderStateInput* BoundShaderStateInput, EPrimitiveType PrimitiveTypeOverride) final override;
+	virtual void RHIVXGIApplyShaderResources(const NVRHI::DrawCallState& DrawCallState) final override;
+	virtual void RHIVXGISetCommandList(FRHICommandList* RHICommandList) final override;
+	virtual FRHITexture* GetRHITextureFromVXGI(NVRHI::TextureHandle texture) final override;
+	virtual NVRHI::TextureHandle GetVXGITextureFromRHI(FRHITexture* texture) final override;
+	virtual void RHIVXGIReleaseUnmanagedTextures() final override;
+	virtual FRHIShader* GetRHIShaderFromVXGI(NVRHI::ShaderHandle shader) final override;
+	virtual bool RHISetExtensionsForNextShader(const void* const* Extensions, uint32 NumExtensions) final override;
+private:
+	VXGI::IGlobalIllumination* VxgiInterface;
+	VXGI::VoxelizationParameters VxgiVoxelizationParameters;
+	bool bVxgiVoxelizationParametersSet;
+	EVxgiTier VxgiTier;
+	void CreateVxgiInterface();
+	void ReleaseVxgiInterface();
+public:
+#endif
+	// NVCHANGE_END: Add VXGI
+
 #if UE_BUILD_DEBUG	
 	uint32 SubmissionLockStalls;
 	uint32 DrawCount;
@@ -574,11 +628,23 @@ public:
 		{
 			TransitionResource(hCommandList, pResource, D3D12_RESOURCE_STATE_DEPTH_WRITE, pView->GetDepthOnlyViewSubresourceSubset());
 		}
+		// NVCHANGE_BEGIN
+		else
+		{
+			TransitionResource(hCommandList, pResource, D3D12_RESOURCE_STATE_DEPTH_READ, pView->GetDepthOnlyViewSubresourceSubset());
+		}
+		// NVCHANGE_END
 
 		if (bStencilIsWritable)
 		{
 			TransitionResource(hCommandList, pResource, D3D12_RESOURCE_STATE_DEPTH_WRITE, pView->GetStencilOnlyViewSubresourceSubset());
 		}
+		// NVCHANGE_BEGIN
+		else if(bHasStencil)
+		{
+			TransitionResource(hCommandList, pResource, D3D12_RESOURCE_STATE_DEPTH_READ, pView->GetStencilOnlyViewSubresourceSubset());
+		}
+		// NVCHANGE_END
 #endif // USE_D3D12RHI_RESOURCE_STATE_TRACKING
 	}
 
@@ -751,6 +817,15 @@ public:
 					hCommandList.AddTransitionBarrier(pResource, before, after, SubresourceIndex);
 					ResourceState.SetSubresourceState(SubresourceIndex, after);
 				}
+				// NVCHANGE_BEGIN: Add VXGI
+				else if (before == D3D12_RESOURCE_STATE_UNORDERED_ACCESS && after == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+				{
+					if (pResource->RequestUAVBarrier())
+					{
+						hCommandList.AddUAVBarrier(pResource);
+					}
+				}
+				// NVCHANGE_END: Add VXGI
 			}
 
 			// The entire resource should now be in the after state on this command list (even if all barriers are pending)
@@ -771,6 +846,15 @@ public:
 				hCommandList.AddTransitionBarrier(pResource, before, after, subresource);
 				ResourceState.SetSubresourceState(subresource, after);
 			}
+			// NVCHANGE_BEGIN: Add VXGI
+			else if (before == D3D12_RESOURCE_STATE_UNORDERED_ACCESS && after == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+			{
+				if (pResource->RequestUAVBarrier())
+				{
+					hCommandList.AddUAVBarrier(pResource);
+				}
+			}
+			// NVCHANGE_END: Add VXGI
 		}
 #endif // USE_D3D12RHI_RESOURCE_STATE_TRACKING
 	}
@@ -807,6 +891,15 @@ public:
 				hCommandList.AddTransitionBarrier(pResource, before, after, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 				ResourceState.SetResourceState(after);
 			}
+			// NVCHANGE_BEGIN: Add VXGI
+			else if (before == D3D12_RESOURCE_STATE_UNORDERED_ACCESS && after == D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+			{
+				if (pResource->RequestUAVBarrier())
+				{
+					hCommandList.AddUAVBarrier(pResource);
+				}
+			}
+			// NVCHANGE_END: Add VXGI
 		}
 		else
 		{

@@ -50,6 +50,11 @@ enum EMaterialUsage
 	MATUSAGE_NiagaraMeshParticles,
 	MATUSAGE_GeometryCache,
 
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	MATUSAGE_VxgiVoxelization,
+#endif
+	// NVCHANGE_END: Add VXGI
 	MATUSAGE_MAX,
 };
 
@@ -204,6 +209,24 @@ struct FMaterialTextureInfo
 
 	/** Return whether the data is valid to be used */
 	ENGINE_API bool IsValid(bool bCheckTextureIndex = false) const; 
+};
+
+struct FVxgiMaterialProperties
+{
+	uint32 bVxgiConeTracingEnabled : 1;
+	uint32 bUsedWithVxgiVoxelization : 1;
+	uint32 bVxgiAllowTesselationDuringVoxelization : 1;
+	uint32 bVxgiAdaptiveMaterialSamplingRate : 1;
+	float VxgiOpacityScale;
+
+	FVxgiMaterialProperties()
+		: bVxgiConeTracingEnabled(0)
+		, bUsedWithVxgiVoxelization(0)
+		, bVxgiAllowTesselationDuringVoxelization(0)
+		, bVxgiAdaptiveMaterialSamplingRate(0)
+		, VxgiOpacityScale(1.0f)
+	{
+	}
 };
 
 UCLASS(abstract, BlueprintType,MinimalAPI)
@@ -706,6 +729,12 @@ public:
 	ENGINE_API virtual bool IsTranslucencyWritingCustomDepth() const;
 	ENGINE_API virtual bool IsMasked() const;
 	ENGINE_API virtual bool IsDeferredDecal() const;
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	ENGINE_API virtual FVxgiMaterialProperties GetVxgiMaterialProperties() const { return FVxgiMaterialProperties(); }
+#endif
+	// NVCHANGE_END: Add VXGI
 
 	ENGINE_API virtual USubsurfaceProfile* GetSubsurfaceProfile_Internal() const;
 

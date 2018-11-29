@@ -734,6 +734,9 @@ FViewInfo::FViewInfo(const FSceneViewInitOptions& InitOptions)
 	,	GPUMask(FRHIGPUMask::GPU0())
 	,	IndividualOcclusionQueries((FSceneViewState*)InitOptions.SceneViewStateInterface, 1)	
 	,	GroupedOcclusionQueries((FSceneViewState*)InitOptions.SceneViewStateInterface, FOcclusionQueryBatcher::OccludedPrimitiveQueryBatchSize)
+	// NVCHANGE_BEGIN: Add VXGI
+	, CustomVisibilityQuery(nullptr)
+	// NVCHANGE_END: Add VXGI
 {
 	Init();
 }
@@ -1200,6 +1203,11 @@ void FViewInfo::SetupUniformBufferParameters(
 
 	ViewUniformShaderParameters.StateFrameIndexMod8 = StateFrameIndexMod8;
 
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	if(!bIsVxgiVoxelization)
+#endif
+	// NVCHANGE_END: Add VXGI
 	{
 		// If rendering in stereo, the other stereo passes uses the left eye's translucency lighting volume.
 		const FViewInfo* PrimaryView = this;
@@ -1215,7 +1223,23 @@ void FViewInfo::SetupUniformBufferParameters(
 			}
 		}
 		PrimaryView->CalcTranslucencyLightingVolumeBounds(OutTranslucentCascadeBoundsArray, NumTranslucentCascades);
-	}
+    }
+    // NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+    else
+    {
+        const FSceneView* PrimaryView = Family->Views[0];
+        if (PrimaryView->bIsViewInfo)
+        {
+            const FViewInfo* PrimaryViewInfo = static_cast<const FViewInfo*>(PrimaryView);
+
+            // Copy the view parameters that are used for tessellation factors from the primary view.
+            ViewUniformShaderParameters.TranslatedWorldCameraOrigin = PrimaryViewInfo->CachedViewUniformShaderParameters->WorldCameraOrigin + CachedViewUniformShaderParameters->PreViewTranslation;
+            ViewUniformShaderParameters.AdaptiveTessellationFactor = PrimaryViewInfo->CachedViewUniformShaderParameters->AdaptiveTessellationFactor;
+        }
+    }
+#endif
+    // NVCHANGE_END: Add VXGI
 
 	for (int32 CascadeIndex = 0; CascadeIndex < NumTranslucentCascades; CascadeIndex++)
 	{
@@ -1685,6 +1709,11 @@ FSceneRenderer::FSceneRenderer(const FSceneViewFamily* InViewFamily,FHitProxyCon
 ,	InstancedStereoWidth(0)
 ,	RootMark(nullptr)
 ,	FamilySize(0, 0)
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+,	VxgiView(nullptr)
+#endif
+// NVCHANGE_END: Add VXGI
 {
 	check(Scene != NULL);
 
@@ -1732,7 +1761,7 @@ FSceneRenderer::FSceneRenderer(const FSceneViewFamily* InViewFamily,FHitProxyCon
 		if (CVarTestCameraCut.GetValueOnGameThread())
 		{
 			ViewInfo->bCameraCut = true;
-		}
+	}
 		#endif
 	}
 
@@ -2231,6 +2260,16 @@ FSceneRenderer::~FSceneRenderer()
 
 	// Manually release references to TRefCountPtrs that are allocated on the mem stack, which doesn't call dtors
 	SortedShadowsForShadowDepthPass.Release();
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	if (VxgiView)
+	{
+		delete VxgiView;
+		VxgiView = nullptr;
+	}
+#endif
+	// NVCHANGE_END: Add VXGI
 }
 
 /** 
@@ -2696,7 +2735,7 @@ void FSceneRenderer::OnStartFrame(FRHICommandListImmediate& RHICmdList)
 	SceneContext.bCustomDepthIsValid = false;
 
 	for(FViewInfo& View : Views)
-	{
+		{
 		if(View.ViewState)
 		{
 			View.ViewState->OnStartFrame(View, ViewFamily);
@@ -3028,7 +3067,7 @@ void OnChangeSimpleForwardShading(IConsoleVariable* Var)
 				if (bShouldBeEnabled)
 				{
 					UE_LOG( LogRenderer, Warning, TEXT( "r.SimpleForwardShading ignored as r.SupportSimpleForwardShading is not enabled" ) );
-				}
+		}
 			bWasIgnored = true;
 		}
 		else if (!PlatformSupportsSimpleForwardShading(GMaxRHIShaderPlatform))
@@ -3036,9 +3075,9 @@ void OnChangeSimpleForwardShading(IConsoleVariable* Var)
 				if (bShouldBeEnabled)
 				{
 					UE_LOG( LogRenderer, Warning, TEXT( "r.SimpleForwardShading ignored, only supported on PC shader platforms.  Current shader platform %s" ), *LegacyShaderPlatformToShaderFormat( GMaxRHIShaderPlatform ).ToString() );
-				}
-			bWasIgnored = true;
 		}
+			bWasIgnored = true;
+	}
 	}
 
 	if( !bWasIgnored )
@@ -3544,8 +3583,8 @@ void FSceneRenderer::ResolveSceneColor(FRHICommandList& RHICmdList)
 
 				if (FMaskTexture.IsValid())
 				{
-					if (CurrentNumSamples == 2)
-					{
+				if (CurrentNumSamples == 2)
+				{
 						TShaderMapRef<FHdrCustomResolveFMask2xPS> PixelShader(ShaderMap);
 						GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
 
@@ -3610,7 +3649,7 @@ void FSceneRenderer::ResolveSceneColor(FRHICommandList& RHICmdList)
 			}
 
 				RHICmdList.DrawPrimitive(PT_TriangleList, 0, 1, 1);
-			}
+		}
 		}
 
 		RHICmdList.SetScissorRect(false, 0, 0, 0, 0);

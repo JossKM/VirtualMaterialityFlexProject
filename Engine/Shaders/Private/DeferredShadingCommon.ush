@@ -385,6 +385,13 @@ struct FScreenSpaceData
 	FGBufferData GBuffer;
 	// 0..1, only valid in some passes, 1 if off
 	float AmbientOcclusion;
+	// NVCHANGE_BEGIN: Add VXGI
+	float4 VxgiDiffuse;
+	float4 VxgiSpecular;
+	float VxgiConfidence;
+	float4 VxgiAreaLightDiffuse;
+	float4 VxgiAreaLightSpecular;
+	// NVCHANGE_END: Add VXGI
 };
 
 /** Sets up the Gbuffer for an unlit material. */
@@ -654,6 +661,14 @@ uint ExtractSubsurfaceProfileInt(FGBufferData BufferData)
 		float4 ScreenSpaceAO = Texture2DSampleLevel(SceneTexturesStruct.ScreenSpaceAOTexture, SceneTexturesStruct.ScreenSpaceAOTextureSampler, (PixelPos + 0.5f) * View.BufferSizeAndInvSize.zw, 0);
 		Out.AmbientOcclusion = ScreenSpaceAO.r;
 
+		// NVCHANGE_BEGIN: Add VXGI
+		Out.VxgiDiffuse = SceneTexturesStruct.VxgiDiffuseTexture.Load(int3(PixelPos, 0)).rgba;
+		Out.VxgiSpecular = SceneTexturesStruct.VxgiSpecularTexture.Load(int3(PixelPos, 0)).rgba;
+		Out.VxgiConfidence = SceneTexturesStruct.VxgiConfidenceTexture.Load(int3(PixelPos, 0)).r;
+		Out.VxgiAreaLightDiffuse = SceneTexturesStruct.VxgiAreaLightDiffuseTexture.Load(int3(PixelPos, 0)).rgba;
+		Out.VxgiAreaLightSpecular = SceneTexturesStruct.VxgiAreaLightSpecularTexture.Load(int3(PixelPos, 0)).rgba;
+		// NVCHANGE_END: Add VXGI
+
 		return Out;
 	}
 #endif
@@ -695,7 +710,7 @@ FGBufferData GetGBufferData(float2 UV, bool bGetNormalizedNormal = true)
 		float4 GBufferE = 1;
 	#endif
 
-	#if WRITES_VELOCITY_TO_GBUFFER
+	#if WRITES_VELOCITY_TO_GBUFFER7
 		float4 GBufferVelocity = Texture2DSampleLevel(SceneTexturesStruct.GBufferVelocityTexture, SceneTexturesStruct.GBufferVelocityTextureSampler, UV, 0);
 	#else
 		float4 GBufferVelocity = 0;
@@ -722,6 +737,14 @@ FScreenSpaceData GetScreenSpaceData(float2 UV, bool bGetNormalizedNormal = true)
 	float4 ScreenSpaceAO = Texture2DSampleLevel(SceneTexturesStruct.ScreenSpaceAOTexture, SceneTexturesStruct.ScreenSpaceAOTextureSampler, UV, 0);
 
 	Out.AmbientOcclusion = ScreenSpaceAO.r;
+
+	// NVCHANGE_BEGIN: Add VXGI
+	Out.VxgiDiffuse = Texture2DSampleLevel(SceneTexturesStruct.VxgiDiffuseTexture, SceneTexturesStruct.VxgiDiffuseTextureSampler, UV, 0).rgba;
+	Out.VxgiSpecular = Texture2DSampleLevel(SceneTexturesStruct.VxgiSpecularTexture, SceneTexturesStruct.VxgiSpecularTextureSampler, UV, 0).rgba;
+	Out.VxgiConfidence = Texture2DSampleLevel(SceneTexturesStruct.VxgiConfidenceTexture, SceneTexturesStruct.VxgiConfidenceTextureSampler, UV, 0).r;
+	Out.VxgiAreaLightDiffuse = Texture2DSampleLevel(SceneTexturesStruct.VxgiAreaLightDiffuseTexture, SceneTexturesStruct.VxgiAreaLightDiffuseTextureSampler, UV, 0).rgba;
+	Out.VxgiAreaLightSpecular = Texture2DSampleLevel(SceneTexturesStruct.VxgiAreaLightSpecularTexture, SceneTexturesStruct.VxgiAreaLightSpecularTextureSampler, UV, 0).rgba;
+	// NVCHANGE_END: Add VXGI
 
 	return Out;
 }

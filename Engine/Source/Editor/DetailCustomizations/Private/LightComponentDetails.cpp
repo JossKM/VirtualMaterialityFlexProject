@@ -64,6 +64,19 @@ void FLightComponentDetails::CustomizeDetails( IDetailLayoutBuilder& DetailBuild
 		LightProfilesCategory.AddProperty( IESBrightnessScaleProperty)
 			.IsEnabled( TAttribute<bool>( this, &FLightComponentDetails::IsIESBrightnessScaleEnabled ) );
 	}
+
+	// NVCHANGE_BEGIN: Add VXGI
+	MobilityProperty = MobilityHandle;
+
+	IDetailCategoryBuilder& VxgiCategory = DetailBuilder.EditCategory("VXGI", FText::GetEmpty(), ECategoryPriority::TypeSpecific);
+
+	CastVXGIIndirectLightingProperty = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(ULightComponent, bCastVxgiIndirectLighting));
+	if (CastVXGIIndirectLightingProperty->IsValidHandle())
+	{
+		VxgiCategory.AddProperty(CastVXGIIndirectLightingProperty)
+			.IsEnabled(TAttribute<bool>(this, &FLightComponentDetails::IsCastVXGIIndirectLightingEnabled));
+	}
+	// NVCHANGE_END: Add VXGI
 }
 
 bool FLightComponentDetails::IsLightBrightnessEnabled() const
@@ -85,6 +98,14 @@ bool FLightComponentDetails::IsIESBrightnessScaleEnabled() const
 	return IsUseIESBrightnessEnabled() && Enabled;
 }
 
+// NVCHANGE_BEGIN: Add VXGI
+bool FLightComponentDetails::IsCastVXGIIndirectLightingEnabled() const
+{
+	uint8 Mobility;
+	MobilityProperty->GetValue(Mobility);
+	return (Mobility == EComponentMobility::Movable);
+}
+// NVCHANGE_END: Add VXGI
 void FLightComponentDetails::SetComponentIntensity(ULightComponent* Component, float InIntensity)
 {
 	check(Component);

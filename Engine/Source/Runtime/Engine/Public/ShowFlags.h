@@ -194,6 +194,16 @@ struct FEngineShowFlags
 		SetDistanceFieldGI(false);
 		SetVolumetricFog(false);
 		SetVolumetricLightmap(false);
+
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		SetVxgiDiffuse(false);
+		SetVxgiSpecular(false);
+		SetVxgiOpacityVoxels(false);
+		SetVxgiEmittanceVoxels(false);
+		SetVxgiIrradianceVoxels(false);
+#endif
+		// NVCHANGE_END: Add VXGI
 	}
 
 	void EnableAdvancedFeatures()
@@ -394,6 +404,14 @@ private:
 		SetScreenPercentage(InitMode != ESFIM_Editor && InitMode != ESFIM_VREditing);
 		SetVREditing(InitMode == ESFIM_VREditing);
 		SetOcclusionMeshes(false);
+
+		// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+		SetVxgiOpacityVoxels(false);
+		SetVxgiEmittanceVoxels(false);
+		SetVxgiIrradianceVoxels(false);
+#endif
+		// NVCHANGE_END: Add VXGI
 	}
 
 

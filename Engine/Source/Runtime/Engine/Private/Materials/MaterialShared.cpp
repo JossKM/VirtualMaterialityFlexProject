@@ -848,10 +848,10 @@ void FMaterial::SerializeInlineShaderMap(FArchive& Ar)
 			{
 				TRefCountPtr<FMaterialShaderMap> LoadedShaderMap = new FMaterialShaderMap();
 				LoadedShaderMap->Serialize(Ar, true, bCooked && Ar.IsLoading());
-				GameThreadShaderMap = LoadedShaderMap;
+					GameThreadShaderMap = LoadedShaderMap;
+				}
 			}
 		}
-	}
 }
 
 void FMaterial::RegisterInlineShaderMap(bool bLoadedByCookedMaterial)
@@ -863,7 +863,7 @@ void FMaterial::RegisterInlineShaderMap(bool bLoadedByCookedMaterial)
 		if (FApp::CanEverRender())
 		{
 			RenderingThreadShaderMap = GameThreadShaderMap;
-		}
+	}
 		GameThreadShaderMap->RegisterSerializedShaders(bLoadedByCookedMaterial);
 	}
 }
@@ -1039,6 +1039,22 @@ bool FMaterialResource::IsUsedWithAPEXCloth() const
 {
 	return Material->bUsedWithClothing;
 }
+
+// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+
+FVxgiMaterialProperties FMaterialResource::GetVxgiMaterialProperties() const
+{
+	return MaterialInstance ? MaterialInstance->GetVxgiMaterialProperties() : Material->GetVxgiMaterialProperties();
+}
+
+bool FMaterialResource::IsPreviewMaterial() const
+{
+	return Material->bIsPreviewMaterial;
+}
+
+#endif
+// NVCHANGE_END: Add VXGI
 
 EMaterialTessellationMode FMaterialResource::GetTessellationMode() const 
 { 
@@ -1939,6 +1955,13 @@ FMaterialRenderContext::FMaterialRenderContext(
 		, Material(InMaterial)
 {
 	bShowSelection = GIsEditor && InView && InView->Family->EngineShowFlags.Selection;
+
+	// NVCHANGE_BEGIN: Add VXGI
+#if WITH_GFSDK_VXGI
+	// Normally, selected dynamic objects get a color added to their EmissiveColor, but we don't want that for voxelization
+	bShowSelection = bShowSelection && !InView->bIsVxgiVoxelization;
+#endif
+	// NVCHANGE_END: Add VXGI
 }
 
 /*-----------------------------------------------------------------------------
@@ -2846,12 +2869,26 @@ FMaterialInstanceBasePropertyOverrides::FMaterialInstanceBasePropertyOverrides()
 	,bOverride_DitheredLODTransition(false)
 	,bOverride_CastDynamicShadowAsMasked(false)
 	,bOverride_TwoSided(false)
+	// NVCHANGE_BEGIN: Add VXGI
+	, bOverride_VxgiConeTracingEnabled(false)
+	, bOverride_UsedWithVxgiVoxelization(false)
+	, bOverride_VxgiAllowTesselationDuringVoxelization(false)
+	, bOverride_VxgiAdaptiveMaterialSamplingRate(false)
+	, bOverride_VxgiOpacityScale(false)
+	// NVCHANGE_END: Add VXGI
 	,OpacityMaskClipValue(.333333f)
 	,BlendMode(BLEND_Opaque)
 	,ShadingModel(MSM_DefaultLit)
 	,TwoSided(0)
 	,DitheredLODTransition(0)
 	,bCastDynamicShadowAsMasked(false)
+	// NVCHANGE_BEGIN: Add VXGI
+	, bVxgiConeTracingEnabled(false)
+	, bUsedWithVxgiVoxelization(true)
+	, bVxgiAllowTesselationDuringVoxelization(false)
+	, bVxgiAdaptiveMaterialSamplingRate(false)
+	, VxgiOpacityScale(1.0f)
+	// NVCHANGE_END: Add VXGI
 {
 
 }
@@ -2867,6 +2904,19 @@ bool FMaterialInstanceBasePropertyOverrides::operator==(const FMaterialInstanceB
 			BlendMode == Other.BlendMode &&
 			ShadingModel == Other.ShadingModel &&
 			TwoSided == Other.TwoSided &&
+			// NVCHANGE_BEGIN: Add VXGI
+			DitheredLODTransition == Other.DitheredLODTransition &&
+			bOverride_VxgiConeTracingEnabled == Other.bOverride_VxgiConeTracingEnabled &&
+			bOverride_UsedWithVxgiVoxelization == Other.bOverride_UsedWithVxgiVoxelization &&
+			bOverride_VxgiAllowTesselationDuringVoxelization == Other.bOverride_VxgiAllowTesselationDuringVoxelization &&
+			bOverride_VxgiAdaptiveMaterialSamplingRate == Other.bOverride_VxgiAdaptiveMaterialSamplingRate &&
+			bOverride_VxgiOpacityScale == Other.bOverride_VxgiOpacityScale &&
+			bVxgiConeTracingEnabled == Other.bVxgiConeTracingEnabled &&
+			bUsedWithVxgiVoxelization == Other.bUsedWithVxgiVoxelization &&
+			bVxgiAllowTesselationDuringVoxelization == Other.bVxgiAllowTesselationDuringVoxelization &&
+			bVxgiAdaptiveMaterialSamplingRate == Other.bVxgiAdaptiveMaterialSamplingRate &&
+			VxgiOpacityScale == Other.VxgiOpacityScale &&
+			// NVCHANGE_END: Add VXGI
 			DitheredLODTransition == Other.DitheredLODTransition;
 }
 
@@ -2988,25 +3038,25 @@ void FMaterialAttributeDefinitionMap::InitializeAttributeMap()
 	AttributeMap.Empty(MP_MAX + 1);
 
 	// Basic attributes
-	Add(FGuid(0x69B8D336, 0x16ED4D49, 0x9AA49729, 0x2F050F7A), TEXT("BaseColor"),		MP_BaseColor,		MCT_Float3,	FVector4(0,0,0,0),	SF_Pixel);
-	Add(FGuid(0x57C3A161, 0x7F064296, 0xB00B24A5, 0xA496F34C), TEXT("Metallic"),		MP_Metallic,		MCT_Float,	FVector4(0,0,0,0),	SF_Pixel);
+	Add(FGuid(0x69B8D336, 0x16ED4D49, 0x9AA49729, 0x2F050F7A), TEXT("BaseColor"),		MP_BaseColor,		MCT_Float3,	FVector4(0,0,0,0), SF_Pixel);
+	Add(FGuid(0x57C3A161, 0x7F064296, 0xB00B24A5, 0xA496F34C), TEXT("Metallic"),		MP_Metallic,		MCT_Float,	FVector4(0,0,0,0), SF_Pixel);
 	Add(FGuid(0x9FDAB399, 0x25564CC9, 0x8CD2D572, 0xC12C8FED), TEXT("Specular"),		MP_Specular,		MCT_Float,	FVector4(.5,0,0,0), SF_Pixel);
 	Add(FGuid(0xD1DD967C, 0x4CAD47D3, 0x9E6346FB, 0x08ECF210), TEXT("Roughness"),		MP_Roughness,		MCT_Float,	FVector4(.5,0,0,0), SF_Pixel);
 	Add(FGuid(0xB769B54D, 0xD08D4440, 0xABC21BA6, 0xCD27D0E2), TEXT("EmissiveColor"),	MP_EmissiveColor,	MCT_Float3,	FVector4(0,0,0,0),	SF_Pixel);
-	Add(FGuid(0xB8F50FBA, 0x2A754EC1, 0x9EF672CF, 0xEB27BF51), TEXT("Opacity"),			MP_Opacity,			MCT_Float,	FVector4(1,0,0,0),	SF_Pixel);
-	Add(FGuid(0x679FFB17, 0x2BB5422C, 0xAD520483, 0x166E0C75), TEXT("OpacityMask"),		MP_OpacityMask,		MCT_Float,	FVector4(1,0,0,0),	SF_Pixel);
+	Add(FGuid(0xB8F50FBA, 0x2A754EC1, 0x9EF672CF, 0xEB27BF51), TEXT("Opacity"),			MP_Opacity,			MCT_Float,	FVector4(1,0,0,0), SF_Pixel);
+	Add(FGuid(0x679FFB17, 0x2BB5422C, 0xAD520483, 0x166E0C75), TEXT("OpacityMask"),		MP_OpacityMask,		MCT_Float,	FVector4(1,0,0,0), SF_Pixel);
 	Add(FGuid(0x0FA2821A, 0x200F4A4A, 0xB719B789, 0xC1259C64), TEXT("Normal"),			MP_Normal,			MCT_Float3,	FVector4(0,0,1,0),	SF_Pixel);
 
 	// Advanced attributes
 	Add(FGuid(0xF905F895, 0xD5814314, 0x916D2434, 0x8C40CE9E), TEXT("WorldPositionOffset"),		MP_WorldPositionOffset,		MCT_Float3,	FVector4(0,0,0,0),	SF_Vertex);
 	Add(FGuid(0x2091ECA2, 0xB59248EE, 0x8E2CD578, 0xD371926D), TEXT("WorldDisplacement"),		MP_WorldDisplacement,		MCT_Float3,	FVector4(0,0,0,0),	SF_Domain);
 	Add(FGuid(0xA0119D44, 0xC456450D, 0x9C39C933, 0x1F72D8D1), TEXT("TessellationMultiplier"),	MP_TessellationMultiplier,	MCT_Float,	FVector4(1,0,0,0),	SF_Hull);
-	Add(FGuid(0x5B8FC679, 0x51CE4082, 0x9D777BEE, 0xF4F72C44), TEXT("SubsurfaceColor"),			MP_SubsurfaceColor,			MCT_Float3,	FVector4(1,1,1,0),	SF_Pixel);
+	Add(FGuid(0x5B8FC679, 0x51CE4082, 0x9D777BEE, 0xF4F72C44), TEXT("SubsurfaceColor"),			MP_SubsurfaceColor,			MCT_Float3,	FVector4(1,1,1,0), SF_Pixel);
 	Add(FGuid(0x9E502E69, 0x3C8F48FA, 0x94645CFD, 0x28E5428D), TEXT("ClearCoat"),				MP_CustomData0,				MCT_Float,	FVector4(1,0,0,0),	SF_Pixel);
 	Add(FGuid(0xBE4F2FFD, 0x12FC4296, 0xB0124EEA, 0x12C28D92), TEXT("ClearCoatRoughness"),		MP_CustomData1,				MCT_Float,	FVector4(.1,0,0,0),	SF_Pixel);
 	Add(FGuid(0xE8EBD0AD, 0xB1654CBE, 0xB079C3A8, 0xB39B9F15), TEXT("AmbientOcclusion"),		MP_AmbientOcclusion,		MCT_Float,	FVector4(1,0,0,0),	SF_Pixel);
-	Add(FGuid(0xD0B0FA03, 0x14D74455, 0xA851BAC5, 0x81A0788B), TEXT("Refraction"),				MP_Refraction,				MCT_Float2,	FVector4(1,0,0,0),	SF_Pixel);
-	Add(FGuid(0x0AC97EC3, 0xE3D047BA, 0xB610167D, 0xC4D919FF), TEXT("PixelDepthOffset"),		MP_PixelDepthOffset,		MCT_Float,	FVector4(0,0,0,0),	SF_Pixel);
+	Add(FGuid(0xD0B0FA03, 0x14D74455, 0xA851BAC5, 0x81A0788B), TEXT("Refraction"),				MP_Refraction,				MCT_Float2,	FVector4(1,0,0,0), SF_Pixel);
+	Add(FGuid(0x0AC97EC3, 0xE3D047BA, 0xB610167D, 0xC4D919FF), TEXT("PixelDepthOffset"),		MP_PixelDepthOffset,		MCT_Float,	FVector4(0,0,0,0), SF_Pixel);
 
 	// Texture coordinates
 	Add(FGuid(0xD30EC284, 0xE13A4160, 0x87BB5230, 0x2ED115DC), TEXT("CustomizedUV0"), MP_CustomizedUVs0, MCT_Float2, FVector4(0,0,0,0), SF_Vertex, 0);
@@ -3169,9 +3219,9 @@ FArchive& FMaterialResourceMemoryWriter::operator<<(class FName& Name)
 	const int32* Idx = Name2Indices.Find(Name.GetDisplayIndex());
 	int32 NewIdx;
 	if (Idx)
-	{
+		{
 		NewIdx = *Idx;
-	}
+		}
 	else
 	{
 		NewIdx = Name2Indices.Num();
