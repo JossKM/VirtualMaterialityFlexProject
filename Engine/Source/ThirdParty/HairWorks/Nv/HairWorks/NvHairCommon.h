@@ -8,9 +8,9 @@
 #ifndef NV_HAIR_COMMON_H
 #define NV_HAIR_COMMON_H
 
-#include <Nv/Common/NvCoCommon.h>
-#include <Nv/Common/Math/NvCoMathTypes.h>
-#include <Nv/Common/Math/NvCoMath.h>
+#include <ThirdParty/HairWorks/Nv/Common/NvCoCommon.h>
+#include <ThirdParty/HairWorks/Nv/Common/Math/NvCoMathTypes.h>
+#include <ThirdParty/HairWorks/Nv/Common/Math/NvCoMath.h>
 
 /** \addtogroup HairWorks
 @{

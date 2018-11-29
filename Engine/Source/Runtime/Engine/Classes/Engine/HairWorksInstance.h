@@ -1,7 +1,7 @@
 // @third party code - BEGIN HairWorks
 #pragma once
 
-#include "ObjectMacros.h"
+#include "UObject/ObjectMacros.h"
 #include "HairWorksInstance.generated.h"
 
 class UHairWorksMaterial;

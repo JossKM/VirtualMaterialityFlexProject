@@ -564,7 +564,11 @@ void UHairWorksComponent::Serialize(FArchive & Ar)
 	}
 
 	// Fix object flag for old assets
-	HairInstance.HairMaterial->SetFlags(GetMaskedFlags(RF_PropagateToSubObjects));
+	if (HairInstance.HairMaterial)
+	{
+		HairInstance.HairMaterial->SetFlags(GetMaskedFlags(RF_PropagateToSubObjects));
+	}
+
 }
 
 void UHairWorksComponent::PostInitProperties()

@@ -106,8 +106,8 @@ float3 GetHairWorksDynamicLighting(float3 ScreenVector, uint2 SamplePos, FHairSc
 	LightAttenuation = saturate((LightAttenuation - HairScreenSpaceData.ShadowAttenuation) / (1 - HairScreenSpaceData.ShadowAttenuation));
 	LightAttenuation = Square(LightAttenuation);
 
-	float SurfaceShadow = 1;
-	float SubsurfaceShadow = 1;
+	FShadowTerms ShadowTerms;
+	ShadowTerms.SurfaceShadow = 1;
 
 	FGBufferData GBuffer = (FGBufferData)0;
 
@@ -115,10 +115,11 @@ float3 GetHairWorksDynamicLighting(float3 ScreenVector, uint2 SamplePos, FHairSc
 	{
 		GBuffer.PrecomputedShadowFactors = 1;
 		GBuffer.Depth = HairScreenSpaceData.Depth;
-		GetShadowTerms(GBuffer, LightData, WorldPosition, LightAttenuation, SurfaceShadow, SubsurfaceShadow);
+		//not sure if hardcoding 0.5 for dither is right
+		GetShadowTerms(GBuffer, LightData, WorldPosition, L, LightAttenuation, 0.5, ShadowTerms);
 
 		// greatly reduces shadow mapping artifacts
-		SurfaceShadow *= saturate(dot(N, L) * 6 - 0.2);
+		ShadowTerms.SurfaceShadow *= saturate(dot(N, L) * 6 - 0.2);
 	}
 	else
 	{
@@ -128,7 +129,7 @@ float3 GetHairWorksDynamicLighting(float3 ScreenVector, uint2 SamplePos, FHairSc
 		//SurfaceShadow = ScreenSpaceData.AmbientOcclusion;
 	}
 
-	float SurfaceAttenuation = (DistanceAttenuation * LightRadiusMask * SpotFalloff) * SurfaceShadow;
+	float SurfaceAttenuation = (DistanceAttenuation * LightRadiusMask * SpotFalloff) * ShadowTerms.SurfaceShadow;
 
 	// Diffuse
 	float HairDiffuse = NvHair_ComputeHairDiffuseShading(

@@ -1,7 +1,7 @@
 // @third party code - BEGIN HairWorks
 #pragma once
 
-#include <Nv/HairWorks/NvHairSdk.h>
+#include <ThirdParty/HairWorks/Nv/HairWorks/NvHairSdk.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;

@@ -7,11 +7,11 @@
 #ifndef _CPP
 #define _CPP
 #endif
-#include <Nv/HairWorks/Shader/NvHairShaderCommonTypes.h>
+#include <ThirdParty/HairWorks/Nv/HairWorks/Shader/NvHairShaderCommonTypes.h>
 
-#include "AllowWindowsPlatformTypes.h"
-#include <Nv/Common/Render/Dx11/NvCoDx11Handle.h>
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <ThirdParty/HairWorks/Nv/Common/Render/Dx11/NvCoDx11Handle.h>
+#include "Windows/HideWindowsPlatformTypes.h"
 
 #include "SceneRendering.h"
 #include "RenderTargetPool.h"
@@ -95,7 +95,7 @@ protected:
 
 				void Execute(FRHICommandListBase& CmdList)
 				{
-					HairWorks::GetD3DHelper().SetShaderResourceView(Srv, SrvIndex);
+					::HairWorks::GetD3DHelper().SetShaderResourceView(Srv, SrvIndex);
 				}
 			};
 
@@ -232,17 +232,17 @@ class FHairWorksCopyDepthPs: public FHairWorksShaderBase
 	FHairWorksCopyDepthPs(const ShaderMetaType::CompiledShaderInitializerType& Initializer)
 		: FHairWorksShaderBase(Initializer)
 	{
-		SceneDepthTexture.Bind(Initializer.ParameterMap, TEXT("SceneDepthTexture"));
+		SceneTextureParameters.Bind(Initializer);
 	}
 
 	virtual bool Serialize(FArchive& Ar)
 	{
 		bool bShaderHasOutdatedParameters = FGlobalShader::Serialize(Ar);
-		Ar << SceneDepthTexture;
+		Ar << SceneTextureParameters;
 		return bShaderHasOutdatedParameters;
 	}
 
-	FShaderResourceParameter SceneDepthTexture;
+	FSceneTextureShaderParameters SceneTextureParameters;
 };
 
 IMPLEMENT_GLOBAL_SHADER(FHairWorksCopyDepthPs, "/Engine/Private/HairWorks/HairWorks.usf", "CopyDepthPs", SF_Pixel);
@@ -565,8 +565,8 @@ namespace HairWorksRenderer
 			void Execute(FRHICommandListBase& CmdList)
 			{
 				NvHair::Stats HairStats;
-				HairWorks::GetSDK()->computeStats(nullptr, false, InstanceId, HairStats);
-				HairWorks::AccumulateStats(HairStats);
+				::HairWorks::GetSDK()->computeStats(nullptr, false, InstanceId, HairStats);
+				::HairWorks::AccumulateStats(HairStats);
 			}
 		};
 
@@ -593,7 +593,7 @@ namespace HairWorksRenderer
 				NvHair::Viewport HairViewPort;
 				HairViewPort.init(ViewRect.Min.X, ViewRect.Min.Y, ViewRect.Width(), ViewRect.Height());
 
-				auto& sdk = *HairWorks::GetSDK();
+				auto& sdk = *::HairWorks::GetSDK();
 				sdk.setViewProjection(HairViewPort, reinterpret_cast<const NvHair::Mat4x4&>(ViewMatrices.GetViewMatrix().M), reinterpret_cast<const NvHair::Mat4x4&>(ViewMatrices.GetProjectionMatrix().M), NvHair::HandednessHint::LEFT);
 				sdk.setPrevViewProjection(HairViewPort, reinterpret_cast<const NvHair::Mat4x4&>(PrevViewMatrices.GetViewMatrix().M), reinterpret_cast<const NvHair::Mat4x4&>(PrevViewMatrices.GetProjectionMatrix().M), NvHair::HandednessHint::LEFT);
 			}
@@ -726,7 +726,7 @@ namespace HairWorksRenderer
 	{
 		DrawFullScreen<FHairWorksCopyDepthPs>(
 			RHICmdList,
-			[&](FHairWorksCopyDepthPs& Shader){SetTextureParameter(RHICmdList, Shader.GetPixelShader(), Shader.SceneDepthTexture, FSceneRenderTargets::Get(RHICmdList).GetSceneDepthTexture()); },
+			[&](FHairWorksCopyDepthPs& Shader){Shader.SceneTextureParameters.Set(RHICmdList, Shader.GetPixelShader(), ERHIFeatureLevel::SM5, ESceneTextureSetupMode::All); },
 			false,
 			true
 			);
@@ -784,7 +784,7 @@ namespace HairWorksRenderer
 		// Copy scene depth to hair depth buffer.
 		DrawFullScreen<FHairWorksCopyDepthPs>(
 			RHICmdList,
-			[&](FHairWorksCopyDepthPs& Shader){SetTextureParameter(RHICmdList, Shader.GetPixelShader(), Shader.SceneDepthTexture, FSceneRenderTargets::Get(RHICmdList).GetSceneDepthTexture()); },
+			[&](FHairWorksCopyDepthPs& Shader){Shader.SceneTextureParameters.Set(RHICmdList, Shader.GetPixelShader(), ERHIFeatureLevel::SM5, ESceneTextureSetupMode::All);},
 			false,
 			true
 			);
@@ -813,7 +813,7 @@ namespace HairWorksRenderer
 
 				// Skip colorize
 				NvHair::InstanceDescriptor HairDescriptor;
-				HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
+				::HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
 
 				if(HairDescriptor.m_colorizeMode != NvHair::ColorizeMode::NONE)
 				{
@@ -824,12 +824,12 @@ namespace HairWorksRenderer
 					else
 					{
 						HairDescriptor.m_colorizeMode = NvHair::ColorizeMode::NONE;
-						HairWorks::GetSDK()->updateInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
+						::HairWorks::GetSDK()->updateInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
 					}
 				}
 
 				// Prepare
-				HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
+				::HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
 
 				// Find stencil value for this hair
 				auto* UsedStencil = HairStencilValues.FindByPredicate(
@@ -891,10 +891,10 @@ namespace HairWorksRenderer
 
 				// Setup shader constants
 				NvHair::ShaderConstantBuffer ConstantBuffer;
-				HairWorks::GetSDK()->prepareShaderConstantBuffer(HairSceneProxy.GetHairInstanceId(), ConstantBuffer);
+				::HairWorks::GetSDK()->prepareShaderConstantBuffer(HairSceneProxy.GetHairInstanceId(), ConstantBuffer);
 
 				ID3D11ShaderResourceView* HairSrvs[NvHair::ShaderResourceType::COUNT_OF] = {};
-				HairWorks::GetSDK()->getShaderResources(HairSceneProxy.GetHairInstanceId(), NV_NULL, NvHair::ShaderResourceType::COUNT_OF, NvCo::Dx11Type::wrapPtr(HairSrvs));
+				::HairWorks::GetSDK()->getShaderResources(HairSceneProxy.GetHairInstanceId(), NV_NULL, NvHair::ShaderResourceType::COUNT_OF, NvCo::Dx11Type::wrapPtr(HairSrvs));
 
 				PixelShader->SetParameters(RHICmdList, View, reinterpret_cast<NvHair_ConstantBuffer&>(ConstantBuffer), HairSceneProxy.GetTextures(), HairSrvs);
 
@@ -1042,7 +1042,7 @@ namespace HairWorksRenderer
 			auto& HairSceneProxy = static_cast<FHairWorksSceneProxy&>(*PrimitiveInfo->Proxy);
 
 			// Prepare
-			HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
+			::HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
 
 			HairSceneProxy.Draw(RHICmdList, FHairWorksSceneProxy::EDrawType::Visualization);
 		}
@@ -1054,20 +1054,20 @@ namespace HairWorksRenderer
 			auto& HairSceneProxy = static_cast<FHairWorksSceneProxy&>(*PrimitiveInfo->Proxy);
 
 			NvHair::InstanceDescriptor HairDescriptor;
-			HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
+			::HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDescriptor);
 
 			if (HairDescriptor.m_colorizeMode == NvHair::ColorizeMode::NONE)
 				continue;
 			
 			// Prepare
-			HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
+			::HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
 
 			// Setup shader constants
 			NvHair::ShaderConstantBuffer ConstantBuffer;
-			HairWorks::GetSDK()->prepareShaderConstantBuffer(HairSceneProxy.GetHairInstanceId(), ConstantBuffer);
+			::HairWorks::GetSDK()->prepareShaderConstantBuffer(HairSceneProxy.GetHairInstanceId(), ConstantBuffer);
 
 			ID3D11ShaderResourceView* HairSrvs[NvHair::ShaderResourceType::COUNT_OF];
-			HairWorks::GetSDK()->getShaderResources(HairSceneProxy.GetHairInstanceId(), NV_NULL, NvHair::ShaderResourceType::COUNT_OF, NvCo::Dx11Type::wrapPtr(HairSrvs));
+			::HairWorks::GetSDK()->getShaderResources(HairSceneProxy.GetHairInstanceId(), NV_NULL, NvHair::ShaderResourceType::COUNT_OF, NvCo::Dx11Type::wrapPtr(HairSrvs));
 
 			PixelShader->SetParameters(RHICmdList, View, reinterpret_cast<NvHair_ConstantBuffer&>(ConstantBuffer), HairSceneProxy.GetTextures(), HairSrvs);
 
@@ -1090,7 +1090,7 @@ namespace HairWorksRenderer
 				auto& HairSceneProxy = static_cast<FHairWorksSceneProxy&>(*PrimitiveInfo->Proxy);
 
 				// Prepare
-				HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
+				::HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
 
 				// Setup render states
 				TShaderMapRef<FScreenVS> VertexShader(GetGlobalShaderMap(ERHIFeatureLevel::SM5));
@@ -1213,7 +1213,7 @@ namespace HairWorksRenderer
 		// To disable instances that should not animate
 		SCOPED_DRAW_EVENT(RHICmdList, SimulateHair);
 
-		if(HairWorks::GetSDK() == nullptr)
+		if(::HairWorks::GetSDK() == nullptr)
 			return;
 
 		// Prepare for simulation
@@ -1258,7 +1258,7 @@ namespace HairWorksRenderer
 						continue;
 
 					NvHair::InstanceDescriptor InstDesc;
-					HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), InstDesc);
+					::HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), InstDesc);
 					if(!InstDesc.m_simulate)
 						continue;
 
@@ -1275,7 +1275,7 @@ namespace HairWorksRenderer
 						InterpolatedSkinningMatrices[Idx] = BlendedTransform.ToMatrixWithScale();
 					}
 
-					HairWorks::GetSDK()->updateSkinningMatrices(
+					::HairWorks::GetSDK()->updateSkinningMatrices(
 						HairSceneProxy.GetHairInstanceId(),
 						InterpolatedSkinningMatrices.Num(),
 						reinterpret_cast<NvHair::Mat4x4*>(InterpolatedSkinningMatrices.GetData())
@@ -1283,7 +1283,7 @@ namespace HairWorksRenderer
 				}
 
 				// Do simulation
-				HairWorks::GetSDK()->stepSimulation(SimulateStepTime, nullptr, true);
+				::HairWorks::GetSDK()->stepSimulation(SimulateStepTime, nullptr, true);
 			}
 
 			// Set current skinning
@@ -1293,7 +1293,7 @@ namespace HairWorksRenderer
 				if(HairSceneProxy.GetSkinningMatrices().Num() == 0)
 					continue;
 
-				HairWorks::GetSDK()->updateSkinningMatrices(
+				::HairWorks::GetSDK()->updateSkinningMatrices(
 					HairSceneProxy.GetHairInstanceId(),
 					HairSceneProxy.GetSkinningMatrices().Num(),
 					reinterpret_cast<const NvHair::Mat4x4*>(HairSceneProxy.GetSkinningMatrices().GetData())
@@ -1306,7 +1306,7 @@ namespace HairWorksRenderer
 		}
 		else	// Without frame rate independent rendering
 		{
-			HairWorks::GetSDK()->stepSimulation(SimulateStepTime, nullptr, true);
+			::HairWorks::GetSDK()->stepSimulation(SimulateStepTime, nullptr, true);
 		}
 
 		// Update pin mesh transform
@@ -1322,7 +1322,7 @@ namespace HairWorksRenderer
 			TArray<FMatrix> PinMatrices;
 			PinMatrices.SetNumUninitialized(Pins.Num());
 
-			HairWorks::GetSDK()->getPinMatrices(nullptr, false, HairSceneProxy.GetHairInstanceId(), 0, PinMatrices.Num(), reinterpret_cast<NvHair::Mat4x4*>(PinMatrices.GetData()));
+			::HairWorks::GetSDK()->getPinMatrices(nullptr, false, HairSceneProxy.GetHairInstanceId(), 0, PinMatrices.Num(), reinterpret_cast<NvHair::Mat4x4*>(PinMatrices.GetData()));
 
 			// UE4 uses left hand system.
 			for(auto& PinMatrix : PinMatrices)
@@ -1380,12 +1380,12 @@ namespace HairWorksRenderer
 			auto& HairSceneProxy = static_cast<FHairWorksSceneProxy&>(*PrimitiveInfo->Proxy);
 
 			NvHair::InstanceDescriptor HairDesc;
-			HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDesc);
+			::HairWorks::GetSDK()->getInstanceDescriptor(HairSceneProxy.GetHairInstanceId(), HairDesc);
 			if(!HairDesc.m_castShadows)
 				continue;
 
 			// Prepare
-			HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
+			::HairWorks::GetSDK()->preRenderInstance(HairSceneProxy.GetHairInstanceId(), 1);
 
 			// Setup render states and shaders
 			GraphicsPSOInit.BoundShaderState.VertexShaderRHI = TShaderMapRef<FScreenVS>(GetGlobalShaderMap(ERHIFeatureLevel::SM5))->GetVertexShader();
@@ -1435,7 +1435,7 @@ namespace HairWorksRenderer
 							HairProjMatrices[FaceIdx] = *(NvHair::Mat4x4*)FMatrix::Identity.M;
 						}
 
-						HairWorks::GetSDK()->setCubeMapViewProjection(viewPorts, HairViewMatrices, HairProjMatrices, Visible, NvHair::HandednessHint::LEFT);
+						::HairWorks::GetSDK()->setCubeMapViewProjection(viewPorts, HairViewMatrices, HairProjMatrices, Visible, NvHair::HandednessHint::LEFT);
 					}
 				};
 
@@ -1464,7 +1464,7 @@ namespace HairWorksRenderer
 						NvHair::Viewport HairViewPort;
 						HairViewPort.init(ViewRect.Min.X, ViewRect.Min.Y, ViewRect.Width(), ViewRect.Height());
 
-						HairWorks::GetSDK()->setViewProjection(HairViewPort, reinterpret_cast<const NvHair::Mat4x4&>(ViewProjMatrix.M), reinterpret_cast<const NvHair::Mat4x4&>(FMatrix::Identity.M), NvHair::HandednessHint::LEFT);
+						::HairWorks::GetSDK()->setViewProjection(HairViewPort, reinterpret_cast<const NvHair::Mat4x4&>(ViewProjMatrix.M), reinterpret_cast<const NvHair::Mat4x4&>(FMatrix::Identity.M), NvHair::HandednessHint::LEFT);
 					}
 				};
 

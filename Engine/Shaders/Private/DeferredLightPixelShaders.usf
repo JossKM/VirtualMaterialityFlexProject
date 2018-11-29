@@ -50,22 +50,6 @@ uint GetLightingChannelMask(float2 UV)
 	return LightingChannelsTexture.Load(uint3(IntegerUV, 0)).x;
 }
 
-	// @third party code - BEGIN HairWorks
-#if SM5_PROFILE
-	, out float3 OutHairColor : SV_Target1
-#endif
-	// @third party code - END HairWorks
-	// @third party code - BEGIN HairWorks
-#if SM5_PROFILE
-	// Lighten hair
-	OutHairColor = 0;
-	if(bHairDeferredRendering)
-	{
-		OutHairColor = GetHairWorksDynamicLighting(ScreenVector, InUV * View.BufferSizeAndInvSize.xy, SetupLightDataForStandardDeferred());
-	}
-#endif
-	// @third party code - END HairWorks
-
 
 void DeferredLightPixelMain(
 #if LIGHT_SOURCE_SHAPE > 0
@@ -83,7 +67,6 @@ void DeferredLightPixelMain(
 	// @third party code - END HairWorks
 	)
 {
-	OutColor = 0;
 
 #if LIGHT_SOURCE_SHAPE > 0
 	float2 ScreenUV = InScreenPosition.xy / InScreenPosition.w * View.ScreenPositionScaleBias.xy + View.ScreenPositionScaleBias.wz;
@@ -97,15 +80,16 @@ void DeferredLightPixelMain(
 	OutHairColor = 0;
 	if(bHairDeferredRendering)
 	{
-		float3 ScreenVector = mul(float4(InScreenPosition.xy / InScreenPosition.w, 1, 0), View.ScreenToTranslatedWorld).xyz;
+		#if LIGHT_SOURCE_SHAPE > 0
+			float3 ScreenVector = mul(float4(InScreenPosition.xy / InScreenPosition.w, 1, 0), View.ScreenToTranslatedWorld).xyz;
+		#endif
 
 		OutHairColor = GetHairWorksDynamicLighting(ScreenVector, ScreenUV * View.BufferSizeAndInvSize.xy, SetupLightDataForStandardDeferred());
-
-		return;
 	}
 #endif
 	// @third party code - END HairWorks
 
+	OutColor = 0;
 	FScreenSpaceData ScreenSpaceData = GetScreenSpaceData(ScreenUV);
 
 	// Only light pixels marked as using deferred shading

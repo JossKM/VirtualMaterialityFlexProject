@@ -922,7 +922,7 @@ void FD3D11DynamicRHI::Init()
 
 	// @third party code - BEGIN HairWorks
 	// Initialize HairWorks
-	class FHairWorksD3DHelper: public HairWorks::FD3DHelper
+	class FHairWorksD3DHelper: public ::HairWorks::FD3DHelper
 	{
 		virtual void SetShaderResourceView(ID3D11ShaderResourceView* Srv, int32 Index) override
 		{
@@ -949,7 +949,7 @@ void FD3D11DynamicRHI::Init()
 
 	static FHairWorksD3DHelper HairWorksD3DHelper;
 
-	HairWorks::Initialize(*GetDevice(), *Direct3DDeviceIMContext, HairWorksD3DHelper);
+	::HairWorks::Initialize(*GetDevice(), *Direct3DDeviceIMContext, HairWorksD3DHelper);
 	// @third party code - END HairWorks
 }
 

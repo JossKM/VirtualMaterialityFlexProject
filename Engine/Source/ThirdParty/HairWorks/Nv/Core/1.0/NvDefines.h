@@ -696,7 +696,9 @@ namespace nvidia {}
 #	define NV_HAS_MOVE_SEMANTICS 0
 #endif
 
-#define NV_MCALL NV_STDCALL
+#ifndef NV_MCALL
+	#define NV_MCALL NV_STDCALL
+#endif
 
 #include <new>		// For placement new
 
@@ -705,11 +707,18 @@ namespace nvidia {}
 // Depreciated
 
 // For compatibility - better to use NV_EXTERN_C (macro name is closer to action)
-#define NV_C_EXPORT NV_EXTERN_C
-
-#define NV_NOALIAS NV_NO_ALIAS
-#define NV_NOINLINE NV_NO_INLINE
-#define NV_NOCOPY NV_NO_COPY
+#ifndef NV_C_EXPORT
+	#define NV_C_EXPORT NV_EXTERN_C
+#endif
+#ifndef NV_NOALIAS
+	#define NV_NOALIAS NV_NO_ALIAS
+#endif
+#ifndef NV_NOINLINE
+	#define NV_NOINLINE NV_NO_INLINE
+#endif
+#ifndef NV_NOCOPY
+	#define NV_NOCOPY NV_NO_COPY
+#endif
 
 /** @} */
 #endif // #ifndef NV_CORE_DEFINES_H

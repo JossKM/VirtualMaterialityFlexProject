@@ -340,7 +340,7 @@ SHOWFLAG_FIXED_IN_SHIPPING(0, VREditing, SFG_Hidden, NSLOCTEXT("UnrealEd", "VREd
 SHOWFLAG_FIXED_IN_SHIPPING(0, OcclusionMeshes, SFG_Visualize, NSLOCTEXT("UnrealEd", "VisualizeOcclusionQueries", "Visualize Occlusion Queries"))
 // @third party code - BEGIN HairWorks
 /** Render hair */
-SHOWFLAG_ALWAYS_ACCESSIBLE(HairWorks, SFG_Advanced, LOCTEXT("HairWorks", "HairWorks"))
+SHOWFLAG_ALWAYS_ACCESSIBLE(HairWorks, SFG_Advanced, NSLOCTEXT("HairWorks", "HairWorks", "HairWorks"))
 // @third party code - END HairWorks
 
 // NVCHANGE_BEGIN: Add VXGI

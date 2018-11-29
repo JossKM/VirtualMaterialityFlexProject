@@ -1,5 +1,5 @@
 // @third party code - BEGIN HairWorks
-#include "Classes/ThumbnailRendering/HairWorksAssetThumbnailRenderer.h"
+#include "ThumbnailRendering/HairWorksAssetThumbnailRenderer.h"
 #include "SceneView.h"
 #include "RendererInterface.h"
 #include "EngineModule.h"

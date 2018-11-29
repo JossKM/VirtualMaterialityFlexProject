@@ -186,7 +186,7 @@ MONOLITHIC_HEADER_BOILERPLATE()
 #include "Factories/FbxSceneImportOptionsSkeletalMesh.h"
 #include "Factories/FbxSceneImportOptionsStaticMesh.h"
 // @third party code - BEGIN HairWorks
-#include "Classes/Factories/HairWorksFactory.h"
+#include "Factories/HairWorksFactory.h"
 // @third party code - END HairWorks
 #include "Commandlets/FileServerCommandlet.h"
 #include "Commandlets/GatherTextCommandletBase.h"

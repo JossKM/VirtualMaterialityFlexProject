@@ -3682,7 +3682,7 @@ void FDeferredShadingSceneRenderer::InitViewsPossiblyAfterPrepass(FRHICommandLis
 
 	// @third party code - BEGIN HairWorks
 	// Setup views for hair
-	if (!IsForwardShadingEnabled(FeatureLevel))
+	if (!IsForwardShadingEnabled(ShaderPlatform))
 		HairWorksRenderer::SetupViews(Views);
 	// @third party code - END HairWorks
 

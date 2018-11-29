@@ -1110,8 +1110,11 @@ void FDeferredShadingSceneRenderer::RenderLight(FRHICommandList& RHICmdList, con
 				GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
 
 				SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
-				PixelShader->SetParameters(RHICmdList, View, LightSceneInfo, ScreenShadowMaskTexture);
-				//need to port this to 4.20: SetShaderTemplLighting<false, false, false>(RHICmdList, GraphicsPSOInit, View, *VertexShader, LightSceneInfo, ScreenShadowMaskTexture, View.VisibleHairs.Num() > 0);
+				PixelShader->SetParameters(RHICmdList, View, LightSceneInfo, ScreenShadowMaskTexture,
+					// @third party code - BEGIN HairWorks
+					View.VisibleHairs.Num() > 0
+					// @third party code - END HairWorks
+				);
 			}
 
 			VertexShader->SetParameters(RHICmdList, View, LightSceneInfo);
@@ -1176,8 +1179,11 @@ RenderForHair:
 				GraphicsPSOInit.BoundShaderState.PixelShaderRHI = GETSAFERHISHADER_PIXEL(*PixelShader);
 
 				SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
-				PixelShader->SetParameters(RHICmdList, View, LightSceneInfo, ScreenShadowMaskTexture);
-				//need to port this to 4.20: SetShaderTemplLighting<false, true, false>(RHICmdList, GraphicsPSOInit, View, *VertexShader, LightSceneInfo, ScreenShadowMaskTexture, bHairPass);
+				PixelShader->SetParameters(RHICmdList, View, LightSceneInfo, ScreenShadowMaskTexture,
+					// @third party code - BEGIN HairWorks
+					bHairPass
+					// @third party code - END HairWorks
+				);
 			}
 
 			VertexShader->SetParameters(RHICmdList, View, LightSceneInfo);

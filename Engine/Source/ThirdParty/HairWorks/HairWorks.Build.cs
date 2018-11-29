@@ -19,6 +19,12 @@ public class HairWorks : ModuleRules
 				break;
 		}
 
+		string hwPath = Target.UEThirdPartySourceDirectory + "HairWorks/Nv/";
+		PublicSystemIncludePaths.Add(hwPath);
+		PublicSystemIncludePaths.Add(Target.UEThirdPartySourceDirectory + "HairWorks");
+		PublicSystemIncludePaths.Add(Target.UEThirdPartySourceDirectory + "HairWorks/Nv/Common");
+		PublicSystemIncludePaths.Add(Target.UEThirdPartySourceDirectory + "HairWorks/Nv/Core/1.0");
+
 		if (PlatformString != null)
 		{
 			// Add HairWorks DLL

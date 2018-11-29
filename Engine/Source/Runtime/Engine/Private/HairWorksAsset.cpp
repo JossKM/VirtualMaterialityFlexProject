@@ -1,8 +1,8 @@
 // @third party code - BEGIN HairWorks
 #include "Engine/HairWorksAsset.h"
-#include <Nv/Common/NvCoMemoryReadStream.h>
+#include <ThirdParty/HairWorks/Nv/Common/NvCoMemoryReadStream.h>
 #include "EditorFramework/AssetImportData.h"
-#include "UObjectIterator.h"
+#include "UObject/UObjectIterator.h"
 #include "HairWorksSDK.h"
 #include "Engine/HairWorksMaterial.h"
 #include "Components/HairWorksComponent.h"

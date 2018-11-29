@@ -6,14 +6,14 @@
 #include "Engine/Engine.h"
 #include "CanvasTypes.h"
 
-#include "AllowWindowsPlatformTypes.h"
-#include <Nv/Common/Render/Dx11/NvCoDx11Handle.h>
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <ThirdParty/HairWorks/Nv/Common/Render/Dx11/NvCoDx11Handle.h>
 #pragma warning(push)
 #pragma warning(disable: 4191)	// For DLL function pointer conversion
 #undef DWORD	// To fix a compiling error
-#include <Nv/HairWorks/Platform/Win/NvHairWinLoadSdk.h>
+#include <ThirdParty/HairWorks/Nv/HairWorks/Platform/Win/NvHairWinLoadSdk.h>
 #pragma warning(pop)
-#include "HideWindowsPlatformTypes.h"
+#include "Windows/HideWindowsPlatformTypes.h"
 
 DEFINE_LOG_CATEGORY(LogHairWorks);
 

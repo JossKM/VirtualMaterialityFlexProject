@@ -39,7 +39,7 @@ float ShadowDepthMain(in float4 Position : SV_Position) : SV_Depth
 
 float CopyDepthPs(FScreenVertexOutput Input) : SV_Depth
 {
-	return SceneDepthTexture[Input.Position.xy].r;
+	return SceneTexturesStruct.SceneDepthTexture[uint2(Input.Position.xy)].r;
 }
 
 Texture2DMS<float4> VelocityTexture;

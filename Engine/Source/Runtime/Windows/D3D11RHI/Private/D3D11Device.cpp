@@ -268,7 +268,7 @@ void FD3D11DynamicRHI::Shutdown()
 
 	// @third party code - BEGIN HairWorks
 	// Shut down HairWorks
-	HairWorks::ShutDown();
+	::HairWorks::ShutDown();
 	// @third party code - END HairWorks
 
 	// Cleanup the D3D device.

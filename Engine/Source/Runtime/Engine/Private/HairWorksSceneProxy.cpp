@@ -1,11 +1,11 @@
 // @third party code - BEGIN HairWorks
 #include "HairWorksSceneProxy.h"
-#include <Nv/Common/NvCoMemoryReadStream.h>
-#include "AllowWindowsPlatformTypes.h"
-#include <Nv/Common/Render/Dx11/NvCoDx11Handle.h>
-#include "HideWindowsPlatformTypes.h"
+#include <ThirdParty/HairWorks/Nv/Common/NvCoMemoryReadStream.h>
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <ThirdParty/HairWorks/Nv/Common/Render/Dx11/NvCoDx11Handle.h>
+#include "Windows/HideWindowsPlatformTypes.h"
 #include "HairWorksSDK.h"
-#include "ScopeLock.h"
+#include "Misc/ScopeLock.h"
 #include "ShaderParameterUtils.h"
 #include "SkeletalRenderGPUSkin.h"
 #include "Engine/Texture2D.h"
