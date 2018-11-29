@@ -27,6 +27,9 @@ struct FBlastCollisionHull
 	TArray<HullPolygon>	PolygonData;
 };
 
+class UBlastMesh;
+class USkeletalMesh;
+
 UCLASS(hideCategories = Object, MinimalAPI)
 class UBlastMeshFactory : public UFactory, public FReimportHandler
 {
@@ -49,7 +52,7 @@ public:
 	//~ End FReimportHandler Interface
 
 	bool						bReimporting;
-	class UBlastMesh*			ReimportMesh;
+	UBlastMesh*					ReimportMesh;
 
 	BLASTEDITOR_API static FTransform GetTransformUE4ToBlastCoordinateSystem(class UFbxSkeletalMeshImportData* SkeletalMeshImportData);
 	BLASTEDITOR_API static FTransform GetTransformBlastToUE4CoordinateSystem(class UFbxSkeletalMeshImportData* SkeletalMeshImportData);

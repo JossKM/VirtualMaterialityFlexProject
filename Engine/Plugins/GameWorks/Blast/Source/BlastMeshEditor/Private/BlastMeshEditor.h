@@ -127,6 +127,10 @@ private:
 	/** Callback for fit uv coordinates */
 	void FitUvCoordinates();
 
+	/** Callback for splitting islands to separate chunks */
+	void SplitIslandsToChunks();
+
+
 	void ExportAssetToFile();
 	/** Callback for rebuilding collision mesh. It might be very expensive if user used VHACD for collision decomposition. */
 	void RebuildCollisionMesh();

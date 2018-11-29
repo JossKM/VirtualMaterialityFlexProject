@@ -9,8 +9,6 @@
 #include "Framework/MultiBox/MultiBoxBuilder.h"
 #include "EditorReimportHandler.h"
 #include "Widgets/Layout/SUniformGridPanel.h"
-#include "Widgets/Input/SNumericEntryBox.h"
-#include "Widgets/Input/SCheckBox.h"
 #include "PropertyEditorModule.h"
 #include "EditorStyleSet.h"
 #include "Widgets/Images/SImage.h"
@@ -23,7 +21,8 @@
 #include <NvBlastExtSerialization.h>
 #include <NvBlastExtLlSerialization.h>
 #include <HAL/PlatformFilemanager.h>
-
+#include "Widgets/Input/SNumericEntryBox.h"
+#include "Widgets/Input/SCheckBox.h"
 
 //////////////////////////////////////////////////////////////////////////
 // SSelectStaticMeshDialog
@@ -283,6 +282,17 @@ bool SExportAssetToFileDialog::ShowWindow(TSharedPtr<FBlastFracture> Fracturer, 
 				writer->appendMesh(*FractureSettings->FractureSession->FractureData.Get(), TCHAR_TO_UTF8(assetName.GetCharArray().GetData()));
 				writer->saveToFile(TCHAR_TO_UTF8(name.GetCharArray().GetData()), TCHAR_TO_UTF8(folderPath.GetCharArray().GetData()));
 			}
+
+
+			{
+				Nv::Blast::ICollisionExporter* writer = NvBlastExtExporterCreateJsonFileWriter();
+				FString jsonFile = folderPath;
+				jsonFile.Append("/").Append(name).Append(".json");
+				const Nv::Blast::AuthoringResult* Auth = FractureSettings->FractureSession->FractureData.Get();
+				writer->writeCollision(TCHAR_TO_UTF8(jsonFile.GetCharArray().GetData()), Auth->chunkCount, Auth->collisionHullOffset, Auth->collisionHull);
+			}
+
+
 			UBlastMeshFactory::TransformBlastAssetFromUE4ToBlastCoordinateSystem(FractureSettings->FractureSession->FractureData->asset, nullptr);
 
 

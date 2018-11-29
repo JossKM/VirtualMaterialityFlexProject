@@ -24,8 +24,9 @@ void FBlastMeshEditorCommands::RegisterCommands()
 	//UI_COMMAND( Refresh, "Refresh", "Refreshes the BlastMesh from the StaticMesh it was created from.", EUserInterfaceActionType::Button, FInputChord() );
 	UI_COMMAND( ImportRootFromStaticMesh, "Import", "Imports root chunk from static mesh.", EUserInterfaceActionType::Button, FInputChord() );
 	UI_COMMAND(FitUvCoordinates, "FitUVs", "Fit uv coordinates to given square.", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(ChunksFromIslands, "Islands to chunks", "Converts islands to separate chunks.", EUserInterfaceActionType::Button, FInputChord());
 	UI_COMMAND(RebuildCollisionMesh, "Collision", "Rebuild collision mesh.", EUserInterfaceActionType::Button, FInputChord());
-	UI_COMMAND(ExportAssetToFile, "Export asset", "Export asset to a file.", EUserInterfaceActionType::Button, FInputChord());
+	UI_COMMAND(ExportAssetToFile, "Export", "Export asset to a file.", EUserInterfaceActionType::Button, FInputChord());
 
 	UI_COMMAND(ToggleFractureVisualization, "Fracture visualization", "Show fracture method specific visualization.", EUserInterfaceActionType::ToggleButton, FInputChord(EModifierKey::Control, EKeys::V));
 	UI_COMMAND(ToggleAABBView, "Bounding box", "Show axis aligned bounding box rendering for selected chunks.", EUserInterfaceActionType::ToggleButton, FInputChord(EModifierKey::Control, EKeys::B));

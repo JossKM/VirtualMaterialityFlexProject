@@ -186,7 +186,7 @@ TSharedPtr<FFractureSession> FBlastFracture::StartFractureSession(UBlastMesh* In
 		FBlastScopedProfiler LFTSP("Load fracture tool state");
 		auto& FTD = InBlastMesh->FractureToolData;
 		uint32 ChunkCount = FTD.VerticesOffset.Num() - 1;
-		if (FTD.VerticesOffset.Num() != 0 && FTD.EdgesOffset.Num() == ChunkCount + 1 && FTD.FacesOffset.Num() == ChunkCount + 1)
+		if (ChunkCount == InBlastMesh->GetChunkCount() && FTD.VerticesOffset.Num() != 0 && FTD.EdgesOffset.Num() == ChunkCount + 1 && FTD.FacesOffset.Num() == ChunkCount + 1)
 		{
 			for (uint32 ChunkIndex = 0; ChunkIndex < ChunkCount; ChunkIndex++)
 			{
@@ -491,6 +491,13 @@ void FBlastFracture::Fracture(UBlastFractureSettings* Settings, TSet<int32>& Sel
 				UE4ToBlastTransform.TransformPosition(Settings->CutFracture->Normal),
 				Settings->CutFracture->Amplitude, Settings->CutFracture->Frequency,
 				Settings->CutFracture->OctaveNumber, Settings->CutFracture->SamplingInterval))
+			{
+				IsCancel = true;
+			}
+			break;
+
+		case EBlastFractureMethod::ChunksFromIslands:
+			if (!FractureChunksFromIslands(FractureSession, FractureChunkId))
 			{
 				IsCancel = true;
 			}
@@ -1145,6 +1152,16 @@ bool FBlastFracture::FractureCutout(TSharedPtr<FFractureSession> FractureSession
 		UE_LOG(LogBlastMeshEditor, Error, TEXT("Failed to perform cutout fracture"));
 		return false;
 	}
+	return true;
+}
+
+bool FBlastFracture::FractureChunksFromIslands(TSharedPtr<FFractureSession> FractureSession, uint32 FractureChunkId)
+{
+	if (FractureChunkId != 0 || FractureSession->BlastMesh == nullptr)
+	{
+		return false;
+	}
+	FractureSession->FractureTool->islandDetectionAndRemoving(0, true);
 	return true;
 }
 

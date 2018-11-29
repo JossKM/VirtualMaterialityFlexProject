@@ -1178,6 +1178,8 @@ void UBlastMeshComponent::RebuildChunkVisibility()
 	}
 #endif
 
+	ClearMotionVector();
+
 	bChunkVisibilityChanged = false;
 }
 

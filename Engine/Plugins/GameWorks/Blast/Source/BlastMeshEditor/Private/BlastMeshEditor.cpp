@@ -386,6 +386,12 @@ void FBlastMeshEditor::BindCommands()
 		FIsActionChecked());
 
 	UICommandList->MapAction(
+		Commands.ChunksFromIslands,
+		FExecuteAction::CreateSP(this, &FBlastMeshEditor::SplitIslandsToChunks),
+		FCanExecuteAction(),
+		FIsActionChecked());
+
+	UICommandList->MapAction(
 		Commands.ExportAssetToFile,
 		FExecuteAction::CreateSP(this, &FBlastMeshEditor::ExportAssetToFile),
 		FCanExecuteAction(),
@@ -425,6 +431,7 @@ void FBlastMeshEditor::ExtendToolbar()
 				//ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().Refresh);
 				ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().ImportRootFromStaticMesh);
 				ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().FitUvCoordinates);
+				ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().ChunksFromIslands);
 				ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().RebuildCollisionMesh);
 				ToolbarBuilder.AddToolBarButton(FBlastMeshEditorCommands::Get().ExportAssetToFile);
 
@@ -937,6 +944,21 @@ void FBlastMeshEditor::FitUvCoordinates()
 	{
 		OnBlastMeshReloaded();
 	}
+}
+
+void FBlastMeshEditor::SplitIslandsToChunks()
+{
+	auto OldMethod = FractureSettings->FractureMethod;
+	FractureSettings->FractureMethod = EBlastFractureMethod::ChunksFromIslands;
+	if (BlastMesh != nullptr)
+	{
+		//Invalidate viewport
+		Viewport->UpdatePreviewMesh(nullptr);
+
+		Fracturer->Fracture(FractureSettings, SelectedChunkIndices);
+		OnBlastMeshReloaded();
+	}
+	FractureSettings->FractureMethod = OldMethod;
 }
 
 void FBlastMeshEditor::RebuildCollisionMesh()

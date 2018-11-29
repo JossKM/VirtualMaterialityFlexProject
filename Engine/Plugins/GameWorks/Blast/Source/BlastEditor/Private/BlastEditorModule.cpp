@@ -563,14 +563,16 @@ public:
 			const auto& inmats = meshes[i]->GetMaterials();
 			materialMapping[i].SetNum(inmats.Num());
 
+			const auto SlotsNames = meshes[i]->GetMaterialSlotNames();
+
 			for (int32 mat = 0; mat < inmats.Num(); ++mat)
 			{
 				if (uniteMaterials == false)
 				{
 					SkeletalMesh->Materials.Add(meshes[i]->SkeletalMesh->Materials[mat]);
 					SkeletalMesh->Materials.Last().MaterialInterface = inmats[mat];
-					SkeletalMesh->Materials.Last().ImportedMaterialSlotName = inmats[mat]->GetFName();
-					SkeletalMesh->Materials.Last().MaterialSlotName = inmats[mat]->GetFName();
+					SkeletalMesh->Materials.Last().ImportedMaterialSlotName = SlotsNames[mat];
+					SkeletalMesh->Materials.Last().MaterialSlotName = SlotsNames[mat];
 					materialMapping[i][mat] = SkeletalMesh->Materials.Num() - 1;
 				}
 				else
@@ -580,8 +582,8 @@ public:
 					{
 						SkeletalMesh->Materials.Add(meshes[i]->SkeletalMesh->Materials[mat]);
 						SkeletalMesh->Materials.Last().MaterialInterface = inmats[mat];
-						SkeletalMesh->Materials.Last().ImportedMaterialSlotName = inmats[mat]->GetFName();
-						SkeletalMesh->Materials.Last().MaterialSlotName = inmats[mat]->GetFName();
+						SkeletalMesh->Materials.Last().ImportedMaterialSlotName = SlotsNames[mat];
+						SkeletalMesh->Materials.Last().MaterialSlotName = SlotsNames[mat];
 						materialMapping[i][mat] = SkeletalMesh->Materials.Num() - 1;
 						materialToIndex.Add(inmats[mat], materialMapping[i][mat]);
 					}
@@ -593,7 +595,9 @@ public:
 			}
 		}
 
-		
+
+		FBox MeshBounds;
+		MeshBounds.Init();
 		TArray< TArray<int32_t> > perSectionParents;
 		TArray< TArray<int32_t> > sectionToPerParentSection;
 
@@ -640,6 +644,8 @@ public:
 					lsect.SoftVertices.Last().TangentY = ComponentTransforms[i].TransformVectorNoScale(lsect.SoftVertices.Last().TangentY);
 					lsect.SoftVertices.Last().TangentZ = ComponentTransforms[i].TransformVectorNoScale(lsect.SoftVertices.Last().TangentZ);					
 					lsect.SoftVertices.Last().InfluenceBones[0] += lsect.BoneMap.Num();
+
+					MeshBounds += lsect.SoftVertices.Last().Position;
 				}
 				for (int32 bid = 0; bid < sect.BoneMap.Num(); ++bid)
 				{
@@ -654,20 +660,12 @@ public:
 		SkeletalMesh->RefSkeleton.EnsureParentsExistAndSort(LODModel.ActiveBoneIndices);
 		LODModel.NumVertices = LODModel.GetNumNonClothingVertices();
 
-		const auto& Resource = SkeletalMesh->GetResourceForRendering();
-		FSkeletalMeshLODRenderData& LODRenderData = Resource->LODRenderData[0];
-
-		FMultiSizeIndexContainerData IndexContainerData;
-		IndexContainerData.DataTypeSize = (LODModel.NumVertices < MAX_uint16) ? sizeof(uint16) : sizeof(uint32);
-		LODRenderData.MultiSizeIndexContainer.RebuildIndexBuffer(IndexContainerData.DataTypeSize, IndexContainerData.Indices);
-
 		// Finish building the sections.
 		int32 vertexIndexOffset = 0;
 		for (int32 SectionIndex = 0; SectionIndex < LODModel.Sections.Num(); SectionIndex++)
 		{
 			FSkelMeshSection& Section = LODModel.Sections[SectionIndex];
-			FRawStaticIndexBuffer16or32Interface* IndexBuffer = LODRenderData.MultiSizeIndexContainer.GetIndexBuffer();
-			Section.BaseIndex = IndexBuffer->Num();
+			Section.BaseIndex = LODModel.IndexBuffer.Num();
 			Section.BaseVertexIndex = vertexIndexOffset;
 	
 
@@ -682,7 +680,7 @@ public:
 				for (uint32 Index = 0; Index < rresource.Sections[psec].NumTriangles * 3; Index++)
 				{
 					int32 realIndex = oldIndices[cpar][Index + csec.BaseIndex] - csec.BaseVertexIndex;
-					IndexBuffer->AddItem(realIndex + vertexIndexOffset);
+					LODModel.IndexBuffer.Add(realIndex + vertexIndexOffset);
 				}
 				vertexIndexOffset += csec.NumVertices;
 			}
@@ -690,6 +688,7 @@ public:
 		// Compute the required bones for this model.
 		USkeletalMesh::CalculateRequiredBones(LODModel, SkeletalMesh->RefSkeleton, NULL);
 
+		SkeletalMesh->SetImportedBounds(FBoxSphereBounds(MeshBounds));
 
 
 		SkeletalMesh->GetLODInfoArray().Empty();
@@ -701,7 +700,7 @@ public:
 		SkeletalMesh->CalculateInvRefMatrices();
 		SkeletalMesh->PostEditChange();
 		SkeletalMesh->MarkPackageDirty();
-
+		
 		SkeletalMesh->Skeleton->MergeAllBonesToBoneTree(SkeletalMesh);
 
 		TArray<TArray<FBlastCollisionHull> > combinedHullsRemapped;

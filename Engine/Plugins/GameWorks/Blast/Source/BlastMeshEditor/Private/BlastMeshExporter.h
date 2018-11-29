@@ -242,19 +242,46 @@ public:
 	virtual void setInteriorIndex(int32_t index) = 0;
 };
 
+
+/**
+An interface to export collision data
+*/
+class ICollisionExporter
+{
+public:
+	/**
+	Delete this object
+	*/
+	virtual void	release() = 0;
+
+	/**
+	Method creates file with given path and serializes given array of arrays of convex hulls to it in JSON format.
+	\param[in] path			Output file path.
+	\param[in] chunkCount	The number of chunks, may be less than the number of collision hulls.
+	\param[in] hullOffsets	Collision hull offsets. Contains chunkCount + 1 element. First collision hull for i-th chunk: hull[hullOffsets[i]]. hullOffsets[chunkCount+1] is total number of hulls.
+	\param[in] hulls		Array of pointers to convex hull descriptors, contiguously grouped for chunk[0], chunk[1], etc.
+	*/
+	virtual bool	writeCollision(const char* path, uint32_t chunkCount, const uint32_t* hullOffsets, const CollisionHull* const * hulls) = 0;
+};
+
 }
 }
 
 /**
-	Creates an instance of IMeshFileWriter for writing obj file.
+	Creates an instance of IMeshFileWriter for writing an obj file.
 */
 NVBLAST_API Nv::Blast::IMeshFileWriter* NvBlastExtExporterCreateObjFileWriter();
 
 /**
-	Creates an instance of IMeshFileWriter for writing fbx file.
+	Creates an instance of IMeshFileWriter for writing a fbx file.
 
 	\param[in] outputFBXAscii	If true writes fbx in ascii format otherwise write in binary.
 */
 NVBLAST_API Nv::Blast::IMeshFileWriter* NvBlastExtExporterCreateFbxFileWriter(bool outputFBXAscii = false);
+
+/**
+Creates an instance of ICollisionExporter for writing a collision json file.
+*/
+NVBLAST_API Nv::Blast::ICollisionExporter* NvBlastExtExporterCreateJsonFileWriter();
 
 #endif //NVBLASTEXTEXPORTER_H

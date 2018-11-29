@@ -55,10 +55,14 @@ void FBlastMeshEditorStyle::Initialize()
 	StyleSet->Set("BlastMeshEditor.Reset.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_Reset_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.FixChunkHierarchy", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_FixChunkHierarchy_40x"), Icon40x40));
 	StyleSet->Set("BlastMeshEditor.FixChunkHierarchy.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_FixChunkHierarchy_20x"), Icon20x20));
+	StyleSet->Set("BlastMeshEditor.ExportAssetToFile", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ExportFromStatic_40x"), Icon40x40));
+	StyleSet->Set("BlastMeshEditor.ExportAssetToFile.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ExportFromStatic_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.ImportRootFromStaticMesh", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ImportFromStatic_40x"), Icon40x40));
 	StyleSet->Set("BlastMeshEditor.ImportRootFromStaticMesh.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ImportFromStatic_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.FitUvCoordinates", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_FitUV_40x"), Icon40x40));
 	StyleSet->Set("BlastMeshEditor.FitUvCoordinates.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_FitUV_20x"), Icon20x20));
+	StyleSet->Set("BlastMeshEditor.ChunksFromIslands", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_IslandToChunk_40x"), Icon40x40));
+	StyleSet->Set("BlastMeshEditor.ChunksFromIslands.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_IslandToChunk_16x"), Icon16x16));
 	StyleSet->Set("BlastMeshEditor.RebuildCollisionMesh", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_RebuildCollisionMesh_40x"), Icon40x40));
 	StyleSet->Set("BlastMeshEditor.RebuildCollisionMesh.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_RebuildCollisionMesh_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.ToggleCollisionMeshView", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_RebuildCollisionMesh_40x"), Icon40x40));
@@ -76,9 +80,6 @@ void FBlastMeshEditorStyle::Initialize()
 	StyleSet->Set("BlastMeshEditor.BlastVectorPoint", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_Point_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.BlastVectorTwoPoint", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_TwoPoint_20x"), Icon20x20));
 	StyleSet->Set("BlastMeshEditor.BlastVectorThreePoint", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ThreePoint_20x"), Icon20x20));
-
-
-	//StyleSet->Set("BlastMeshEditor.ImportRootFromStaticMesh.Small", new IMAGE_PLUGIN_BRUSH(TEXT("Icons/icon_BlastMeshEd_ImportFBX_20x"), Icon20x20));
 
 	StyleSet->Set("BlastMeshEditor.ExpandArrow", new IMAGE_BRUSH(TEXT("Icons/toolbar_expand_16x"), Icon16x16));
 

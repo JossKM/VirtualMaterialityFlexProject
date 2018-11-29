@@ -142,6 +142,8 @@ private:
 		FVector Origin, FVector Normal,
 		float NoiseAmplitude, float NoiseFrequency, int32 NoiseOctaveNumber, FVector SamplingInterval);
 
+	bool FractureChunksFromIslands(TSharedPtr<FFractureSession> FractureSession, uint32 FractureChunkId);
+
 	//void AddFractureToHistory(UBlastFractureSettings* Settings, const TArray<int32>& SelectedChunkIndices);
 
 	EFractureScriptParseResult ParseFractureScript(const FString& Script, UBlastFractureSettings* Settings = nullptr);

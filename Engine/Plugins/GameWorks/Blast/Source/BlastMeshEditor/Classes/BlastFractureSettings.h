@@ -206,7 +206,9 @@ enum class EBlastFractureMethod : uint8
 	/** Cutout method for fracturing with bitmap pattern */
 	Cutout,
 	/** Split chunk with cut */
-	Cut
+	Cut,
+	/** Split islands to new chunks. */
+	ChunksFromIslands
 };
 
 UCLASS()

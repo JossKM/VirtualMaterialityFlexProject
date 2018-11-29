@@ -94,6 +94,7 @@ robocopy %BLAST_SOURCE_DIR%\sdk\lowlevel\include %BLAST_PLUGIN_DIR%\Source\Blast
 robocopy %BLAST_SOURCE_DIR%\sdk\globals\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\globals\include *.h /PURGE
 robocopy %BLAST_SOURCE_DIR%\sdk\extensions\assetutils\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\assetutils\include *.h /PURGE
 robocopy %BLAST_SOURCE_DIR%\sdk\extensions\authoring\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\authoring\include *.h /PURGE
+robocopy %BLAST_SOURCE_DIR%\sdk\extensions\authoringCommon\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\authoringCommon\include *.h /PURGE
 robocopy %BLAST_SOURCE_DIR%\sdk\extensions\serialization\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\serialization\include *.h /PURGE
 robocopy %BLAST_SOURCE_DIR%\sdk\extensions\shaders\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\shaders\include *.h /PURGE
 robocopy %BLAST_SOURCE_DIR%\sdk\extensions\stress\include %BLAST_PLUGIN_DIR%\Source\Blast\Public\extensions\stress\include *.h /PURGE

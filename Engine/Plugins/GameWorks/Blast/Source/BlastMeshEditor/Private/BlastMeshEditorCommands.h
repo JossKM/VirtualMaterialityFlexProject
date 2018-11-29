@@ -22,6 +22,7 @@ public:
 	//TSharedPtr< FUICommandInfo > Refresh;
 	TSharedPtr< FUICommandInfo > ImportRootFromStaticMesh;
 	TSharedPtr< FUICommandInfo > FitUvCoordinates;
+	TSharedPtr< FUICommandInfo > ChunksFromIslands;
 	TSharedPtr< FUICommandInfo > RebuildCollisionMesh;
 	
 	TSharedPtr< FUICommandInfo > ToggleFractureVisualization;

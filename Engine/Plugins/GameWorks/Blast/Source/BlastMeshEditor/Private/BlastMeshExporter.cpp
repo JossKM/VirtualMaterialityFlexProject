@@ -29,6 +29,7 @@
 #include "BlastMeshExporter.h"
 #include "BlastMeshExporterFbxWriter.h"
 #include "BlastMeshExporterObjWriter.h"
+#include "BlastMeshExporterJsonWriter.h"
 
 using namespace Nv::Blast;
 
@@ -45,3 +46,7 @@ IMeshFileWriter* NvBlastExtExporterCreateFbxFileWriter(bool outputFBXAscii)
 	return ret;
 }
 
+ICollisionExporter* NvBlastExtExporterCreateJsonFileWriter()
+{
+	return new JsonCollisionExporter;
+}
