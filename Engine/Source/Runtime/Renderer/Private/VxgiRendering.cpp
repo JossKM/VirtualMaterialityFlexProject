@@ -1194,6 +1194,10 @@ void FSceneRenderer::EndVxgiFinalPostProcessSettings(FFinalPostProcessSettings& 
 	{
 		FinalPostProcessSettings.VxgiSpecularTracingEnabled = false;
 	}
+	if (!CVarVxgiAreaLightsEnable.GetValueOnRenderThread())
+	{
+		FinalPostProcessSettings.VxgiAreaLightsEnabled = false;
+	}
 	if (!bVxgiTemporalReprojectionEnable)
 	{
 		FinalPostProcessSettings.bVxgiDiffuseTracingTemporalReprojectionEnabled = false;

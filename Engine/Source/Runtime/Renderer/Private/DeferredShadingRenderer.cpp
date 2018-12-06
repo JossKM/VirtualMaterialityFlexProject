@@ -662,6 +662,8 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 #if WITH_GFSDK_VXGI
 	ViewFamily.bVxgiAvailable = false;
 
+	EndVxgiFinalPostProcessSettingsForAllViews();
+
 	// This needs to happen before RenderHzb because that function looks at View.bVxgiAmbientOcclusionMode,
 	// and if that's set to None, HZB rendering might be skipped. But the HZB is later required for the SSAO pass.
 	// This also needs to happen before InitViews because shadow map setup depends on bVxgiEnabled and bVxgiAmbientOcclusionMode flags.
@@ -673,6 +675,7 @@ void FDeferredShadingSceneRenderer::Render(FRHICommandListImmediate& RHICmdList)
 	ViewFamily.bVxgiEnabled = bVxgiEnabled;
 	ViewFamily.bVxgiAmbientOcclusionMode = bVxgiAmbientOcclusionMode;
 
+	// Go over the settings again in case InitializeVxgiVoxelizationParameters has modified something
 	EndVxgiFinalPostProcessSettingsForAllViews();
 #endif
 	// NVCHANGE_END: Add VXGI
