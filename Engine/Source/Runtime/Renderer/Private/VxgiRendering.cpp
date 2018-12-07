@@ -158,13 +158,6 @@ static TAutoConsoleVariable<int32> CVarVxgiEmittanceShadowEnable(
 	TEXT("0: Disable, 1: Enable"),
 	ECVF_Default);
 
-static TAutoConsoleVariable<int32> CVarVxgiEmittanceShadowQuality(
-	TEXT("r.VXGI.EmittanceShadowQuality"),
-	1,
-	TEXT("0: no filtering\n")
-	TEXT("1: 2x2 samples"),
-	ECVF_Default);
-
 static TAutoConsoleVariable<int32> CVarVxgiDebugClipmapLevel(
 	TEXT("r.VXGI.DebugClipmapLevel"),
 	-1,

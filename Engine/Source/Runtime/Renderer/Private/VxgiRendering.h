@@ -251,7 +251,9 @@ public:
 			ShadowExtentsArrayValue.GetData(),
 			ShadowExtentsArrayValue.Num());
 
-		SetSamplerParameter(RHICmdList, ShaderRHI, ShadowDepthTextureSampler, TStaticSamplerState<SF_Point, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
+		// Note: the ShadowDepthTextureSampler is also used for LTCMatSampler and LTCAmpSampler, so it has to be bilinear.
+		// The VXGI voxelization shader uses it in a Gather operation, so whether it is a linear or point sampler doesn't matter.
+		SetSamplerParameter(RHICmdList, ShaderRHI, ShadowDepthTextureSampler, TStaticSamplerState<SF_Bilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI());
 
 		for (int32 CascadeIndex = 0; CascadeIndex < ShadowDepthTextureArrayValue.Num(); ++CascadeIndex)
 		{
@@ -296,7 +298,6 @@ class FVoxelizationShaderParameters
 {
 public:
 	FShaderParameter EmittanceShadingMode;
-	FShaderParameter EmittanceShadowQuality;
 	FShaderParameter IsInverseSquared;
 	FShaderParameter IsRadialLight;
 	FShaderParameter IsSpotLight;
@@ -320,7 +321,6 @@ public:
 	void Bind(const FShaderParameterMap& ParameterMap)
 	{
 		EmittanceShadingMode.Bind(ParameterMap, TEXT("EmittanceShadingMode"));
-		EmittanceShadowQuality.Bind(ParameterMap, TEXT("EmittanceShadowQuality"));
 		IsInverseSquared.Bind(ParameterMap, TEXT("IsInverseSquared"));
 		IsRadialLight.Bind(ParameterMap, TEXT("IsRadialLight"));
 		IsSpotLight.Bind(ParameterMap, TEXT("IsSpotLight"));
@@ -346,9 +346,6 @@ public:
 	{
 		static const auto CVarEmittanceShadingMode = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VXGI.EmittanceShadingMode"));
 		SetShaderValue(RHICmdList, ShaderRHI, EmittanceShadingMode, CVarEmittanceShadingMode->GetValueOnRenderThread());
-
-		static const auto CVarEmittanceShadowQuality = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("r.VXGI.EmittanceShadowQuality"));
-		SetShaderValue(RHICmdList, ShaderRHI, EmittanceShadowQuality, CVarEmittanceShadowQuality->GetValueOnRenderThread());
 
 		const FLightSceneInfo* LightSceneInfo = View.VxgiVoxelizationArgs.LightSceneInfo;
 		const FProjectedShadowInfo* ProjectedShadowInfo = NULL;
@@ -441,7 +438,6 @@ public:
 	void Serialize(FArchive& Ar)
 	{
 		Ar << EmittanceShadingMode;
-		Ar << EmittanceShadowQuality;
 		Ar << IsInverseSquared;
 		Ar << IsRadialLight;
 		Ar << IsSpotLight;

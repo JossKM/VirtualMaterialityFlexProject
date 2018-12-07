@@ -346,10 +346,16 @@ float3 PolygonIrradiance( float3 Poly[4] )
 	return L;
 }
 
+// NVCHANGE_BEGIN: Add VXGI -- save sampler slots in the VXGI voxelization shader
 Texture2D		LTCMatTexture;
+#ifndef LTCMatSampler
 SamplerState	LTCMatSampler;
+#endif
 Texture2D		LTCAmpTexture;
+#ifndef LTCAmpSampler
 SamplerState	LTCAmpSampler;
+#endif
+// NVCHANGE_END: Add VXGI
 
 // [ Heitz et al. 2016, "Real-Time Polygonal-Light Shading with Linearly Transformed Cosines" ]
 float3 RectGGXApproxLTC( float Roughness, float3 SpecularColor, half3 N, float3 V, FRect Rect, Texture2D Texture )
@@ -433,7 +439,7 @@ float3 RectGGXApproxLTC( float Roughness, float3 SpecularColor, half3 N, float3 
 
 
 // Rectangle projected to a sphere
-// [UreÒa et al. 2013, "An Area-Preserving Parametrization for Spherical Rectangles"]
+// [Ure—Åa et al. 2013, "An Area-Preserving Parametrization for Spherical Rectangles"]
 struct FSphericalRect
 {
 	float3x3	Axis;

@@ -5,20 +5,22 @@
 	Based on BasePassForForwardShadingPixelShader.usf & TiledDeferredShading.usf
 =============================================================================*/
 
-#define SUPPORT_CONTACT_SHADOWS 1
+#define SUPPORT_CONTACT_SHADOWS 0
+#define USE_SOURCE_TEXTURE 0
+
+#define LTCMatSampler ShadowDepthTextureSampler
+#define LTCAmpSampler ShadowDepthTextureSampler
 
 #include "/Engine/Private/Common.ush"
 #include "/Engine/Private/SHCommon.ush"
 #include "/Engine/Private/MobileBasePassCommon.ush"
 #include "/Engine/Generated/Material.ush"
 #include "/Engine/Generated/VertexFactory.ush"
-#include "/Engine/Private/LightmapCommon.ush"  
+#include "/Engine/Private/ShadowProjectionCommon.ush"
 #include "/Engine/Private/DeferredLightingCommon.ush"
 #include "/Engine/Private/ReflectionEnvironmentShared.ush"
-#include "/Engine/Private/ShadowProjectionCommon.ush"
 
 int EmittanceShadingMode;
-int EmittanceShadowQuality;
 bool IsInverseSquared;
 bool IsRadialLight;
 bool IsSpotLight;
@@ -187,22 +189,14 @@ float GetVxgiSingleLightShadow(float3 WorldPosition)
 				{
 					float CascadeShadow;
 
-					if (EmittanceShadowQuality == 0)
-					{
-						float ShadowmapDepth = Texture2DSampleLevel(ShadowDepthTextures[ShadowIndex], ShadowDepthTextureSampler, ShadowPosition.xy, 0).r;
-						CascadeShadow = CalculateOcclusion(ShadowmapDepth, ShadowPosition.z, TransitionScale);
-					}
-					else
-					{
-						float2 Fraction = frac(TexelPos);
-						float2 TexelCenter = floor(TexelPos) + 0.5f;	// bias to get reliable texel center content
+					float2 Fraction = frac(TexelPos);
+					float2 TexelCenter = floor(TexelPos) + 0.5f;	// bias to get reliable texel center content
 
-						// using Gather: xyzw in counter clockwise order starting with the sample to the lower left of the queried location
-						float4 Samples = ShadowDepthTextures[ShadowIndex].Gather(ShadowDepthTextureSampler, TexelCenter * ShadowBufferSize.zw);
+					// using Gather: xyzw in counter clockwise order starting with the sample to the lower left of the queried location
+					float4 Samples = ShadowDepthTextures[ShadowIndex].Gather(ShadowDepthTextureSampler, TexelCenter * ShadowBufferSize.zw);
 
-						float4 Values00 = CalculateOcclusion(Samples, ShadowPosition.z, TransitionScale);
-						CascadeShadow = PCF1x1(Fraction, Values00);
-					}
+					float4 Values00 = CalculateOcclusion(Samples, ShadowPosition.z, TransitionScale);
+					CascadeShadow = PCF1x1(Fraction, Values00);
 
 					DynamicShadow += Weight * CascadeShadow;
 					TotalWeight += Weight;
