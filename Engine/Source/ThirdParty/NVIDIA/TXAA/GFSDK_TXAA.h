@@ -334,7 +334,7 @@ INCLUDES
 #   if defined(__GFSDK_OS_ANDROID__)
 #       include <Regal/GL/Regal.h>
 #   else
-#	    include <GL3/gl3.h>
+#	    include <GL/gl.h>
 #   endif
 #endif
 

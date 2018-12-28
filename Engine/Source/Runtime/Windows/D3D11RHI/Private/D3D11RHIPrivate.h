@@ -43,9 +43,10 @@ DECLARE_LOG_CATEGORY_EXTERN(LogD3D11RHI, Log, All);
 #include "D3D11StateCache.h"
 
 #if WITH_TXAA
+#ifndef __GFSDK_DX11__
 #define __GFSDK_DX11__
-//#include "GFSDK_TXAA.h"
-#include "ThirdParty/NVIDIA//TXAA/GFSDK_TXAA.h"
+#endif
+#include "ThirdParty/NVIDIA/TXAA/GFSDK_TXAA.h"
 #endif
 
 #ifndef WITH_DX_PERF
