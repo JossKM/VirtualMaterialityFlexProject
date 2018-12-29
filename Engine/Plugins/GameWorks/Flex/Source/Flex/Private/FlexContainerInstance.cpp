@@ -6,6 +6,7 @@
 #include "FlexManager.h"
 
 #include "PhysXPublic.h"
+#include "Physics/PhysicsInterfacePhysX.h"
 #include "Physics/PhysicsFiltering.h"
 #include "DrawDebugHelpers.h"
 #include "FlexFluidSurfaceActor.h"
@@ -379,13 +380,13 @@ void FFlexContainerInstance::UpdateCollisionData()
 	// buffer for overlaps
 	TArray<FOverlapResult> Overlaps;
 	TArray<FOverlapResult> PerComponentOverlaps;
-	TArray<PxShape*> Shapes;
+	TArray<FPhysicsShapeHandle_PhysX> ShapeHandles;
 
 	// expand bounds to catch any potential collisions (assume 60fps)
 	const FVector Expand = FVector(Template->MaxVelocity / 60.0f + Template->CollisionDistance + Template->CollisionMarginShapes);
 
 	// lock the scene to perform scene queries
-	SCENE_LOCK_READ(Owner->GetPhysXScene(PST_Sync));
+	SCENE_LOCK_READ(Owner->GetPxScene(PST_Sync));
 
 	{
 		SCOPE_CYCLE_COUNTER(STAT_Flex_GatherCollisionShapes);
@@ -485,18 +486,18 @@ void FFlexContainerInstance::UpdateCollisionData()
 			if (!Body)
 				continue;
 
-			PxRigidActor* Actor = Body->GetPxRigidActor_AssumesLocked();
+			PxRigidActor* Actor = FPhysicsInterface_PhysX::GetPxRigidActor_AssumesLocked(Body->GetPhysicsActorHandle());
 			if (!Actor)
 				continue;
 
-			Shapes.Reset();
+			ShapeHandles.Reset();
 
 			int32 NumSyncShapes;			
-			NumSyncShapes = Body->GetAllShapes_AssumesLocked(Shapes);
+			NumSyncShapes = Body->GetAllShapes_AssumesLocked(ShapeHandles);
 
-			for (int ShapeIndex = 0; ShapeIndex < Shapes.Num(); ++ShapeIndex)
+			for (int ShapeIndex = 0; ShapeIndex < ShapeHandles.Num(); ++ShapeIndex)
 			{
-				PxShape* Shape = Shapes[ShapeIndex];
+				PxShape* Shape = ShapeHandles[ShapeIndex].Shape;
 
 				if (!Actor || !Shape)
 					continue;
@@ -718,7 +719,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 		}
 	}
 
-	SCENE_UNLOCK_READ(Owner->GetPhysXScene(PST_Sync));
+	SCENE_UNLOCK_READ(Owner->GetPxScene(PST_Sync));
 
 	// push to flex
 	{
@@ -1141,7 +1142,7 @@ void FFlexContainerInstance::Simulate(float DeltaTime)
 
 #if STATS
 	// only gather GPU stats if enabled as this has a high perf. overhead
-	static TStatId FlexGpuStatId = IStatGroupEnableManager::Get().GetHighPerformanceEnableForStat(FName(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::GetGroupName(), STAT_GROUP_TO_FStatGroup(STATGROUP_UObjects)::GetGroupCategory(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::DefaultEnable, true, EStatDataType::ST_int64, TEXT("Flex GPU Stats"), true);
+	static TStatId FlexGpuStatId = IStatGroupEnableManager::Get().GetHighPerformanceEnableForStat(FName(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::GetGroupName(), STAT_GROUP_TO_FStatGroup(STATGROUP_UObjects)::GetGroupCategory(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::DefaultEnable, true, EStatDataType::ST_int64, TEXT("Flex GPU Stats"), true, true);
 	
 	TimerGatherEnable = !FlexGpuStatId.IsNone();
 #endif

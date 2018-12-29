@@ -88,7 +88,7 @@
 
 //#nv begin #flex
 #if WITH_FLEX
-#include "FrameworkObjectVersion.h"
+#include "UObject/FrameworkObjectVersion.h"
 #include "GameWorks/IFlexPluginBridge.h"
 #endif
 //#nv end

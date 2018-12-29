@@ -2548,9 +2548,10 @@ UMaterialExpressionFlexFluidSurfaceThickness::UMaterialExpressionFlexFluidSurfac
 
 #if WITH_EDITOR
 	MenuCategories.Add(ConstructorStatics.NAME_Texture);
-#endif // WITH_EDITOR
 
 	bShaderInputData = true;
+#endif // WITH_EDITOR
+
 	ConstInput = FVector2D(0.f, 0.f);
 }
 
@@ -2594,7 +2595,6 @@ void UMaterialExpressionFlexFluidSurfaceThickness::GetCaption(TArray<FString>& O
 	OutCaptions.Add(TEXT("FlexFluidSurface Thickness"));
 }
 
-#endif // WITH_EDITOR
 
 FName UMaterialExpressionFlexFluidSurfaceThickness::GetInputName(int32 InputIndex) const
 {
@@ -2608,6 +2608,8 @@ FName UMaterialExpressionFlexFluidSurfaceThickness::GetInputName(int32 InputInde
 	}
 	return TEXT("");
 }
+
+#endif // WITH_EDITOR
 
 ///////////////////////////////////////////////////////////////////////////////
 // UMaterialExpressionFlexFluidSurfaceColor
@@ -2628,9 +2630,10 @@ UMaterialExpressionFlexFluidSurfaceColor::UMaterialExpressionFlexFluidSurfaceCol
 
 #if WITH_EDITOR
 	MenuCategories.Add(ConstructorStatics.NAME_Texture);
-#endif // WITH_EDITOR
 
 	bShaderInputData = true;
+#endif // WITH_EDITOR
+
 	ConstInput = FVector2D(0.f, 0.f);
 }
 
@@ -2674,7 +2677,6 @@ void UMaterialExpressionFlexFluidSurfaceColor::GetCaption(TArray<FString>& OutCa
 	OutCaptions.Add(TEXT("FlexFluidSurface Color"));
 }
 
-#endif // WITH_EDITOR
 
 FName UMaterialExpressionFlexFluidSurfaceColor::GetInputName(int32 InputIndex) const
 {
@@ -2683,13 +2685,15 @@ FName UMaterialExpressionFlexFluidSurfaceColor::GetInputName(int32 InputIndex) c
 		// Display the current InputMode enum's display name.
 		UByteProperty* InputModeProperty = NULL;
 		InputModeProperty = FindField<UByteProperty>(UMaterialExpressionFlexFluidSurfaceColor::StaticClass(), "InputMode");
-		FString InputName = InputModeProperty->Enum->GetEnumName((int32)InputMode.GetValue());
+		FString InputName = InputModeProperty->Enum->GetNameStringByIndex((int32)InputMode.GetValue());
 		return FName(*InputName);
 	}
 	return TEXT("");
 }
+#endif // WITH_EDITOR
 #endif
 //#nv end
+
 
 #if WITH_EDITOR
 int32 UMaterialExpressionAdd::Compile(class FMaterialCompiler* Compiler, int32 OutputIndex)

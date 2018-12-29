@@ -233,7 +233,7 @@ void FFlexCPUVertexFactory::SkinCloth(const FVector4* SimulatedPositions, const 
 			
 			// convert normal to packed format
 			FPackedNormal Normal = FVector(-SimulatedNormals[particleIndex]);
-			Normal.Vector.W = 255;
+			Normal.Vector.W = MAX_int8;
 			Vertex[i].TangentZ = Normal;
 			Vertex[i].TangentX = FPackedNormal(FVector(1, 0, 0));
 		}
@@ -321,7 +321,7 @@ void FFlexCPUVertexFactory::SkinSoft(const FPositionVertexBuffer& Positions, con
 
 		// tangent space
 		FPackedNormal Normal = SoftNormal;
-		Normal.Vector.W = 255;
+		Normal.Vector.W = MAX_int8;
 		SkinnedVertices[VertexIndex].TangentZ = Normal;
 		SkinnedVertices[VertexIndex].TangentX = FPackedNormal(SoftTangent);
 	}

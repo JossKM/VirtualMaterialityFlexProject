@@ -11,22 +11,22 @@ public class FlexLibrary : ModuleRules
 
         if (Target.bCompileNvFlexD3D == false && Target.bCompileNvFlexCUDA == false)
         {
-            Definitions.Add("WITH_FLEX=0");
+            PublicDefinitions.Add("WITH_FLEX=0");
             return;
         }
 
-        Definitions.Add("WITH_FLEX=1");
+        PublicDefinitions.Add("WITH_FLEX=1");
 
         if(Target.bCompileNvFlexD3D)
         {
-            Definitions.Add("WITH_FLEX_DX=1");
-            Definitions.Add("WITH_FLEX_CUDA=0");
+            PublicDefinitions.Add("WITH_FLEX_DX=1");
+            PublicDefinitions.Add("WITH_FLEX_CUDA=0");
         }
 
         if (Target.bCompileNvFlexCUDA)
         {
-            Definitions.Add("WITH_FLEX_CUDA=1");
-            Definitions.Add("WITH_FLEX_DX=0");
+            PublicDefinitions.Add("WITH_FLEX_CUDA=1");
+            PublicDefinitions.Add("WITH_FLEX_DX=0");
         }
         
 		string IncludeDir = ModuleDirectory + "/include";
@@ -98,7 +98,7 @@ public class FlexLibrary : ModuleRules
 
                 foreach (string RuntimeDependency in RuntimeDependenciesX64)
                 {
-                    RuntimeDependencies.Add(new RuntimeDependency(BinariesDir + RuntimeDependency));
+                    RuntimeDependencies.Add(BinariesDir + RuntimeDependency);
                 }
             }
 
@@ -116,7 +116,7 @@ public class FlexLibrary : ModuleRules
 
                 foreach (string RuntimeDependency in RuntimeDependenciesX64)
                 {
-                    RuntimeDependencies.Add(new RuntimeDependency(BinariesDir + RuntimeDependency));
+                    RuntimeDependencies.Add(BinariesDir + RuntimeDependency);
                 }
             }
 		}
@@ -182,7 +182,7 @@ public class FlexLibrary : ModuleRules
 
                 foreach (string RuntimeDependency in RuntimeDependenciesX86)
                 {
-                    RuntimeDependencies.Add(new RuntimeDependency(BinariesDir + RuntimeDependency));
+                    RuntimeDependencies.Add(BinariesDir + RuntimeDependency);
                 }
             }
 
@@ -202,7 +202,7 @@ public class FlexLibrary : ModuleRules
 
                 foreach (string RuntimeDependency in RuntimeDependenciesX86)
                 {
-                    RuntimeDependencies.Add(new RuntimeDependency(BinariesDir + RuntimeDependency));
+                    RuntimeDependencies.Add(BinariesDir + RuntimeDependency);
                 }
             }
         }

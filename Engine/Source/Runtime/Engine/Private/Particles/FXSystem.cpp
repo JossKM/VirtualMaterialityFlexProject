@@ -361,7 +361,7 @@ void FFXSystem::PreRender(FRHICommandListImmediate& RHICmdList, const FGlobalDis
 		//#nv begin #flex
 #if WITH_FLEX
 		// Perform the Flex 'Simulate' - which in effect is just copying the flex state into the particles.
-		SimulateGPUParticles(RHICmdList, EParticleSimulatePhase::Flex, NULL, NULL, FTexture2DRHIParamRef(), FTexture2DRHIParamRef());
+		SimulateGPUParticles(RHICmdList, EParticleSimulatePhase::Flex, nullptr, nullptr, nullptr, FUniformBufferRHIParamRef());
 #endif
 		//#nv end
 

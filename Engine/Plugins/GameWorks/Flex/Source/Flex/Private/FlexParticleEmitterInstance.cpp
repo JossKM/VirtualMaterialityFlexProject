@@ -1,7 +1,10 @@
 #include "FlexParticleEmitterInstance.h"
+#include "FlexContainerInstance.h"
+#include "FlexCollisionComponent.h"
 #include "FlexFluidSurfaceComponent.h"
 #include "FlexParticleSpriteEmitter.h"
 #include "FlexManager.h"
+#include "Particles/ParticleSystemComponent.h"
 
 
 FFlexParticleEmitterInstance::FFlexParticleEmitterInstance(FParticleEmitterInstance* Instance)

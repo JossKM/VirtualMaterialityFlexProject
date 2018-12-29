@@ -1,4 +1,5 @@
 #include "FlexGPUParticleEmitterInstance.h"
+#include "FlexContainerInstance.h"
 #include "FlexParticleSpriteEmitter.h"
 #include "FlexFluidSurfaceComponent.h"
 

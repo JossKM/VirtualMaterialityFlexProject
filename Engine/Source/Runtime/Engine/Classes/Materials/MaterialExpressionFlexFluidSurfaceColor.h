@@ -35,9 +35,8 @@ class UMaterialExpressionFlexFluidSurfaceColor : public UMaterialExpression
 #if WITH_EDITOR	
 	virtual int32 Compile(class FMaterialCompiler* Compiler, int32 OutputIndex) override;
 	virtual void GetCaption(TArray<FString>& OutCaptions) const override;
-#endif // WITH_EDITOR
-
 	virtual FName GetInputName(int32 InputIndex) const override;
+#endif // WITH_EDITOR
 	// End UMaterialExpression Interface
 };
 

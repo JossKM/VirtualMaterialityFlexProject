@@ -1,5 +1,6 @@
 #include "FlexManager.h"
 
+#include "FlexActor.h"
 #include "FlexAsset.h"
 
 #include "FlexFluidSurfaceActor.h"
@@ -19,10 +20,12 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "ParticleEmitterInstances.h"
 #include "Particles/ParticleEmitter.h"
+#include "Particles/ParticleLODLevel.h"
 #include "FlexParticleEmitterInstance.h"
 #include "FlexCollisionComponent.h"
 #include "FlexParticleSpriteEmitter.h"
 #include "FlexGPUParticleEmitterInstance.h"
+#include "PhysicsPublic.h"
 
 #include "Misc/ScopeRWLock.h"
 
@@ -106,7 +109,7 @@ void FFlexManager::ReImportFlexAsset(class UStaticMesh* StaticMesh)
 	}
 }
 
-struct FFlexContainerInstance* FFlexManager::FindFlexContainerInstance(class FPhysScene* PhysScene, class UFlexContainer* Template)
+struct FFlexContainerInstance* FFlexManager::FindFlexContainerInstance(class FPhysScene_PhysX* PhysScene, class UFlexContainer* Template)
 {
 	if (!bFlexInitialized)
 	{
@@ -127,7 +130,7 @@ struct FFlexContainerInstance* FFlexManager::FindFlexContainerInstance(class FPh
 	return nullptr;
 }
 
-struct FFlexContainerInstance* FFlexManager::FindOrCreateFlexContainerInstance(class FPhysScene* PhysScene, class UFlexContainer* Template)
+struct FFlexContainerInstance* FFlexManager::FindOrCreateFlexContainerInstance(class FPhysScene_PhysX* PhysScene, class UFlexContainer* Template)
 {
 	if (!bFlexInitialized)
 	{
@@ -158,7 +161,7 @@ struct FFlexContainerInstance* FFlexManager::FindOrCreateFlexContainerInstance(c
 	}
 }
 
-void FFlexManager::WaitFlexScenes(class FPhysScene* PhysScene)
+void FFlexManager::WaitFlexScenes(class FPhysScene_PhysX* PhysScene)
 {
 	if (!bFlexInitialized)
 	{
@@ -223,7 +226,7 @@ void FFlexManager::WaitFlexScenes(class FPhysScene* PhysScene)
 	PhysSceneMapLock.WriteUnlock();
 }
 
-void FFlexManager::TickFlexScenes(class FPhysScene* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt)
+void FFlexManager::TickFlexScenes(class FPhysScene_PhysX* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt)
 {
 	if (!bFlexInitialized)
 	{
@@ -294,7 +297,7 @@ void FFlexManager::TickFlexScenesTask(FFlexManager::FPhysSceneContext* PhysScene
 	}
 }
 
-void FFlexManager::CleanupFlexScenes(class FPhysScene* PhysScene)
+void FFlexManager::CleanupFlexScenes(class FPhysScene_PhysX* PhysScene)
 {
 	if (!bFlexInitialized)
 	{
@@ -342,7 +345,7 @@ void FFlexManager::CleanupFlexScenes(class FPhysScene* PhysScene)
 	PhysSceneMapLock.WriteUnlock();
 }
 
-void FFlexManager::StartFlexRecord(class FPhysScene* PhysScene)
+void FFlexManager::StartFlexRecord(class FPhysScene_PhysX* PhysScene)
 {
 #if 0
 	FRWScopeLock Lock(PhysSceneMapLock, SLT_ReadOnly);
@@ -361,7 +364,7 @@ void FFlexManager::StartFlexRecord(class FPhysScene* PhysScene)
 #endif
 }
 
-void FFlexManager::StopFlexRecord(class FPhysScene* PhysScene)
+void FFlexManager::StopFlexRecord(class FPhysScene_PhysX* PhysScene)
 {
 #if 0
 	FRWScopeLock Lock(PhysSceneMapLock, SLT_ReadOnly);
@@ -379,7 +382,7 @@ void FFlexManager::StopFlexRecord(class FPhysScene* PhysScene)
 #endif
 }
 
-void FFlexManager::AddRadialForceToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff)
+void FFlexManager::AddRadialForceToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff)
 {
 	FRWScopeLock Lock(PhysSceneMapLock, SLT_ReadOnly);
 
@@ -394,7 +397,7 @@ void FFlexManager::AddRadialForceToFlex(class FPhysScene* PhysScene, FVector Ori
 	}
 }
 
-void FFlexManager::AddRadialImpulseToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange)
+void FFlexManager::AddRadialImpulseToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange)
 {
 	FRWScopeLock Lock(PhysSceneMapLock, SLT_ReadOnly);
 

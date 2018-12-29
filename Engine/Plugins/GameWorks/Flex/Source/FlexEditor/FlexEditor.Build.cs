@@ -8,7 +8,7 @@ namespace UnrealBuildTool.Rules
 		{
 			PublicIncludePaths.AddRange(
 				new string[] {
-					"FlexEditor/Public",
+					"../Plugins/GameWorks/Flex/Source/FlexEditor/Public",
 					// ... add public include paths required here ...
 				}
 				);

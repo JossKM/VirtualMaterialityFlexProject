@@ -2,6 +2,8 @@
 
 #include "FlexParticleEmitterInstance.h"
 
+struct FFlexGPUParticleSimulationParameters;
+
 /*-----------------------------------------------------------------------------
 FFlexGPUParticleEmitterInstance
 -----------------------------------------------------------------------------*/

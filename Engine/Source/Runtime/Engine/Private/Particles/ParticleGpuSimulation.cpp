@@ -1771,8 +1771,8 @@ void ExecuteSimulationCommands(
 			ParticleSimulationResources,
 			NULL,
 			GlobalDistanceFieldParameterData,
-			FTexture2DRHIParamRef(),
-			FTexture2DRHIParamRef(),
+			SceneTexturesUniformBufferStruct,
+			SceneTexturesUniformBuffer,
 			bUseFixDT);
 	}
 	else

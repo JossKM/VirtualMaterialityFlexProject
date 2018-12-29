@@ -57,7 +57,7 @@ struct FFlexGPUParticleSimulationShaderParameters
 	}
 };
 
-FArchive& operator<<(FArchive& Ar, FFlexGPUParticleSimulationShaderParameters& Parameters)
+FORCEINLINE FArchive& operator<<(FArchive& Ar, FFlexGPUParticleSimulationShaderParameters& Parameters)
 {
 	Ar << Parameters.ParticleIndexBuffer;
 	Ar << Parameters.PositionBuffer;

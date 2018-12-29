@@ -211,7 +211,7 @@ struct FFlexDownsampleSceneDepthPS : public FGlobalShader
 	FFlexDownsampleSceneDepthPS(const ShaderMetaType::CompiledShaderInitializerType& Initializer) :
 		FGlobalShader(Initializer)
 	{
-		SceneTextureParameters.Bind(Initializer.ParameterMap);
+		SceneTextureParameters.Bind(Initializer);
 		ProjectionScaleBias.Bind(Initializer.ParameterMap, TEXT("ProjectionScaleBias"));
 		SourceTexelOffsets01.Bind(Initializer.ParameterMap, TEXT("SourceTexelOffsets01"));
 		SourceTexelOffsets23.Bind(Initializer.ParameterMap, TEXT("SourceTexelOffsets23"));
@@ -234,7 +234,7 @@ struct FFlexDownsampleSceneDepthPS : public FGlobalShader
 		const FVector4 Offsets23(0.0f, 1.0f / DownsampledBufferSize.Y, 1.0f / DownsampledBufferSize.X, 1.0f / DownsampledBufferSize.Y);
 		SetShaderValue(RHICmdList, GetPixelShader(), SourceTexelOffsets23, Offsets23);
 		SetShaderValue(RHICmdList, GetPixelShader(), MinMaxBlend, 0.0f);
-		SceneTextureParameters.Set(RHICmdList, GetPixelShader(), View);
+		SceneTextureParameters.Set(RHICmdList, GetPixelShader(), View.FeatureLevel, ESceneTextureSetupMode::All);
 	}
 
 	virtual bool Serialize(FArchive& Ar) override
@@ -461,10 +461,10 @@ void DrawParticleMesh(FRHICommandList& RHICmdList, const FViewInfo& View, const 
 
 	FDrawingPolicyRenderState DrawRenderStateLocal(DrawRenderState);
 	MeshDrawingPolicy.SetupPipelineState(DrawRenderStateLocal, View);
-	CommitGraphicsPipelineState(RHICmdList, MeshDrawingPolicy, DrawRenderStateLocal, ShaderStateInput);
+	CommitGraphicsPipelineState(RHICmdList, MeshDrawingPolicy, DrawRenderStateLocal, ShaderStateInput, MeshDrawingPolicy.GetMaterialRenderProxy());
 
-	VertexShader->SetParameters(RHICmdList, VertexShader->GetVertexShader(), MaterialRenderProxy, MaterialResource, View, View.ViewUniformBuffer, ESceneRenderTargetsMode::DontSet);
-	PixelShader->SetParameters(RHICmdList, PixelShader->GetPixelShader(), MaterialRenderProxy, MaterialResource, View, View.ViewUniformBuffer, ESceneRenderTargetsMode::DontSet);
+	VertexShader->SetParameters(RHICmdList, VertexShader->GetVertexShader(), MaterialRenderProxy, MaterialResource, View, DrawRenderState.GetViewUniformBuffer(), DrawRenderState.GetPassUniformBuffer());
+	PixelShader->SetParameters(RHICmdList, PixelShader->GetPixelShader(), MaterialRenderProxy, MaterialResource, View, DrawRenderState.GetViewUniformBuffer(), DrawRenderState.GetPassUniformBuffer());
 
 	MeshDrawingPolicy.SetSharedState(RHICmdList, DrawRenderState, &View, FMeshDrawingPolicy::ContextDataType());
 

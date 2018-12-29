@@ -6,7 +6,6 @@
 #include "NvFlexExt.h"
 #include "NvFlexDevice.h"
 
-
 class FFlexManager : public IFlexPluginBridge
 {
 public:
@@ -31,20 +30,20 @@ public:
 	virtual void ReImportFlexAsset(class UStaticMesh* StaticMesh);
 
 	/** Retrive the container instance for a soft joint, will return a nullptr if it doesn't already exist */
-	struct FFlexContainerInstance* FindFlexContainerInstance(class FPhysScene* PhysScene, class UFlexContainer* Template);
+	struct FFlexContainerInstance* FindFlexContainerInstance(class FPhysScene_PhysX* PhysScene, class UFlexContainer* Template);
 
 	/** Retrive the container instance for a template, will create the instance if it doesn't already exist */
-	struct FFlexContainerInstance* FindOrCreateFlexContainerInstance(class FPhysScene* PhysScene, class UFlexContainer* Template);
+	struct FFlexContainerInstance* FindOrCreateFlexContainerInstance(class FPhysScene_PhysX* PhysScene, class UFlexContainer* Template);
 
-	virtual void WaitFlexScenes(class FPhysScene* PhysScene);
-	virtual void TickFlexScenes(class FPhysScene* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt);
-	virtual void CleanupFlexScenes(class FPhysScene* PhysScene);
+	virtual void WaitFlexScenes(class FPhysScene_PhysX* PhysScene);
+	virtual void TickFlexScenes(class FPhysScene_PhysX* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt);
+	virtual void CleanupFlexScenes(class FPhysScene_PhysX* PhysScene);
 
-	virtual void AddRadialForceToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff);
-	virtual void AddRadialImpulseToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange);
+	virtual void AddRadialForceToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff);
+	virtual void AddRadialImpulseToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange);
 
-	void StartFlexRecord(class FPhysScene* PhysScene);
-	void StopFlexRecord(class FPhysScene* PhysScene);
+	void StartFlexRecord(class FPhysScene_PhysX* PhysScene);
+	void StopFlexRecord(class FPhysScene_PhysX* PhysScene);
 	void ToggleFlexContainerDebugDraw(class UWorld* World);
 
 	virtual void AttachFlexToComponent(class USceneComponent* Component, float Radius);
@@ -97,7 +96,7 @@ private:
 		TMap<class UFlexContainer*, struct FFlexContainerInstance*> FlexContainerMap;
 		FGraphEventRef FlexSimulateTaskRef;
 	};
-	TMap<class FPhysScene*, FPhysSceneContext> PhysSceneMap;
+	TMap<class FPhysScene_PhysX*, FPhysSceneContext> PhysSceneMap;
 
 	mutable FRWLock PhysSceneMapLock;
 

@@ -6870,7 +6870,7 @@ void FSlateEditorStyle::FStyle::SetupToolkitStyles()
 		Set( "StaticMeshEditor.SetDrawAdditionalData", new IMAGE_BRUSH( "Icons/icon_StaticMeshEd_AdditionalData_40x", Icon40x40 ) );
 		Set( "StaticMeshEditor.SetDrawAdditionalData.Small", new IMAGE_BRUSH( "Icons/icon_StaticMeshEd_AdditionalData_40x", Icon20x20 ) );
 		//#nv begin #flex
-#if WITH_FLEX
+#if 1//WITH_FLEX
 		Set( "StaticMeshEditor.SetDrawFlexPreview", new IMAGE_BRUSH("Icons/icon_StaticMeshEd_FlexPreview_40x", Icon40x40));
 		Set( "StaticMeshEditor.SetDrawFlexPreview.Small", new IMAGE_BRUSH( "Icons/icon_StaticMeshEd_FlexPreview_40x", Icon20x20 ) );
 #endif

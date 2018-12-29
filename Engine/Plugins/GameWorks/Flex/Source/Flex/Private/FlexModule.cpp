@@ -39,6 +39,9 @@ void FFlexModule::StartupModule()
 {
 	LoadDLLs();
 
+	FString PluginShaderDir = FPaths::Combine(IPluginManager::Get().FindPlugin(TEXT("Flex"))->GetBaseDir(), TEXT("Shaders"));
+	AddShaderSourceDirectoryMapping(TEXT("/Plugin/Flex"), PluginShaderDir);
+
 	GFlexPluginBridge = &FFlexManager::get();
 	GFlexFluidSurfaceRenderer = &FFlexFluidSurfaceRenderer::get();
 }

@@ -8,7 +8,7 @@ namespace UnrealBuildTool.Rules
 		{
 			PublicIncludePaths.AddRange(
 				new string[] {
-					"Flex/Public",
+					"../Plugins/GameWorks/Flex/Source/Flex/Public",
 					// ... add public include paths required here ...
 				}
 				);
@@ -54,7 +54,7 @@ namespace UnrealBuildTool.Rules
 				}
 				);
 
-			SetupModulePhysXAPEXSupport(Target);
+			SetupModulePhysicsSupport(Target);
 		}
 	}
 }

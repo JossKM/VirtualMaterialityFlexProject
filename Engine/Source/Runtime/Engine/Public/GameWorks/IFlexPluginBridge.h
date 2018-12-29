@@ -18,15 +18,15 @@ public:
 	virtual void ReImportFlexAsset(class UStaticMesh* StaticMesh) = 0;
 
 	// PhysScene
-	virtual void WaitFlexScenes(class FPhysScene* PhysScene) = 0;
-	virtual void TickFlexScenes(class FPhysScene* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt) = 0;
-	virtual void CleanupFlexScenes(class FPhysScene* PhysScene) = 0;
+	virtual void WaitFlexScenes(class FPhysScene_PhysX* PhysScene) = 0;
+	virtual void TickFlexScenes(class FPhysScene_PhysX* PhysScene, ENamedThreads::Type CurrentThread, const FGraphEventRef& MyCompletionGraphEvent, float dt) = 0;
+	virtual void CleanupFlexScenes(class FPhysScene_PhysX* PhysScene) = 0;
 
 	/** Adds a radial force to all flex container instances */
-	virtual void AddRadialForceToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff) = 0;
+	virtual void AddRadialForceToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff) = 0;
 
 	/** Adds a radial force to all flex container instances */
-	virtual void AddRadialImpulseToFlex(class FPhysScene* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange) = 0;
+	virtual void AddRadialImpulseToFlex(class FPhysScene_PhysX* PhysScene, FVector Origin, float Radius, float Strength, ERadialImpulseFalloff Falloff, bool bVelChange) = 0;
 
 	// RadialForceComponent
 	virtual void AttachFlexToComponent(class USceneComponent* Component, float Radius) = 0;

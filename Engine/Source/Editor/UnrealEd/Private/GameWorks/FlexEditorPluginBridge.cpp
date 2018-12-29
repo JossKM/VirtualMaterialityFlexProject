@@ -1,5 +1,5 @@
 //#nv begin #flex
-#include "IFlexEditorPluginBridge.h"
+#include "GameWorks/IFlexEditorPluginBridge.h"
 
 #if WITH_FLEX
 IFlexEditorPluginBridge* GFlexEditorPluginBridge = nullptr;

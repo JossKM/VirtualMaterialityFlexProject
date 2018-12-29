@@ -134,7 +134,6 @@ protected:
 	const FDataType& GetData() const { return Data; }
 
 	//#nv begin #flex
-#if WITH_FLEX
 	/**
 	* Add the decl elements for the streams
 	* @param InData - type with stream components
@@ -148,7 +147,6 @@ protected:
 	* @param OutElements - vertex decl list to modify
 	*/
 	virtual void AddVertexPositionElements(FDataType& InData, FVertexDeclarationElementList& OutElements);
-#endif
 	//#nv end
 
 	FDataType Data;

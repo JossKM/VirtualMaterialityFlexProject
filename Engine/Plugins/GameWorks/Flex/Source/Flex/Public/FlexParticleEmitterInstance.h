@@ -6,6 +6,9 @@
 #include "ParticleEmitterInstances.h"
 #include "FlexContainer.h"
 
+struct FParticleEmitterInstance;
+struct FFlexContainerInstance;
+
 /*-----------------------------------------------------------------------------
 FFlexParticleEmitterInstance
 -----------------------------------------------------------------------------*/
