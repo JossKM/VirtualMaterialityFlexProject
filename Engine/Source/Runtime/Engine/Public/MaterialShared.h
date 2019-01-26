@@ -881,7 +881,7 @@ public:
 
 	bool IsValidForRendering(bool bFailOnInvalid = false) const
 	{
-		const bool bValid = bCompilationFinalized && bCompiledSuccessfully && !bDeletedThroughDeferredCleanup;
+		const bool bValid = bCompilationFinalized && bCompiledSuccessfully;// && !bDeletedThroughDeferredCleanup; //deferred actually deletion will prevent the material to go away before we finish rendering
 		checkf(bValid || !bFailOnInvalid, TEXT("FMaterialShaderMap %s invalid for rendering: bCompilationFinalized: %i, bCompiledSuccessfully: %i, bDeletedThroughDeferredCleanup: %i"), *GetFriendlyName(), bCompilationFinalized, bCompiledSuccessfully, bDeletedThroughDeferredCleanup ? 1 : 0);
 		return bValid;
 	}

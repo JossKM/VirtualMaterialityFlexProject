@@ -210,6 +210,9 @@ Engine/Extras/ThirdPartyNotUE/SDKs/
 # Ignore CLion directory
 .idea/
 
+# Annoying windows files
+[Dd]esktop.ini
+
 # Add back some files for HairWorks
 !/Engine/Binaries/ThirdParty/HairWorks/*.dll
 
