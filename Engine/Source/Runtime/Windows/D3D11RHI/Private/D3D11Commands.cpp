@@ -660,7 +660,7 @@ void FD3D11DynamicRHI::RHISetShaderSampler(FComputeShaderRHIParamRef ComputeShad
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FVertexShaderRHIParamRef VertexShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	VALIDATE_BOUND_SHADER(VertexShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 	{
@@ -674,7 +674,7 @@ void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FVertexShaderRHIParamRef Vertex
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FHullShaderRHIParamRef HullShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	VALIDATE_BOUND_SHADER(HullShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 	{
@@ -688,7 +688,7 @@ void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FHullShaderRHIParamRef HullShad
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FDomainShaderRHIParamRef DomainShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	VALIDATE_BOUND_SHADER(DomainShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 	{
@@ -702,7 +702,7 @@ void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FDomainShaderRHIParamRef Domain
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FGeometryShaderRHIParamRef GeometryShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	VALIDATE_BOUND_SHADER(GeometryShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 	{
@@ -716,7 +716,7 @@ void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FGeometryShaderRHIParamRef Geom
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FPixelShaderRHIParamRef PixelShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	VALIDATE_BOUND_SHADER(PixelShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 
@@ -731,7 +731,7 @@ void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FPixelShaderRHIParamRef PixelSh
 
 void FD3D11DynamicRHI::RHISetShaderUniformBuffer(FComputeShaderRHIParamRef ComputeShader,uint32 BufferIndex,FUniformBufferRHIParamRef BufferRHI)
 {
-	check(BufferRHI->GetLayout().GetHash());
+	//check(BufferRHI->GetLayout().GetHash());
 	//VALIDATE_BOUND_SHADER(ComputeShader);
 	FD3D11UniformBuffer* Buffer = ResourceCast(BufferRHI);
 	{
