@@ -461,6 +461,10 @@ namespace UnrealBuildTool
 				Arguments.Add("/wd4463"); // 4463 - overflow; assigning 1 to bit-field that can only hold values from -1 to 0
 
 				Arguments.Add("/wd4838"); // 4838: conversion from 'type1' to 'type2' requires a narrowing conversion
+
+				Arguments.Add("/wd4800");
+
+				Arguments.Add("/wd5038");
 			}
 
 			if(CompileEnvironment.bEnableUndefinedIdentifierWarnings)
