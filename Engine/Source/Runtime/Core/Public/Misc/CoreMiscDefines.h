@@ -110,7 +110,7 @@ enum EForceInit
 enum ENoInit {NoInit};
 
 // Handle type to stably track users on a specific platform
-typedef int32 FPlatformUserId;
+typedef __int32 FPlatformUserId;
 const FPlatformUserId PLATFORMUSERID_NONE = INDEX_NONE;
 #endif // RC_INVOKED
 

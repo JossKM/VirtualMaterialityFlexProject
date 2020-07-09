@@ -74,6 +74,10 @@ void FFlexParticleEmitterInstance::Tick(float DeltaTime, bool bSuppressSpawning)
 
 	if (Container && (!GIsEditor || GIsPlayInEditorWorld))
 	{
+		//Emitter->MaxActiveParticles = 1000;
+		//Emitter->GetModuleInstanceData(Cast<FColorOverLife>)
+		//Emitter->Tick(1, false);
+
 		ExecutePendingComponentsToAttach();
 		SynchronizeAttachments(DeltaTime);
 

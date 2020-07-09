@@ -59,6 +59,9 @@
     <Prefer32Bit>false</Prefer32Bit>
     <DocumentationFile>..\..\..\Binaries\DotNET\UnrealBuildTool.XML</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>UnrealBuildTool.UnrealBuildTool</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Ionic.Zip.Reduced">
       <HintPath>..\..\..\Binaries\DotNET\Ionic.Zip.Reduced.dll</HintPath>

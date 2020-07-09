@@ -14,7 +14,7 @@
 #include "Distributions/DistributionFloatConstant.h"
 #include "Particles/ParticleEmitter.h"
 #include "FlexParticleSpriteEmitter.h"
-
+#include "FlexStaticMesh.h"
 
 /*-----------------------------------------------------------------------------
 UParticleModuleFlexShapeSpawn implementation.
@@ -198,10 +198,10 @@ bool UParticleModuleFlexFluidSpawn::GetBurstCount(FParticleEmitterInstance* Owne
 		if (Template->Fluid)
 			Spacing *= Template->RestDistance;
 
-		float VelocityVal = Velocity.Distribution->GetValue(0.0f, Owner->Component);
-		float DimXVal = DimX.Distribution->GetValue(0.0f, Owner->Component);
-		float DimYVal = DimY.Distribution->GetValue(0.0f, Owner->Component);
-		float LayerScaleVal = LayerScale.Distribution->GetValue(0.0f, Owner->Component);
+		float VelocityVal = Velocity.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+		float DimXVal = DimX.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+		float DimYVal = DimY.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+		float LayerScaleVal = LayerScale.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
 
 		// clamp delta time like flex sim does
 		// compute max left over, formula from flex sim. 60 should likely be replaced with template->framerate.
@@ -257,9 +257,10 @@ void UParticleModuleFlexFluidSpawn::Spawn(FParticleEmitterInstance* Owner, int32
 		if (Template->Fluid)
 			Spacing *= Template->RestDistance;
 
-		float DimXVal = DimX.Distribution->GetValue(0.0f, Owner->Component);
-		float DimYVal = DimY.Distribution->GetValue(0.0f, Owner->Component);
-		float VelocityVal = Velocity.Distribution->GetValue(0.0f, Owner->Component);
+		float DimXVal = DimX.Distribution->GetValue(0.0f,  (UObject*)(Owner->Component));
+		float DimYVal = DimY.Distribution->GetValue(0.0f,  (UObject*)(Owner->Component));
+		float VelocityVal = Velocity.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+
 
 		int32 IntDimX = int32(DimXVal);
 		int32 IntDimY = int32(DimYVal);
@@ -272,10 +273,39 @@ void UParticleModuleFlexFluidSpawn::Spawn(FParticleEmitterInstance* Owner, int32
 		int32 X = LayerIndex%IntDimX;
 		int32 Y = LayerIndex/IntDimX;
 
-		FVector Vel = Owner->EmitterToSimulation.TransformVector(FVector(0.0f, 0.0f, VelocityVal));
+		//struct FRawDistributionFloat SprayAmount;
+
+
+		//joss
+		float AngleVarianceXVal = AngleVarianceX.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+		float AngleVarianceYVal = AngleVarianceY.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+		//float SprayVal = SprayAmount.Distribution->GetValue(0.0f, (UObject*)(Owner->Component));
+
+		
+		static FRandomStream wew = FRandomStream(9001);
+		//
+		//float angleX = (float)((rand() % 2000000) - 1000000) * 0.000001f * AngleVarianceXVal;
+		//float angleY = (float)((rand() % 2000000) - 1000000) * 0.000001f * AngleVarianceYVal;
+		float angleX = wew.FRandRange(-AngleVarianceXVal, AngleVarianceXVal);
+		float angleY = wew.FRandRange(-AngleVarianceYVal, AngleVarianceYVal);
+		//
+		//FVector Vel = Owner->EmitterToSimulation.TransformVector(FVector(0.0f, 0.0f, VelocityVal).RotateAngleAxis(angleX, FVector::ForwardVector).RotateAngleAxis(angleY, FVector::RightVector));
+		// /joss
+
+
+
 		FVector2D Center(Spacing*IntDimX*0.5f, Spacing*IntDimY*0.5f);
 
-		Particle.Location += Owner->EmitterToSimulation.TransformVector(FVector(X*Spacing - Center.X, Y*Spacing - Center.Y, Layer*Spacing));
+		FVector localPos = FVector(X * Spacing - Center.X, Y * Spacing - Center.Y, Layer * Spacing);
+
+		Particle.Location += Owner->EmitterToSimulation.TransformVector(localPos);
+
+		//joss
+		//FVector Vel = FMath::Lerp(FVector(0.0f, 0.0f, VelocityVal), (localPos.GetSafeNormal() * VelocityVal), SprayVal);
+		FVector Vel = Owner->EmitterToSimulation.TransformVector(FVector(0.0f, 0.0f, VelocityVal).RotateAngleAxis(angleX, FVector::ForwardVector).RotateAngleAxis(angleY, FVector::RightVector));
+
+
+
 		Particle.Velocity += Vel;
 		Particle.BaseVelocity += Vel;
 		// disable particle and shadow rendering in first frame

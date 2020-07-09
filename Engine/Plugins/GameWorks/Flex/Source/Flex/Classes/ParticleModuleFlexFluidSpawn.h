@@ -42,6 +42,15 @@ class UParticleModuleFlexFluidSpawn : public UParticleModuleSpawnBase
 	UPROPERTY(EditAnywhere, Category=Velocity)
 	struct FRawDistributionFloat Velocity;
 
+	UPROPERTY(EditAnywhere, Category = Velocity)
+	struct FRawDistributionFloat AngleVarianceX;
+	UPROPERTY(EditAnywhere, Category = Velocity)
+	struct FRawDistributionFloat AngleVarianceY;
+
+	/** Whether the velocity of the particles spawned is uniform or divergent. If set to 1, the particles will spray out based on spawn X and Y dimensions*/
+	//UPROPERTY(EditAnywhere, Category = Velocity)
+	//	struct FRawDistributionFloat SprayAmount;
+
 	// Begin UParticleModuleSpawnBase Interface
 	virtual bool	GetSpawnAmount(FParticleEmitterInstance* Owner, int32 Offset, float OldLeftover, float DeltaTime, int32& Number, float& Rate) override;
 	virtual bool	GetBurstCount(FParticleEmitterInstance* Owner, int32 Offset, float OldLeftover, float DeltaTime, int32& Number) override;

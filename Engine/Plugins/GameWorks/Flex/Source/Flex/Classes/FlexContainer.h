@@ -222,11 +222,11 @@ class UFlexContainer : public UObject
 	float FreeSurfaceDrag;
 
 	/** Particles belonging to rigid shapes that move with a position delta magnitude > threshold will be permanently deformed in the rest pose */
-    UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = Fluid, meta = (editcondition = "Plasticity"))
     float PlasticThreshold;            
 	
 	/** Controls the rate at which particles in the rest pose are deformed for particles passing the deformation threshold */
-	UPROPERTY()
+	UPROPERTY(EditAnywhere, Category = Fluid, meta = (editcondition = "Plasticity"))
     float PlasticCreep;
 };
 
