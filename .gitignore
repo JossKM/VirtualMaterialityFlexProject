@@ -229,3 +229,6 @@ BuildGraph.Automation.xml
 !BlastPluginSample/Content/
 !BlastPluginSample/Content/**/*.uasset
 !BlastPluginSample/Content/**/*.umap
+
+FlexProject/
+UE4FirstPersonVRTemplate-0.3/

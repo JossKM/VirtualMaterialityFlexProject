@@ -614,19 +614,19 @@ void FFlexContainerInstance::UpdateCollisionData()
 					
 						PxTransform WorldTransform = ActorTransform*ShapeTransform;
 						PxTransform WorldTransformPrev = PxTransform(WorldTransform.p + DeltaTransform.p, DeltaTransform.q*WorldTransform.q);
-
+					
 						if (ConvexMesh.convexMesh)
 						{
 							// current transforms
 							ShapePositions.push_back(FVector4(WorldTransform.p.x, WorldTransform.p.y, WorldTransform.p.z, 1.0f));
 							ShapeRotations.push_back(FQuat(WorldTransform.q.x, WorldTransform.q.y, WorldTransform.q.z, WorldTransform.q.w));
-
+					
 							// previous transforms
 							ShapePositionsPrev.push_back(FVector4(WorldTransformPrev.p.x, WorldTransformPrev.p.y, WorldTransformPrev.p.z, 1.0f));
 							ShapeRotationsPrev.push_back(FQuat(WorldTransformPrev.q.x, WorldTransformPrev.q.y, WorldTransformPrev.q.z, WorldTransformPrev.q.w));
-
+					
 							SetupCollisionReport(Shape, CollisionComponent);
-
+					
 							// look up mesh in cache (or create)
 							NvFlexConvexMeshId Mesh = GetConvexMesh(ConvexMesh.convexMesh);
 							
@@ -635,7 +635,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 							Geometry.convexMesh.scale[0] = ConvexMesh.scale.scale.x;
 							Geometry.convexMesh.scale[1] = ConvexMesh.scale.scale.y;
 							Geometry.convexMesh.scale[2] = ConvexMesh.scale.scale.z;
-
+					
 							ShapeGeometry.push_back(Geometry);
 														
 							int32 Flags = NvFlexMakeShapeFlags(NvFlexCollisionShapeType::eNvFlexShapeConvexMesh, Actor->is<PxRigidStatic>() == NULL) | (bIsOverlap ? eNvFlexShapeFlagTrigger : 0);
@@ -648,21 +648,21 @@ void FFlexContainerInstance::UpdateCollisionData()
 					{
 						PxTriangleMeshGeometry TriMesh;							
 						Shape->getTriangleMeshGeometry(TriMesh);
-
+					
 						PxTransform WorldTransform = ActorTransform*ShapeTransform;
 						PxTransform WorldTransformPrev = PxTransform(WorldTransform.p + DeltaTransform.p, DeltaTransform.q*WorldTransform.q);
-
+					
 						// current transforms
 						ShapePositions.push_back(FVector4(WorldTransform.p.x, WorldTransform.p.y, WorldTransform.p.z, 1.0f));
 						ShapeRotations.push_back(FQuat(WorldTransform.q.x, WorldTransform.q.y, WorldTransform.q.z, WorldTransform.q.w));
-
+					
 						// previous transforms
 						ShapePositionsPrev.push_back(FVector4(WorldTransformPrev.p.x, WorldTransformPrev.p.y, WorldTransformPrev.p.z, 1.0f));
 						ShapeRotationsPrev.push_back(FQuat(WorldTransformPrev.q.x, WorldTransformPrev.q.y, WorldTransformPrev.q.z, WorldTransformPrev.q.w));
-
+					
 						// find or convert matching FlexTriangleMesh
 						NvFlexTriangleMeshId Mesh = GetTriangleMesh(TriMesh.triangleMesh);
-
+					
 						NvFlexCollisionGeometry Geometry;
 						Geometry.triMesh.mesh = Mesh;
 						Geometry.triMesh.scale[0] = TriMesh.scale.scale.x;
@@ -673,7 +673,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 						
 						int32 Flags = NvFlexMakeShapeFlags(NvFlexCollisionShapeType::eNvFlexShapeTriangleMesh, Actor->is<PxRigidStatic>() == NULL) | (bIsOverlap ? eNvFlexShapeFlagTrigger : 0);							
 						ShapeFlags.push_back(Flags);
-
+					
 						SetupCollisionReport(Shape, CollisionComponent);
 						break;
 					}
@@ -681,36 +681,36 @@ void FFlexContainerInstance::UpdateCollisionData()
 					{
 						PxHeightFieldGeometry HeightFieldGeom;
 						Shape->getHeightFieldGeometry(HeightFieldGeom);
-
+					
 						PxTransform WorldTransform = ActorTransform*ShapeTransform;
 						PxTransform WorldTransformPrev = PxTransform(WorldTransform.p + DeltaTransform.p, DeltaTransform.q*WorldTransform.q);
-
+					
 						// current transforms
 						ShapePositions.push_back(FVector4(WorldTransform.p.x, WorldTransform.p.y, WorldTransform.p.z, 1.0f));
 						ShapeRotations.push_back(FQuat(WorldTransform.q.x, WorldTransform.q.y, WorldTransform.q.z, WorldTransform.q.w));
-
+					
 						// previous transforms
 						ShapePositionsPrev.push_back(FVector4(WorldTransformPrev.p.x, WorldTransformPrev.p.y, WorldTransformPrev.p.z, 1.0f));
 						ShapeRotationsPrev.push_back(FQuat(WorldTransformPrev.q.x, WorldTransformPrev.q.y, WorldTransformPrev.q.z, WorldTransformPrev.q.w));
-
+					
 						// scaled mesh bounds
 						//PxBounds3 MeshBounds = PxBounds3(PxVec3(0.0f), U2PVector(Scale));						
 						//DrawDebugBox(GWorld, P2UVector(WorldTransform.p), P2UVector(MeshBounds.getExtents()), FColor::Cyan);					
-
+					
 						// find or convert matching FlexTriangleMesh
 						NvFlexTriangleMeshId Mesh = GetTriangleMesh(HeightFieldGeom.heightField);
-
+					
 						NvFlexCollisionGeometry Geometry;
 						Geometry.triMesh.mesh = Mesh;
 						Geometry.triMesh.scale[0] = HeightFieldGeom.rowScale;
 						Geometry.triMesh.scale[1] = HeightFieldGeom.heightScale;
 						Geometry.triMesh.scale[2] = HeightFieldGeom.columnScale;
-
+					
 						ShapeGeometry.push_back(Geometry);
 						
 						int32 Flags = NvFlexMakeShapeFlags(NvFlexCollisionShapeType::eNvFlexShapeTriangleMesh, Actor->is<PxRigidStatic>() == NULL) | (bIsOverlap ? eNvFlexShapeFlagTrigger : 0);							
 						ShapeFlags.push_back(Flags);
-
+					
 						SetupCollisionReport(Shape, CollisionComponent);
 						break;
 					}
