@@ -20,14 +20,14 @@
 #include "Engine/CollisionProfile.h"
 
 
-#if STATS
-
-DECLARE_CYCLE_STAT(TEXT("Update Bounds (CPU)"), STAT_Flex_UpdateBoundsCpu, STATGROUP_Flex);
-
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Active Mesh Particle Count"), STAT_Flex_ActiveParticleCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Active Mesh Actor Count"), STAT_Flex_ActiveMeshActorCount, STATGROUP_Flex);
-
-#endif
+//#if STATS
+//
+//DECLARE_CYCLE_STAT(TEXT("Update Bounds (CPU)"), STAT_Flex_UpdateBoundsCpu, STATGROUP_Flex);
+//
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Active Mesh Particle Count"), STAT_Flex_ActiveParticleCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Active Mesh Actor Count"), STAT_Flex_ActiveMeshActorCount, STATGROUP_Flex);
+//
+//#endif
 
 inline class UFlexAsset* UFlexComponent::GetFlexAsset() const
 {
@@ -137,8 +137,8 @@ void UFlexComponent::OnUnregister()
 
 	if (ContainerInstance && AssetInstance)
 	{
-		DEC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, AssetInstance->numParticles);
-		DEC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
+		//DEC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, AssetInstance->numParticles);
+		//DEC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
 
 		ContainerInstance->DestroyInstance(AssetInstance);
 		AssetInstance = NULL;
@@ -565,8 +565,8 @@ void UFlexComponent::DisableSim()
 {
 	if (ContainerInstance && AssetInstance)
 	{
-		DEC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, AssetInstance->numParticles);
-		DEC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
+		//DEC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, AssetInstance->numParticles);
+		//DEC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
 
 		ContainerInstance->DestroyInstance(AssetInstance);
 		AssetInstance = NULL;
@@ -643,8 +643,8 @@ void UFlexComponent::EnableSim()
 		if (AssetInstance)
 		{
 			check(FlexAsset);
-			INC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, FlexAsset->Particles.Num());
-			INC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
+			//INC_DWORD_STAT_BY(STAT_Flex_ActiveParticleCount, FlexAsset->Particles.Num());
+			//INC_DWORD_STAT(STAT_Flex_ActiveMeshActorCount);
 		
 			// if attach requested then generate attachment points for overlapping shapes
 			if (AttachToRigids)

@@ -11,9 +11,9 @@
 #include "Engine/StaticMesh.h"
 #include "Materials/Material.h"
 
-#if STATS
-DECLARE_CYCLE_STAT(TEXT("Skin Mesh Time (CPU)"), STAT_Flex_RenderMeshTime, STATGROUP_Flex);
-#endif
+//#if STATS
+//DECLARE_CYCLE_STAT(TEXT("Skin Mesh Time (CPU)"), STAT_Flex_RenderMeshTime, STATGROUP_Flex);
+//#endif
 
 /* CPU Skinning */
 
@@ -218,7 +218,7 @@ void FFlexCPUVertexFactory::OverrideMeshElement(FMeshBatchElement& Element)
 
 void FFlexCPUVertexFactory::SkinCloth(const FVector4* SimulatedPositions, const FVector* SimulatedNormals)
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
 
 	FFlexVertex* RESTRICT Vertex = (FFlexVertex*)RHILockVertexBuffer(VertexBuffer.VertexBufferRHI, 0, VertexBuffer.NumVerts*sizeof(FFlexVertex), RLM_WriteOnly);
 
@@ -284,7 +284,7 @@ void FFlexCPUVertexFactory::TearCloth(const NvFlexExtTearingMeshEdit* Edits, int
 
 void FFlexCPUVertexFactory::SkinSoft(const FPositionVertexBuffer& Positions, const FStaticMeshVertexBuffer& Vertices, const FFlexShapeTransform* Transforms, const FVector* RestPoses, const int16* ClusterIndices, const float* ClusterWeights, int NumClusters)
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
 
 	const int NumVertices = Vertices.GetNumVertices();
 
@@ -439,7 +439,7 @@ void FFlexGPUVertexFactory::SkinCloth(const FVector4* SimulatedPositions, const 
 // for GPU skinning this method just uploads the necessary data to the skinning buffers
 void FFlexGPUVertexFactory::SkinSoft(const FPositionVertexBuffer& Positions, const FStaticMeshVertexBuffer& Vertices, const FFlexShapeTransform* Transforms, const FVector* RestPoses, const int16* ClusterIndices, const float* ClusterWeights, int NumClusters)
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_RenderMeshTime);
 	
 	AllocateFor(NumClusters);
 

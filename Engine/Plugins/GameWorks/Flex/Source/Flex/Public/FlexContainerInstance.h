@@ -6,6 +6,8 @@
 #include "NvFlexExt.h"
 
 #include "PhysXIncludes.h"
+#include "Physics/PhysicsInterfaceDeclares.h"
+#include "Engine/EngineTypes.h"
 
 // UE types
 class UFlexContainer;
@@ -16,12 +18,12 @@ class UFlexCollisionComponent;
 struct FFlexPhase;
 struct IFlexContainerClient;
 
-#if STATS
-
-DECLARE_STATS_GROUP(TEXT("Flex"), STATGROUP_Flex, STATCAT_Advanced);
-DECLARE_STATS_GROUP_VERBOSE(TEXT("FlexGpu"), STATGROUP_FlexGpu, STATCAT_Advanced);
-
-#endif
+//#if STATS
+//
+//DECLARE_STATS_GROUP(TEXT("Flex"), STATGROUP_Flex, STATCAT_Advanced);
+//DECLARE_STATS_GROUP_VERBOSE(TEXT("FlexGpu"), STATGROUP_FlexGpu, STATCAT_Advanced);
+//
+//#endif
 
 
 // one container per-phys scene

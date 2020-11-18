@@ -12,82 +12,85 @@
 #include "FlexFluidSurfaceActor.h"
 #include "FlexFluidSurfaceComponent.h"
 
+#include "Components/SkeletalMeshComponent.h"
+#include "FlexContainer.h"
+
 bool FFlexContainerInstance::sGlobalDebugDraw = false;
-
-#if STATS
-
-enum EFlexGpuStats
-{
-	// gpu stats
-	STAT_Flex_ContainerGpuTickTime,
-	STAT_Flex_Predict,
-	STAT_Flex_CreateCellIndices,
-	STAT_Flex_SortCellIndices,		
-	STAT_Flex_CreateGrid,				
-	STAT_Flex_Reorder,					
-	STAT_Flex_CollideParticles,
-	STAT_Flex_CollideConvexes,			
-	STAT_Flex_CollideTriangles,		
-	STAT_Flex_CollideFields,			
-	STAT_Flex_CalculateDensity,		
-	STAT_Flex_SolveDensities,			
-	STAT_Flex_SolveVelocities,			
-	STAT_Flex_SolveShapes,				
-	STAT_Flex_SolveSprings,			
-	STAT_Flex_SolveContacts,			
-	STAT_Flex_SolveInflatables,		
-	STAT_Flex_CalculateAnisotropy,		
-	STAT_Flex_UpdateDiffuse,			
-	STAT_Flex_UpdateTriangles,
-	STAT_Flex_Finalize,				
-	STAT_Flex_UpdateBounds,		
-};
-
-#endif
-
-// CPU stats, use "stat flex" to enable
-DECLARE_CYCLE_STAT(TEXT("Gather Collision Shapes Time (CPU)"), STAT_Flex_GatherCollisionShapes, STATGROUP_Flex);
-DECLARE_CYCLE_STAT(TEXT("Update Collision Shapes Time (CPU)"), STAT_Flex_UpdateCollisionShapes, STATGROUP_Flex);
-DECLARE_CYCLE_STAT(TEXT("Update Actors Time (CPU)"), STAT_Flex_UpdateActors, STATGROUP_Flex);
-DECLARE_CYCLE_STAT(TEXT("Update Data Time (CPU)"), STAT_Flex_DeviceUpdateTime, STATGROUP_Flex);
-DECLARE_CYCLE_STAT(TEXT("Solver Tick Time (CPU)"), STAT_Flex_SolverUpdateTime, STATGROUP_Flex);
-DECLARE_CYCLE_STAT(TEXT("Solve Sync Time (CPU)"), STAT_Flex_SolverSynchronizeTime, STATGROUP_Flex);
-
-// Counters
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Container Count"), STAT_Flex_ContainerCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Instance Count"), STAT_Flex_InstanceCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Particle Count"), STAT_Flex_ParticleCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Spring Count"), STAT_Flex_SpringCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Shape Count"), STAT_Flex_ShapeCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Shape Count"), STAT_Flex_CollisionShapeCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Convex Mesh Count"), STAT_Flex_CollisionConvexMeshCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Triangle Mesh Count"), STAT_Flex_CollisionTriangleMeshCount, STATGROUP_Flex);
-DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Force Field Count"), STAT_Flex_ForceFieldCount, STATGROUP_Flex);
-
-// GPU stats, use "stat group enable flexgpu", and "stat flexgpu" to enable via console
-// note that the the GPU counters will introduce significant synchronization overhead
-DECLARE_CYCLE_STAT(TEXT("Predict"), STAT_Flex_Predict, STATGROUP_FlexGpu);
-DECLARE_CYCLE_STAT(TEXT("CreateCellIndices"), STAT_Flex_CreateCellIndices, STATGROUP_FlexGpu);
-DECLARE_CYCLE_STAT(TEXT("SortCellIndices"), STAT_Flex_SortCellIndices, STATGROUP_FlexGpu);		
-DECLARE_CYCLE_STAT(TEXT("CreateGrid"), STAT_Flex_CreateGrid, STATGROUP_FlexGpu);				
-DECLARE_CYCLE_STAT(TEXT("Reorder"), STAT_Flex_Reorder, STATGROUP_FlexGpu);					
-DECLARE_CYCLE_STAT(TEXT("Collide Particles"), STAT_Flex_CollideParticles, STATGROUP_FlexGpu);
-DECLARE_CYCLE_STAT(TEXT("Collide Convexes"), STAT_Flex_CollideConvexes, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Collide Triangles"), STAT_Flex_CollideTriangles, STATGROUP_FlexGpu);		
-DECLARE_CYCLE_STAT(TEXT("Collide Fields"), STAT_Flex_CollideFields, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Calculate Density"), STAT_Flex_CalculateDensity, STATGROUP_FlexGpu);		
-DECLARE_CYCLE_STAT(TEXT("Solve Density"), STAT_Flex_SolveDensities, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Solve Velocities"), STAT_Flex_SolveVelocities, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Solve Shapes"), STAT_Flex_SolveShapes, STATGROUP_FlexGpu);				
-DECLARE_CYCLE_STAT(TEXT("Solve Springs"), STAT_Flex_SolveSprings, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Solve Contacts"), STAT_Flex_SolveContacts, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Solve Inflatables"), STAT_Flex_SolveInflatables, STATGROUP_FlexGpu);		
-DECLARE_CYCLE_STAT(TEXT("Calculate Anisotropy"), STAT_Flex_CalculateAnisotropy, STATGROUP_FlexGpu);		
-DECLARE_CYCLE_STAT(TEXT("Update Diffuse"), STAT_Flex_UpdateDiffuse, STATGROUP_FlexGpu);			
-DECLARE_CYCLE_STAT(TEXT("Finalize"), STAT_Flex_Finalize, STATGROUP_FlexGpu);				
-DECLARE_CYCLE_STAT(TEXT("Update Bounds"), STAT_Flex_UpdateBounds, STATGROUP_FlexGpu);
-DECLARE_CYCLE_STAT(TEXT("Update Triangles"), STAT_Flex_UpdateTriangles, STATGROUP_FlexGpu);
-DECLARE_CYCLE_STAT(TEXT("Total GPU Kernel Time"), STAT_Flex_ContainerGpuTickTime, STATGROUP_FlexGpu);
+//
+//#if STATS
+//
+//enum EFlexGpuStats
+//{
+//	// gpu stats
+//	STAT_Flex_ContainerGpuTickTime,
+//	STAT_Flex_Predict,
+//	STAT_Flex_CreateCellIndices,
+//	STAT_Flex_SortCellIndices,		
+//	STAT_Flex_CreateGrid,				
+//	STAT_Flex_Reorder,					
+//	STAT_Flex_CollideParticles,
+//	STAT_Flex_CollideConvexes,			
+//	STAT_Flex_CollideTriangles,		
+//	STAT_Flex_CollideFields,			
+//	STAT_Flex_CalculateDensity,		
+//	STAT_Flex_SolveDensities,			
+//	STAT_Flex_SolveVelocities,			
+//	STAT_Flex_SolveShapes,				
+//	STAT_Flex_SolveSprings,			
+//	STAT_Flex_SolveContacts,			
+//	STAT_Flex_SolveInflatables,		
+//	STAT_Flex_CalculateAnisotropy,		
+//	STAT_Flex_UpdateDiffuse,			
+//	STAT_Flex_UpdateTriangles,
+//	STAT_Flex_Finalize,				
+//	STAT_Flex_UpdateBounds,		
+//};
+//
+//#endif
+//
+//// CPU stats, use "stat flex" to enable
+//DECLARE_CYCLE_STAT(TEXT("Gather Collision Shapes Time (CPU)"), STAT_Flex_GatherCollisionShapes, STATGROUP_Flex);
+//DECLARE_CYCLE_STAT(TEXT("Update Collision Shapes Time (CPU)"), STAT_Flex_UpdateCollisionShapes, STATGROUP_Flex);
+//DECLARE_CYCLE_STAT(TEXT("Update Actors Time (CPU)"), STAT_Flex_UpdateActors, STATGROUP_Flex);
+//DECLARE_CYCLE_STAT(TEXT("Update Data Time (CPU)"), STAT_Flex_DeviceUpdateTime, STATGROUP_Flex);
+//DECLARE_CYCLE_STAT(TEXT("Solver Tick Time (CPU)"), STAT_Flex_SolverUpdateTime, STATGROUP_Flex);
+//DECLARE_CYCLE_STAT(TEXT("Solve Sync Time (CPU)"), STAT_Flex_SolverSynchronizeTime, STATGROUP_Flex);
+//
+//// Counters
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Container Count"), STAT_Flex_ContainerCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Instance Count"), STAT_Flex_InstanceCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Particle Count"), STAT_Flex_ParticleCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Spring Count"), STAT_Flex_SpringCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Shape Count"), STAT_Flex_ShapeCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Shape Count"), STAT_Flex_CollisionShapeCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Convex Mesh Count"), STAT_Flex_CollisionConvexMeshCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Collision Triangle Mesh Count"), STAT_Flex_CollisionTriangleMeshCount, STATGROUP_Flex);
+//DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("Force Field Count"), STAT_Flex_ForceFieldCount, STATGROUP_Flex);
+//
+//// GPU stats, use "stat group enable flexgpu", and "stat flexgpu" to enable via console
+//// note that the the GPU counters will introduce significant synchronization overhead
+//DECLARE_CYCLE_STAT(TEXT("Predict"), STAT_Flex_Predict, STATGROUP_FlexGpu);
+//DECLARE_CYCLE_STAT(TEXT("CreateCellIndices"), STAT_Flex_CreateCellIndices, STATGROUP_FlexGpu);
+//DECLARE_CYCLE_STAT(TEXT("SortCellIndices"), STAT_Flex_SortCellIndices, STATGROUP_FlexGpu);		
+//DECLARE_CYCLE_STAT(TEXT("CreateGrid"), STAT_Flex_CreateGrid, STATGROUP_FlexGpu);				
+//DECLARE_CYCLE_STAT(TEXT("Reorder"), STAT_Flex_Reorder, STATGROUP_FlexGpu);					
+//DECLARE_CYCLE_STAT(TEXT("Collide Particles"), STAT_Flex_CollideParticles, STATGROUP_FlexGpu);
+//DECLARE_CYCLE_STAT(TEXT("Collide Convexes"), STAT_Flex_CollideConvexes, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Collide Triangles"), STAT_Flex_CollideTriangles, STATGROUP_FlexGpu);		
+//DECLARE_CYCLE_STAT(TEXT("Collide Fields"), STAT_Flex_CollideFields, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Calculate Density"), STAT_Flex_CalculateDensity, STATGROUP_FlexGpu);		
+//DECLARE_CYCLE_STAT(TEXT("Solve Density"), STAT_Flex_SolveDensities, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Solve Velocities"), STAT_Flex_SolveVelocities, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Solve Shapes"), STAT_Flex_SolveShapes, STATGROUP_FlexGpu);				
+//DECLARE_CYCLE_STAT(TEXT("Solve Springs"), STAT_Flex_SolveSprings, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Solve Contacts"), STAT_Flex_SolveContacts, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Solve Inflatables"), STAT_Flex_SolveInflatables, STATGROUP_FlexGpu);		
+//DECLARE_CYCLE_STAT(TEXT("Calculate Anisotropy"), STAT_Flex_CalculateAnisotropy, STATGROUP_FlexGpu);		
+//DECLARE_CYCLE_STAT(TEXT("Update Diffuse"), STAT_Flex_UpdateDiffuse, STATGROUP_FlexGpu);			
+//DECLARE_CYCLE_STAT(TEXT("Finalize"), STAT_Flex_Finalize, STATGROUP_FlexGpu);				
+//DECLARE_CYCLE_STAT(TEXT("Update Bounds"), STAT_Flex_UpdateBounds, STATGROUP_FlexGpu);
+//DECLARE_CYCLE_STAT(TEXT("Update Triangles"), STAT_Flex_UpdateTriangles, STATGROUP_FlexGpu);
+//DECLARE_CYCLE_STAT(TEXT("Total GPU Kernel Time"), STAT_Flex_ContainerGpuTickTime, STATGROUP_FlexGpu);
 
 namespace 
 {
@@ -113,7 +116,7 @@ void FFlexContainerInstance::onRelease(const PxBase* observed, void* userData, P
 		NvFlexDestroyTriangleMesh(FFlexManager::get().GetFlexLib(), *Mesh);
 		TriangleMeshes.Remove(observed);
 
-		DEC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
+		//DEC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
 	}
 
 	NvFlexConvexMeshId* Convex = ConvexMeshes.Find(observed);
@@ -124,7 +127,7 @@ void FFlexContainerInstance::onRelease(const PxBase* observed, void* userData, P
 		NvFlexDestroyConvexMesh(FFlexManager::get().GetFlexLib(), *Convex);
 		ConvexMeshes.Remove(observed);
 
-		DEC_DWORD_STAT(STAT_Flex_CollisionConvexMeshCount);
+		//DEC_DWORD_STAT(STAT_Flex_CollisionConvexMeshCount);
 	}
 
 	int32* ReportIndex = ShapeToCollisionReportIndex.Find(observed);
@@ -219,7 +222,7 @@ const NvFlexTriangleMeshId FFlexContainerInstance::GetTriangleMesh(const PxHeigh
 		// add to cache
 		TriangleMeshes.Add((void*)HeightField, NewMesh);
 
-		INC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
+		//INC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
 
 		return NewMesh;
 	}
@@ -279,7 +282,7 @@ const NvFlexTriangleMeshId FFlexContainerInstance::GetTriangleMesh(const PxTrian
 		// add to cache
 		TriangleMeshes.Add((void*)TriMesh, NewMesh);
 
-		INC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
+		//INC_DWORD_STAT(STAT_Flex_CollisionTriangleMeshCount);
 
 		return NewMesh;
 	}
@@ -323,7 +326,7 @@ const NvFlexTriangleMeshId FFlexContainerInstance::GetConvexMesh(const PxConvexM
 
 		ConvexMeshes.Add((void*)ConvexMesh, NewMesh);
 
-		INC_DWORD_STAT(STAT_Flex_CollisionConvexMeshCount);
+		//INC_DWORD_STAT(STAT_Flex_CollisionConvexMeshCount);
 
 		return NewMesh;
 	}
@@ -350,7 +353,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 		return;
 
 	// modify global geometry counts
-	DEC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
+	//DEC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
 
 	// map buffers for write
 	ShapeGeometry.map();
@@ -389,7 +392,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 	SCENE_LOCK_READ(Owner->GetPxScene(PST_Sync));
 
 	{
-		SCOPE_CYCLE_COUNTER(STAT_Flex_GatherCollisionShapes);
+		//SCOPE_CYCLE_COUNTER(STAT_Flex_GatherCollisionShapes);
 
 		// gather shapes from the scene
 		for (int32 ActorIndex=0; ActorIndex < Components.Num(); ActorIndex++)
@@ -723,7 +726,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 
 	// push to flex
 	{
-		SCOPE_CYCLE_COUNTER(STAT_Flex_UpdateCollisionShapes);
+		//SCOPE_CYCLE_COUNTER(STAT_Flex_UpdateCollisionShapes);
 		
 		ShapeGeometry.unmap();
 		ShapePositions.unmap();
@@ -743,7 +746,7 @@ void FFlexContainerInstance::UpdateCollisionData()
 	}
 
 	// increase  global geometry counters
-	INC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
+	//INC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
 
 }
 
@@ -766,7 +769,7 @@ FFlexContainerInstance::FFlexContainerInstance(UFlexContainer* InTemplate, FPhys
 	ContactVelocities(FFlexManager::get().GetFlexLib()),
 	ContactCounts(FFlexManager::get().GetFlexLib())
 {
-	INC_DWORD_STAT(STAT_Flex_ContainerCount);
+	//INC_DWORD_STAT(STAT_Flex_ContainerCount);
 
 	UE_LOG(LogFlex, Display, TEXT("Creating FLEX container: %s"), *InTemplate->GetName());
 
@@ -832,8 +835,8 @@ FFlexContainerInstance::FFlexContainerInstance(UFlexContainer* InTemplate, FPhys
 
 FFlexContainerInstance::~FFlexContainerInstance()
 {
-	DEC_DWORD_STAT(STAT_Flex_ContainerCount);
-	DEC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
+	//DEC_DWORD_STAT(STAT_Flex_ContainerCount);
+	//DEC_DWORD_STAT_BY(STAT_Flex_CollisionShapeCount, ShapePositions.size());
 
 	UE_LOG(LogFlex, Display, TEXT("Destroying a FLEX system for.."));
 	
@@ -842,8 +845,8 @@ FFlexContainerInstance::~FFlexContainerInstance()
 
 	GPhysXSDK->unregisterDeletionListener(*this);
 
-	DEC_DWORD_STAT_BY(STAT_Flex_CollisionTriangleMeshCount, TriangleMeshes.Num());
-	DEC_DWORD_STAT_BY(STAT_Flex_CollisionConvexMeshCount, ConvexMeshes.Num());
+	//DEC_DWORD_STAT_BY(STAT_Flex_CollisionTriangleMeshCount, TriangleMeshes.Num());
+	//DEC_DWORD_STAT_BY(STAT_Flex_CollisionConvexMeshCount, ConvexMeshes.Num());
 
 	// destroy any remaining cached triangle meshes
 	for (auto It = TriangleMeshes.CreateIterator(); It; ++It)
@@ -878,7 +881,7 @@ int32 FFlexContainerInstance::CreateParticle()
 	int32 Index = -1;
 	if (NvFlexExtAllocParticles(Container, 1, &Index) > 0)
 	{
-		INC_DWORD_STAT(STAT_Flex_ParticleCount);
+		//INC_DWORD_STAT(STAT_Flex_ParticleCount);
 	}
 	return Index;
 }
@@ -924,7 +927,7 @@ void FFlexContainerInstance::DestroyParticle(int32 Index)
 
 	NvFlexExtFreeParticles(Container, 1, &Index);
 
-	DEC_DWORD_STAT(STAT_Flex_ParticleCount);
+	//DEC_DWORD_STAT(STAT_Flex_ParticleCount);
 }
 
 void FFlexContainerInstance::DestroyParticles(const int32* Indices, int32 NumIndices)
@@ -942,7 +945,7 @@ void FFlexContainerInstance::DestroyParticles(const int32* Indices, int32 NumInd
 	// destruction is deferred so we do not need to be mapped here
 	NvFlexExtFreeParticles(Container, NumIndices, Indices);
 
-	DEC_DWORD_STAT_BY(STAT_Flex_ParticleCount, NumIndices);
+	//DEC_DWORD_STAT_BY(STAT_Flex_ParticleCount, NumIndices);
 }
 
 
@@ -969,10 +972,10 @@ NvFlexExtInstance* FFlexContainerInstance::CreateInstance(const NvFlexExtAsset* 
 	// creation will fail if instance cannot fit inside container
 	if (Inst)
 	{
-		INC_DWORD_STAT(STAT_Flex_InstanceCount);
-		INC_DWORD_STAT_BY(STAT_Flex_ParticleCount, Inst->asset->numParticles);
-		INC_DWORD_STAT_BY(STAT_Flex_SpringCount, Inst->asset->numSprings);
-		INC_DWORD_STAT_BY(STAT_Flex_ShapeCount, Inst->asset->numShapes);
+		//INC_DWORD_STAT(STAT_Flex_InstanceCount);
+		//INC_DWORD_STAT_BY(STAT_Flex_ParticleCount, Inst->asset->numParticles);
+		//INC_DWORD_STAT_BY(STAT_Flex_SpringCount, Inst->asset->numSprings);
+		//INC_DWORD_STAT_BY(STAT_Flex_ShapeCount, Inst->asset->numShapes);
 	}
 	else
 	{
@@ -987,10 +990,10 @@ void FFlexContainerInstance::DestroyInstance(NvFlexExtInstance* Inst)
 {
 	// destruction is deferred so we do not need to be mapped here
 
-	DEC_DWORD_STAT(STAT_Flex_InstanceCount);
-	DEC_DWORD_STAT_BY(STAT_Flex_ParticleCount, Inst->asset->numParticles);
-	DEC_DWORD_STAT_BY(STAT_Flex_SpringCount, Inst->asset->numSprings);
-	DEC_DWORD_STAT_BY(STAT_Flex_ShapeCount, Inst->asset->numShapes);
+	//DEC_DWORD_STAT(STAT_Flex_InstanceCount);
+	//DEC_DWORD_STAT_BY(STAT_Flex_ParticleCount, Inst->asset->numParticles);
+	//DEC_DWORD_STAT_BY(STAT_Flex_SpringCount, Inst->asset->numSprings);
+	//DEC_DWORD_STAT_BY(STAT_Flex_ShapeCount, Inst->asset->numShapes);
 
 	NvFlexExtDestroyInstance(Container, Inst);
 }
@@ -1063,7 +1066,7 @@ void FFlexContainerInstance::ComputeSteppingParam(float& Dt, int32& NumSubsteps,
 
 void FFlexContainerInstance::UpdateSimData()
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_DeviceUpdateTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_DeviceUpdateTime);
 
 	//map the surface tension to a comfortable scale
 	static float SurfaceTensionFactor = 1e-6f;
@@ -1131,7 +1134,7 @@ void FFlexContainerInstance::UpdateSimData()
 
 void FFlexContainerInstance::Simulate(float DeltaTime)
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_SolverUpdateTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_SolverUpdateTime);
 
 	// ensure that all data is unmapped before sending to the GPU
 	if (IsMapped())
@@ -1140,12 +1143,12 @@ void FFlexContainerInstance::Simulate(float DeltaTime)
 	// only catpure perf counters if stats are visible (significant perf. cost)
 	bool TimerGatherEnable = false;
 
-#if STATS
-	// only gather GPU stats if enabled as this has a high perf. overhead
-	static TStatId FlexGpuStatId = IStatGroupEnableManager::Get().GetHighPerformanceEnableForStat(FName(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::GetGroupName(), STAT_GROUP_TO_FStatGroup(STATGROUP_UObjects)::GetGroupCategory(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::DefaultEnable, true, EStatDataType::ST_int64, TEXT("Flex GPU Stats"), true, true);
-	
-	TimerGatherEnable = !FlexGpuStatId.IsNone();
-#endif
+//#if STATS
+//	// only gather GPU stats if enabled as this has a high perf. overhead
+//	static TStatId FlexGpuStatId = IStatGroupEnableManager::Get().GetHighPerformanceEnableForStat(FName(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::GetGroupName(), STAT_GROUP_TO_FStatGroup(STATGROUP_UObjects)::GetGroupCategory(), STAT_GROUP_TO_FStatGroup(STATGROUP_FlexGpu)::DefaultEnable, true, EStatDataType::ST_int64, TEXT("Flex GPU Stats"), true, true);
+//	
+//	TimerGatherEnable = !FlexGpuStatId.IsNone();
+//#endif
 
 	// compute smoothed time-step
 	AverageDeltaTime = FMath::Lerp(DeltaTime, AverageDeltaTime, Template->TimeStepSmoothingFactor);
@@ -1187,7 +1190,7 @@ void FFlexContainerInstance::Simulate(float DeltaTime)
 	// ensure copies have been kicked off
 	NvFlexFlush(FFlexManager::get().GetFlexLib());
 
-	SET_DWORD_STAT(STAT_Flex_ForceFieldCount, ForceFields.Num());
+	//SET_DWORD_STAT(STAT_Flex_ForceFieldCount, ForceFields.Num());
 
 	//reset force fields
 	ForceFields.SetNum(0);
@@ -1195,7 +1198,7 @@ void FFlexContainerInstance::Simulate(float DeltaTime)
 
 void FFlexContainerInstance::Synchronize()
 {
-	SCOPE_CYCLE_COUNTER(STAT_Flex_SolverSynchronizeTime);
+	//SCOPE_CYCLE_COUNTER(STAT_Flex_SolverSynchronizeTime);
 
 	// ensure data is mapped, this is a GPU sync point
 	if (!IsMapped())
@@ -1213,7 +1216,7 @@ void FFlexContainerInstance::Synchronize()
 	NvFlexExtUpdateInstances(Container);
 
 	{
-		SCOPE_CYCLE_COUNTER(STAT_Flex_UpdateActors);
+		//SCOPE_CYCLE_COUNTER(STAT_Flex_UpdateActors);
 		
 		// process components
 		for (int32 i=0; i < Components.Num(); ++i)
@@ -1256,30 +1259,30 @@ void FFlexContainerInstance::Map()
 	Anisotropy3.map();
 	SmoothPositions.map();
 
-#if STATS
-	float scale = 0.001f / FPlatformTime::GetSecondsPerCycle();
-
-	SET_CYCLE_COUNTER(STAT_Flex_Predict, FMath::TruncToInt(Timers.predict*scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CreateCellIndices, FMath::TruncToInt(Timers.createCellIndices * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SortCellIndices, FMath::TruncToInt(Timers.sortCellIndices* scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CreateGrid, FMath::TruncToInt(Timers.createGrid * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_Reorder, FMath::TruncToInt(Timers.reorder * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CollideParticles, FMath::TruncToInt(Timers.collideParticles* scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CollideConvexes, FMath::TruncToInt(Timers.collideShapes * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CollideTriangles, FMath::TruncToInt(Timers.collideTriangles * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CollideFields, FMath::TruncToInt(Timers.collideFields * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CalculateDensity, FMath::TruncToInt(Timers.calculateDensity* scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveDensities, FMath::TruncToInt(Timers.solveDensities * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveVelocities, FMath::TruncToInt(Timers.solveVelocities* scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveShapes, FMath::TruncToInt(Timers.solveShapes * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveSprings, FMath::TruncToInt(Timers.solveSprings * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveContacts, FMath::TruncToInt(Timers.solveContacts * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_SolveInflatables, FMath::TruncToInt(Timers.solveInflatables * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_CalculateAnisotropy, FMath::TruncToInt(Timers.calculateAnisotropy * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_UpdateDiffuse, FMath::TruncToInt(Timers.updateDiffuse * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_Finalize, FMath::TruncToInt(Timers.finalize * scale));
-	SET_CYCLE_COUNTER(STAT_Flex_UpdateBounds, FMath::TruncToInt(Timers.updateBounds * scale));
-#endif
+//#if STATS
+//	float scale = 0.001f / FPlatformTime::GetSecondsPerCycle();
+//
+//	SET_CYCLE_COUNTER(STAT_Flex_Predict, FMath::TruncToInt(Timers.predict*scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CreateCellIndices, FMath::TruncToInt(Timers.createCellIndices * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SortCellIndices, FMath::TruncToInt(Timers.sortCellIndices* scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CreateGrid, FMath::TruncToInt(Timers.createGrid * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_Reorder, FMath::TruncToInt(Timers.reorder * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CollideParticles, FMath::TruncToInt(Timers.collideParticles* scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CollideConvexes, FMath::TruncToInt(Timers.collideShapes * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CollideTriangles, FMath::TruncToInt(Timers.collideTriangles * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CollideFields, FMath::TruncToInt(Timers.collideFields * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CalculateDensity, FMath::TruncToInt(Timers.calculateDensity* scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveDensities, FMath::TruncToInt(Timers.solveDensities * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveVelocities, FMath::TruncToInt(Timers.solveVelocities* scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveShapes, FMath::TruncToInt(Timers.solveShapes * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveSprings, FMath::TruncToInt(Timers.solveSprings * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveContacts, FMath::TruncToInt(Timers.solveContacts * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_SolveInflatables, FMath::TruncToInt(Timers.solveInflatables * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_CalculateAnisotropy, FMath::TruncToInt(Timers.calculateAnisotropy * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_UpdateDiffuse, FMath::TruncToInt(Timers.updateDiffuse * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_Finalize, FMath::TruncToInt(Timers.finalize * scale));
+//	SET_CYCLE_COUNTER(STAT_Flex_UpdateBounds, FMath::TruncToInt(Timers.updateBounds * scale));
+//#endif
 }
 
 // unmaps data, should only be called by Simulate()

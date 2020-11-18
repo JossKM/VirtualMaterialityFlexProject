@@ -349,10 +349,6 @@ void FFlexGPUParticleEmitterInstance::Tick(float DeltaSeconds, bool bSuppressSpa
 					UFlexFluidSurfaceComponent::Particle SurfaceParticle;
 					SurfaceParticle.Position = bHasSmoothedPositions ? Container->SmoothPositions[FlexParticleIndex] : Container->Particles[FlexParticleIndex];
 					SurfaceParticle.Size = MiscSampler(RelativeTime).X * InitialSize * LocalToWorldScale * bIsAlive;
-
-					//tessst
-					SurfaceParticle.Color = FLinearColor(1.0f, 0.5f, 0.5f, 1.0f);//FVector4ToFLinearColor::Convert(ColorSampler(RelativeTime) * DynamicColor);
-					//josss
 					SurfaceComponent->Particles.Add(SurfaceParticle);
 
 					if (bHasAnisotropy)

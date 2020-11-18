@@ -97,12 +97,6 @@ void FFlexParticleEmitterInstance::Tick(float DeltaTime, bool bSuppressSpawning)
 				int32 CurrentOffset = FlexDataOffset;
 				const uint8* ParticleBase = (const uint8*)&Particle;
 
-				//tempTest
-				FLinearColor mycol = FLinearColor(1.0f, 0.5f, 0.5f);
-				Particle.Color = mycol;
-				Particle.BaseColor = mycol;
-				// josssss
-
 				PARTICLE_ELEMENT(int32, FlexParticleIndex);
 
 				const int ContactIndex = Container->ContactIndices[FlexParticleIndex];
